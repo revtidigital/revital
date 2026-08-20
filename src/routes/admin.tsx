@@ -484,10 +484,12 @@ function Admin() {
   const [usersPage, setUsersPage] = useState(1);
   const [usersPerPage, setUsersPerPage] = useState(10);
 
+  const getAdminToken = () => sessionStorage.getItem("adminToken") ?? "";
+
   const addLog = useCallback(async (action: string, details: string) => {
     try {
       const { addAdminLogFn } = await import("@/server/adminFns");
-      await addAdminLogFn({ data: { action, details } });
+      await addAdminLogFn({ data: { token: getAdminToken(), action, details } });
     } catch (e) {
       if (import.meta.env.DEV) console.warn("Failed to add admin log:", e);
     }
@@ -497,8 +499,9 @@ function Admin() {
     setLoading(true);
     try {
       const { getAllUsersAdminFn } = await import("@/server/userFns");
+      const token = getAdminToken();
       const [u, adminMod, daily, global] = await Promise.all([
-        getAllUsersAdminFn({ data: { password: sessionStorage.getItem("adminPass") ?? "" } }),
+        getAllUsersAdminFn({ data: { token } }),
         import("@/server/adminFns"),
         getDailyLeaderboard(),
         getGlobalLeaderboard(),
@@ -507,8 +510,8 @@ function Admin() {
       setDailyLeaders(daily);
       setGlobalLeaders(global);
       const [l, s] = await Promise.all([
-        adminMod.getAdminLogsFn(),
-        adminMod.getPlatformSettingsFn(),
+        adminMod.getAdminLogsFn({ data: { token } }),
+        adminMod.getPlatformSettingsAdminFn({ data: { token } }),
       ]);
       setLogs(l);
       setSettings(s);
@@ -531,9 +534,9 @@ function Admin() {
     try {
       const { verifyAdminPasswordFn } = await import("@/server/adminFns");
       const result = await verifyAdminPasswordFn({ data: { password: passInput } });
-      if (result.ok) {
+      if (result.ok && result.token) {
         sessionStorage.setItem("adminAuth", "true");
-        sessionStorage.setItem("adminPass", passInput);
+        sessionStorage.setItem("adminToken", result.token);
         setAuthenticated(true);
         setPassError(false);
       } else {
@@ -1017,11 +1020,12 @@ function Admin() {
     e.preventDefault();
     try {
       const { savePlatformSettingsFn, getAdminLogsFn } = await import("@/server/adminFns");
-      await savePlatformSettingsFn({ data: settings });
+      const token = getAdminToken();
+      await savePlatformSettingsFn({ data: { token, ...settings } });
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 2000);
       await addLog("SETTINGS_SAVED", "Platform settings updated");
-      setLogs(await getAdminLogsFn());
+      setLogs(await getAdminLogsFn({ data: { token } }));
     } catch (e) {
       console.error("Save settings error", e);
     }
@@ -1033,8 +1037,9 @@ function Admin() {
     try {
       const { savePlatformSettingsFn, lockDailyTopTenAndNotifyFn } =
         await import("@/server/adminFns");
-      await savePlatformSettingsFn({ data: settings });
-      const result = await lockDailyTopTenAndNotifyFn();
+      const token = getAdminToken();
+      await savePlatformSettingsFn({ data: { token, ...settings } });
+      const result = await lockDailyTopTenAndNotifyFn({ data: { token } });
 
       if (!result.winners) {
         setLeaderboardEmailStatus(`No winners found for ${result.lockDate}. Email not sent.`);
@@ -1147,6 +1152,7 @@ function Admin() {
           <button
             onClick={() => {
               sessionStorage.removeItem("adminAuth");
+              sessionStorage.removeItem("adminToken");
               setAuthenticated(false);
             }}
             title="Sign out"
