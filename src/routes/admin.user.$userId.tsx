@@ -34,6 +34,7 @@ function AdminUserDetail() {
       const result = await verifyAdminPasswordFn({ data: { password: passInput } });
       if (result.ok) {
         sessionStorage.setItem("adminAuth", "true");
+        sessionStorage.setItem("adminPass", passInput);
         setAuthenticated(true);
         setPassError(false);
       } else {
@@ -49,11 +50,10 @@ function AdminUserDetail() {
     setLoading(true);
     (async () => {
       try {
-        const { getUserByIdFn } = await import("@/server/userFns");
-        const { getAllUsersFn } = await import("@/server/userFns");
+        const { getUserByIdFn, getAllUsersAdminFn } = await import("@/server/userFns");
         const [found, all] = await Promise.all([
           getUserByIdFn({ data: { userId } }),
-          getAllUsersFn(),
+          getAllUsersAdminFn({ data: { password: sessionStorage.getItem("adminPass") ?? "" } }),
         ]);
         if (!found) {
           setNotFound(true);
@@ -301,15 +301,7 @@ function AdminUserDetail() {
   );
 }
 
-function KpiCard({
-  title,
-  value,
-  info,
-}: {
-  title: string;
-  value: string | number;
-  info?: string;
-}) {
+function KpiCard({ title, value, info }: { title: string; value: string | number; info?: string }) {
   return (
     <div className="bg-gradient-card border border-border rounded-2xl p-4 shadow-card">
       <div className="flex items-center justify-between gap-2">

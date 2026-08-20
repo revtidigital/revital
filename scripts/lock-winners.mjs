@@ -13,21 +13,26 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // ── Config ───────────────────────────────────────────────────────────────────
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://mongo:27017/rev-challenge-hub";
 const GMAIL_FROM_EMAIL = process.env.GMAIL_FROM_EMAIL || "revitalenergyuae@gmail.com";
-const GMAIL_APP_PASSWORD = (process.env.GMAIL_APP_PASSWORD || "zkve peto wnre mhmx").replace(/\s+/g, "");
+const GMAIL_APP_PASSWORD = (process.env.GMAIL_APP_PASSWORD || "zkve peto wnre mhmx").replace(
+  /\s+/g,
+  "",
+);
 const GMAIL_SMTP_HOST = "smtp.gmail.com";
 const GMAIL_SMTP_PORT = 465;
 const SMTP_TIMEOUT_MS = 20_000;
 
 // ── Date helpers ─────────────────────────────────────────────────────────────
-const formatUaeDate = (d) =>
-  new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dubai" }).format(d);
+const formatUaeDate = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dubai" }).format(d);
 
 // ── Email helpers ─────────────────────────────────────────────────────────────
 const sanitizeMailHeader = (v) => v.replace(/[\r\n]+/g, " ").trim();
 const dotStuff = (v) => v.replace(/^\./gm, "..");
 const chunkBase64 = (v) => v.match(/.{1,76}/g)?.join("\r\n") ?? "";
 const parseAdminEmails = (input) =>
-  input.split(/[;,\n]/).map((e) => e.trim()).filter(Boolean);
+  input
+    .split(/[;,\n]/)
+    .map((e) => e.trim())
+    .filter(Boolean);
 
 // ── SMTP ──────────────────────────────────────────────────────────────────────
 function readSmtpResponse(socket) {
@@ -38,8 +43,14 @@ function readSmtpResponse(socket) {
       socket.off("error", onError);
       socket.off("timeout", onTimeout);
     };
-    const onError = (err) => { cleanup(); reject(err); };
-    const onTimeout = () => { cleanup(); reject(new Error("Timed out waiting for SMTP response.")); };
+    const onError = (err) => {
+      cleanup();
+      reject(err);
+    };
+    const onTimeout = () => {
+      cleanup();
+      reject(new Error("Timed out waiting for SMTP response."));
+    };
     const onData = (chunk) => {
       buffer += chunk.toString("utf8");
       const lines = buffer.split(/\r?\n/).filter(Boolean);
@@ -93,16 +104,18 @@ async function sendViaGmailSmtp(to, subject, body, attachment) {
 
     if (!attachment) {
       socket.write(
-        `Subject: ${safeSubject}\r\nFrom: ${safeFrom}\r\nTo: ${safeTo}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n${safeBody}\r\n.\r\n`
+        `Subject: ${safeSubject}\r\nFrom: ${safeFrom}\r\nTo: ${safeTo}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n${safeBody}\r\n.\r\n`,
       );
     } else {
       const boundary = `revital_${Date.now()}`;
       const rawContent = attachment.content;
       const encoded = chunkBase64(
-        (Buffer.isBuffer(rawContent) ? rawContent : Buffer.from(rawContent, "utf8")).toString("base64")
+        (Buffer.isBuffer(rawContent) ? rawContent : Buffer.from(rawContent, "utf8")).toString(
+          "base64",
+        ),
       );
       socket.write(
-        `Subject: ${safeSubject}\r\nFrom: ${safeFrom}\r\nTo: ${safeTo}\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary="${boundary}"\r\n\r\n--${boundary}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n${safeBody}\r\n\r\n--${boundary}\r\nContent-Type: ${attachment.contentType}; name="${sanitizeMailHeader(attachment.filename)}"\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename="${sanitizeMailHeader(attachment.filename)}"\r\n\r\n${encoded}\r\n--${boundary}--\r\n.\r\n`
+        `Subject: ${safeSubject}\r\nFrom: ${safeFrom}\r\nTo: ${safeTo}\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary="${boundary}"\r\n\r\n--${boundary}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n${safeBody}\r\n\r\n--${boundary}\r\nContent-Type: ${attachment.contentType}; name="${sanitizeMailHeader(attachment.filename)}"\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename="${sanitizeMailHeader(attachment.filename)}"\r\n\r\n${encoded}\r\n--${boundary}--\r\n.\r\n`,
       );
     }
 
@@ -115,11 +128,16 @@ async function sendViaGmailSmtp(to, subject, body, attachment) {
 
 // ── PNG generation ────────────────────────────────────────────────────────────
 const NAME_SLOTS = [
-  { x: 321.5, y: 735.5 }, { x: 779.5, y: 735.5 },
-  { x: 321.5, y: 842.5 }, { x: 779.5, y: 842.5 },
-  { x: 321.5, y: 949.5 }, { x: 779.5, y: 949.5 },
-  { x: 321.5, y: 1056.5 }, { x: 779.5, y: 1056.5 },
-  { x: 321.5, y: 1163.5 }, { x: 779.5, y: 1163.5 },
+  { x: 321.5, y: 735.5 },
+  { x: 779.5, y: 735.5 },
+  { x: 321.5, y: 842.5 },
+  { x: 779.5, y: 842.5 },
+  { x: 321.5, y: 949.5 },
+  { x: 779.5, y: 949.5 },
+  { x: 321.5, y: 1056.5 },
+  { x: 779.5, y: 1056.5 },
+  { x: 321.5, y: 1163.5 },
+  { x: 779.5, y: 1163.5 },
 ];
 const TEMPLATE_WIDTH = 1080;
 const TEMPLATE_HEIGHT = 1920;
@@ -157,7 +175,10 @@ async function generateWinnersPng(winners) {
 
     let textToDraw = displayName;
     if (ctx.measureText(textToDraw).width > maxTextWidth) {
-      while (textToDraw.length > 0 && ctx.measureText(`${textToDraw}${ellipsis}`).width > maxTextWidth) {
+      while (
+        textToDraw.length > 0 &&
+        ctx.measureText(`${textToDraw}${ellipsis}`).width > maxTextWidth
+      ) {
         textToDraw = textToDraw.slice(0, -1);
       }
       textToDraw = textToDraw ? `${textToDraw}${ellipsis}` : ellipsis;
@@ -207,11 +228,10 @@ async function main() {
     console.log(`[lock-winners] Locking ${ranked.length} winner(s).`);
     await Promise.all(
       ranked.map((winner) =>
-        db.collection("users").updateOne(
-          { userId: winner.userId },
-          { $addToSet: { winnerLockDates: lockDate } }
-        )
-      )
+        db
+          .collection("users")
+          .updateOne({ userId: winner.userId }, { $addToSet: { winnerLockDates: lockDate } }),
+      ),
     );
 
     const adminEmails = parseAdminEmails(settings.leaderboardAdminEmail || "");
@@ -235,8 +255,8 @@ async function main() {
           filename: `revital-winners-${lockDate}.png`,
           contentType: "image/png",
           content: winnersPng,
-        })
-      )
+        }),
+      ),
     );
 
     console.log(`[lock-winners] Email sent to: ${adminEmails.join(", ")}`);

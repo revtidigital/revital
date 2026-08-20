@@ -18,7 +18,8 @@ export interface ShareCardData {
 }
 
 export async function buildShareCard(data: ShareCardData): Promise<Blob> {
-  const W = 1080, H = 1350;
+  const W = 1080,
+    H = 1350;
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
@@ -45,7 +46,9 @@ export async function buildShareCard(data: ShareCardData): Promise<Blob> {
     const lw = 360;
     const lh = (logo.height / logo.width) * lw;
     ctx.drawImage(logo, (W - lw) / 2, 90, lw, lh);
-  } catch {}
+  } catch {
+    // logo is optional decoration — card still renders without it
+  }
 
   // Header text
   ctx.textAlign = "center";
@@ -60,7 +63,9 @@ export async function buildShareCard(data: ShareCardData): Promise<Blob> {
   }
 
   // Score circle
-  const cx = W / 2, cy = 720, r = 230;
+  const cx = W / 2,
+    cy = 720,
+    r = 230;
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.fillStyle = "rgba(255,255,255,0.05)";
@@ -107,12 +112,17 @@ export async function buildShareCard(data: ShareCardData): Promise<Blob> {
   ctx.font = "500 28px system-ui, -apple-system, sans-serif";
   ctx.fillText("Take the challenge at revital.com", W / 2, 1260);
 
-  return new Promise<Blob>((resolve) =>
-    canvas.toBlob((b) => resolve(b!), "image/png", 0.95)
-  );
+  return new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), "image/png", 0.95));
 }
 
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.arcTo(x + w, y, x + w, y + h, r);
@@ -125,11 +135,10 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 // Generates a share card by stamping score, name, tier, and category onto the user template PNG.
 export async function buildShareCardFromTemplate(data: ShareCardData): Promise<Blob> {
   // Load Duplit font into the browser font registry before drawing
-  const duplitFont = new FontFace(
-    "Duplit",
-    "url(/fonts/Duplet-Semibold-BF642a34066f658.otf)",
-    { weight: "600", style: "normal" }
-  );
+  const duplitFont = new FontFace("Duplit", "url(/fonts/Duplet-Semibold-BF642a34066f658.otf)", {
+    weight: "600",
+    style: "normal",
+  });
   await duplitFont.load();
   document.fonts.add(duplitFont);
 
@@ -142,7 +151,8 @@ export async function buildShareCardFromTemplate(data: ShareCardData): Promise<B
   ctx.drawImage(template, 0, 0);
 
   // Scale factors in case template isn't exactly 1080×1920
-  const W = 1080, H = 1920;
+  const W = 1080,
+    H = 1920;
   const sx = canvas.width / W;
   const sy = canvas.height / H;
   const scale = Math.min(sx, sy);
@@ -176,9 +186,7 @@ export async function buildShareCardFromTemplate(data: ShareCardData): Promise<B
   ctx.textAlign = "center";
   ctx.fillText(truncateText(ctx, `Tier ${data.tier}`, 220 * sx), 767.5 * sx, 1034.5 * sy);
 
-  return new Promise<Blob>((resolve) =>
-    canvas.toBlob((b) => resolve(b!), "image/png", 0.95)
-  );
+  return new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), "image/png", 0.95));
 }
 
 function truncateText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {

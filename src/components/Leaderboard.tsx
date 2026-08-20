@@ -55,15 +55,23 @@ export function Leaderboard({
               }`}
             >
               <div className="w-8 text-center text-lg font-black">
-                {highlightWinner && i < 3 ? medals[i] : <span className="text-muted-foreground">{i + 1}</span>}
+                {highlightWinner && i < 3 ? (
+                  medals[i]
+                ) : (
+                  <span className="text-muted-foreground">{i + 1}</span>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-garnet truncate text-sm md:text-base">{e.name}</div>
-                <div className="text-[11px] text-muted-foreground truncate">{e.contact} • {e.when}</div>
+                <div className="text-[11px] text-muted-foreground truncate">
+                  {e.contact} • {e.when}
+                </div>
               </div>
               <div className="text-right">
                 <div className="text-lg md:text-xl font-black text-gradient-energy">{e.total}</div>
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">pts</div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  pts
+                </div>
               </div>
             </motion.li>
           ))}

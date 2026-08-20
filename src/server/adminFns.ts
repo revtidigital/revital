@@ -177,22 +177,16 @@ export const getPlatformSettingsFn = createServerFn({ method: "GET" }).handler(a
     homeAnnouncementTexts: storedTexts,
     leaderboardAdminEmail:
       typeof rest.leaderboardAdminEmail === "string" ? rest.leaderboardAdminEmail : "",
-    campaignStartDate:
-      typeof rest.campaignStartDate === "string" ? rest.campaignStartDate : "",
+    campaignStartDate: typeof rest.campaignStartDate === "string" ? rest.campaignStartDate : "",
   } as PlatformSettings;
 });
 
 const GMAIL_SMTP_HOST = "smtp.gmail.com";
 const GMAIL_SMTP_PORT = 465;
 const GMAIL_FROM_EMAIL = process.env.GMAIL_FROM_EMAIL || "revitalenergyuae@gmail.com";
-const GMAIL_APP_PASSWORD = (process.env.GMAIL_APP_PASSWORD || "zkve peto wnre mhmx").replace(
-  /\s+/g,
-  "",
-);
+const GMAIL_APP_PASSWORD = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "");
 
-const NAME_SLOTS = [
-  { x: 537.5, y: 1128.5 },
-];
+const NAME_SLOTS = [{ x: 537.5, y: 1128.5 }];
 
 const TEMPLATE_WIDTH = 1080;
 const TEMPLATE_HEIGHT = 1920;
@@ -214,9 +208,9 @@ async function generateWinnersPng(
 ): Promise<Buffer> {
   const __dir = dirname(fileURLToPath(import.meta.url));
   const fontCandidate = join(__dir, "../../public/fonts/Duplet-Semibold-BF642a34066f658.otf");
-  const fontPath = await readFile(fontCandidate).then(() => fontCandidate).catch(() =>
-    join(process.cwd(), "public/fonts/Duplet-Semibold-BF642a34066f658.otf")
-  );
+  const fontPath = await readFile(fontCandidate)
+    .then(() => fontCandidate)
+    .catch(() => join(process.cwd(), "public/fonts/Duplet-Semibold-BF642a34066f658.otf"));
   registerFont(fontPath, { family: "Duplet", weight: "600" });
 
   const templatePath = await getTemplatePath();
@@ -248,7 +242,10 @@ async function generateWinnersPng(
 
     let textToDraw = displayName;
     if (ctx.measureText(textToDraw).width > maxTextWidth) {
-      while (textToDraw.length > 0 && ctx.measureText(`${textToDraw}${ellipsis}`).width > maxTextWidth) {
+      while (
+        textToDraw.length > 0 &&
+        ctx.measureText(`${textToDraw}${ellipsis}`).width > maxTextWidth
+      ) {
         textToDraw = textToDraw.slice(0, -1);
       }
       textToDraw = textToDraw ? `${textToDraw}${ellipsis}` : ellipsis;
@@ -365,7 +362,9 @@ async function sendViaGmailSmtp(
       const boundary = `revital_${Date.now()}`;
       const rawContent = attachment.content;
       const encoded = chunkBase64(
-        (Buffer.isBuffer(rawContent) ? rawContent : Buffer.from(rawContent, "utf8")).toString("base64"),
+        (Buffer.isBuffer(rawContent) ? rawContent : Buffer.from(rawContent, "utf8")).toString(
+          "base64",
+        ),
       );
       socket.write(
         `Subject: ${safeSubject}\r\nFrom: ${safeFrom}\r\nTo: ${safeTo}\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary="${boundary}"\r\n\r\n--${boundary}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n${safeBody}\r\n\r\n--${boundary}\r\nContent-Type: ${attachment.contentType}; name="${sanitizeMailHeader(attachment.filename)}"\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename="${sanitizeMailHeader(attachment.filename)}"\r\n\r\n${encoded}\r\n--${boundary}--\r\n.\r\n`,
@@ -467,7 +466,10 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
   const totalCampaignDays = Math.max(1, Math.round((todayMs - campaignStartMs) / 86_400_000) + 1);
 
   const mask = (c: string) => {
-    if (c.includes("@")) { const [a, b] = c.split("@"); return a.slice(0, 2) + "•••@" + b; }
+    if (c.includes("@")) {
+      const [a, b] = c.split("@");
+      return a.slice(0, 2) + "•••@" + b;
+    }
     if (c.length > 4) return c.slice(0, 3) + "•••" + c.slice(-2);
     return c;
   };
@@ -484,14 +486,17 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
         attempts
           .filter((a) => a.date === date)
           .reduce((best, cur) => {
-            const curSum = (cur.scores.reflex ?? 0) + (cur.scores.memory ?? 0) + (cur.scores.balance ?? 0);
-            const bestSum = (best.scores.reflex ?? 0) + (best.scores.memory ?? 0) + (best.scores.balance ?? 0);
+            const curSum =
+              (cur.scores.reflex ?? 0) + (cur.scores.memory ?? 0) + (cur.scores.balance ?? 0);
+            const bestSum =
+              (best.scores.reflex ?? 0) + (best.scores.memory ?? 0) + (best.scores.balance ?? 0);
             return curSum > bestSum ? cur : best;
-          })
+          }),
       );
 
       const sumDailyBest = dailyBests.reduce(
-        (s, a) => s + (a.scores.reflex ?? 0) + (a.scores.memory ?? 0) + (a.scores.balance ?? 0), 0
+        (s, a) => s + (a.scores.reflex ?? 0) + (a.scores.memory ?? 0) + (a.scores.balance ?? 0),
+        0,
       );
       const performanceScore = sumDailyBest / activeDays;
       const consistencyMultiplier = 1 + (activeDays / totalCampaignDays) * 0.2;
@@ -508,7 +513,7 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
       const avgBalance = dailyBests.reduce((s, a) => s + (a.scores.balance ?? 0), 0) / activeDays;
       const earliestPlayedAt = attempts.reduce(
         (min, a) => (a.playedAt < min ? a.playedAt : min),
-        attempts[0]?.playedAt ?? ""
+        attempts[0]?.playedAt ?? "",
       );
 
       return {
@@ -537,7 +542,19 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
     return a._earliestPlayedAt.localeCompare(b._earliestPlayedAt);
   });
 
-  return scored.slice(0, 10).map(({ _activeDays: _, _avgReflex: _r, _avgMemory: _m, _avgBalance: _b, _referCount: _rc, _earliestPlayedAt: _e, ...entry }) => entry);
+  return scored
+    .slice(0, 10)
+    .map(
+      ({
+        _activeDays: _,
+        _avgReflex: _r,
+        _avgMemory: _m,
+        _avgBalance: _b,
+        _referCount: _rc,
+        _earliestPlayedAt: _e,
+        ...entry
+      }) => entry,
+    );
 });
 
 export const getPreviousDayWinnersFn = createServerFn({ method: "GET" }).handler(async () => {

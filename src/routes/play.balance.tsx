@@ -31,11 +31,18 @@ function BalanceGame() {
   const rafRef = useRef<number>(0);
   const startedAt = useRef(0);
 
-  useEffect(() => { if (!isGameUnlocked("balance")) nav({ to: "/challenges" }); }, [nav]);
+  useEffect(() => {
+    if (!isGameUnlocked("balance")) nav({ to: "/challenges" });
+  }, [nav]);
 
   const start = () => {
-    if (done) { setDone(false); setHold(0); }
-    yRef.current = 50; vRef.current = 0; setY(50);
+    if (done) {
+      setDone(false);
+      setHold(0);
+    }
+    yRef.current = 50;
+    vRef.current = 0;
+    setY(50);
     setTime(DURATION);
     startedAt.current = performance.now();
     lastFrame.current = performance.now();
@@ -51,8 +58,14 @@ function BalanceGame() {
       lastFrame.current = t;
       vRef.current += GRAVITY * dt;
       yRef.current += vRef.current * dt;
-      if (yRef.current > 95) { yRef.current = 95; vRef.current = 0; }
-      if (yRef.current < 5) { yRef.current = 5; vRef.current = Math.max(0, vRef.current); }
+      if (yRef.current > 95) {
+        yRef.current = 95;
+        vRef.current = 0;
+      }
+      if (yRef.current < 5) {
+        yRef.current = 5;
+        vRef.current = Math.max(0, vRef.current);
+      }
       setY(yRef.current);
 
       if (Math.abs(yRef.current - TARGET_Y) < TARGET_BAND) {
@@ -87,7 +100,10 @@ function BalanceGame() {
   }, [done, hold, nav]);
 
   const tap = () => {
-    if (!running) { start(); return; }
+    if (!running) {
+      start();
+      return;
+    }
     vRef.current = TAP_BOOST;
   };
 
@@ -116,8 +132,16 @@ function BalanceGame() {
         </div>
 
         <div className="mt-4 flex justify-around bg-gradient-card border border-border rounded-2xl p-3">
-          <div className="text-center"><div className="text-xs uppercase tracking-wider text-muted-foreground">Time</div><div className="text-xl font-black text-gradient-energy">{time.toFixed(1)}s</div></div>
-          <div className="text-center"><div className="text-xs uppercase tracking-wider text-muted-foreground">In Zone</div><div className="text-xl font-black text-gradient-energy">{(hold/1000).toFixed(1)}s</div></div>
+          <div className="text-center">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">Time</div>
+            <div className="text-xl font-black text-gradient-energy">{time.toFixed(1)}s</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">In Zone</div>
+            <div className="text-xl font-black text-gradient-energy">
+              {(hold / 1000).toFixed(1)}s
+            </div>
+          </div>
         </div>
 
         <button
@@ -130,7 +154,9 @@ function BalanceGame() {
             className={`absolute left-[8%] right-[8%] rounded-full border-2 flex items-center justify-center ${inZone ? "border-accent bg-accent/20" : "border-accent/40 bg-accent/5"} transition-colors`}
             style={{ top: `${TARGET_Y - TARGET_BAND}%`, height: `${TARGET_BAND * 2}%` }}
           >
-            <span className="text-xs uppercase tracking-widest text-accent/80 pointer-events-none select-none">⟶ Revital Zone ⟵</span>
+            <span className="text-xs uppercase tracking-widest text-accent/80 pointer-events-none select-none">
+              ⟶ Revital Zone ⟵
+            </span>
           </div>
 
           {/* ember */}
@@ -145,7 +171,9 @@ function BalanceGame() {
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="bg-background/80 backdrop-blur px-6 py-4 rounded-2xl border border-border">
                 <p className="font-black text-xl">Tap to Start</p>
-                <p className="text-xs text-muted-foreground mt-1">Tap repeatedly to fight gravity</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tap repeatedly to fight gravity
+                </p>
               </div>
             </div>
           )}
@@ -153,7 +181,11 @@ function BalanceGame() {
 
         <AnimatePresence>
           {done && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[90] flex items-center justify-center bg-background/85 backdrop-blur-md px-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="fixed inset-0 z-[90] flex items-center justify-center bg-background/85 backdrop-blur-md px-4"
+            >
               <div className="bg-gradient-card border border-border rounded-3xl p-8 text-center shadow-card max-w-sm w-full">
                 <div className="text-5xl mb-3">🔥</div>
                 <h2 className="text-2xl font-black text-gradient-energy">Challenge complete!</h2>
@@ -163,7 +195,10 @@ function BalanceGame() {
           )}
         </AnimatePresence>
 
-        <Link to="/challenges" className="mt-3 text-center text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <Link
+          to="/challenges"
+          className="mt-3 text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
           ← Back to challenges
         </Link>
       </main>

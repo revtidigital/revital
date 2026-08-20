@@ -2,9 +2,9 @@ import { motion } from "framer-motion";
 import { CHALLENGE_ORDER, getCurrentScores, type GameKey } from "@/lib/storage";
 
 const LABELS: Record<GameKey, { name: string; emoji: string }> = {
-  reflex:  { name: "Reflex Tap",   emoji: "⚡" },
-  memory:  { name: "Memory Match", emoji: "🧠" },
-  balance: { name: "Tap Balance",  emoji: "🔥" },
+  reflex: { name: "Reflex Tap", emoji: "⚡" },
+  memory: { name: "Memory Match", emoji: "🧠" },
+  balance: { name: "Tap Balance", emoji: "🔥" },
 };
 
 export function ChallengeProgressBar({ current }: { current?: GameKey }) {
@@ -43,8 +43,8 @@ export function ChallengeProgressBar({ current }: { current?: GameKey }) {
                 done
                   ? "bg-gradient-to-br from-[var(--marigold)]/30 to-[var(--honey)]/20 border-[var(--honey)]"
                   : active
-                  ? "bg-white border-[var(--tiger)] shadow-glow"
-                  : "bg-white/40 border-[var(--garnet)]/10 opacity-60"
+                    ? "bg-white border-[var(--tiger)] shadow-glow"
+                    : "bg-white/40 border-[var(--garnet)]/10 opacity-60"
               }`}
             >
               <div
@@ -52,8 +52,8 @@ export function ChallengeProgressBar({ current }: { current?: GameKey }) {
                   done
                     ? "bg-gradient-energy text-white shadow-button"
                     : active
-                    ? "bg-[var(--tiger)] text-white shadow-button glow-pulse"
-                    : "bg-muted text-muted-foreground"
+                      ? "bg-[var(--tiger)] text-white shadow-button glow-pulse"
+                      : "bg-muted text-muted-foreground"
                 }`}
               >
                 {done ? "✓" : locked ? "🔒" : i + 1}

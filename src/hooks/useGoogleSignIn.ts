@@ -68,7 +68,9 @@ export function useGoogleSignIn({ onSuccess, onError }: UseGoogleSignInOptions) 
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
     if (!clientId) {
-      console.warn("[useGoogleSignIn] VITE_GOOGLE_CLIENT_ID is not set — Google Sign-In is disabled.");
+      console.warn(
+        "[useGoogleSignIn] VITE_GOOGLE_CLIENT_ID is not set — Google Sign-In is disabled.",
+      );
       return;
     }
 
@@ -79,16 +81,17 @@ export function useGoogleSignIn({ onSuccess, onError }: UseGoogleSignInOptions) 
         scope: "openid profile email",
         callback: async (tokenResponse) => {
           if (tokenResponse.error || !tokenResponse.access_token) {
-            onErrorRef.current?.(tokenResponse.error_description ?? tokenResponse.error ?? "Google sign-in failed");
+            onErrorRef.current?.(
+              tokenResponse.error_description ?? tokenResponse.error ?? "Google sign-in failed",
+            );
             return;
           }
           try {
-            const res = await fetch(
-              "https://www.googleapis.com/oauth2/v3/userinfo",
-              { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } }
-            );
+            const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+              headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+            });
             if (!res.ok) throw new Error(`userinfo ${res.status}`);
-            const data = await res.json() as { name?: string; email?: string; picture?: string };
+            const data = (await res.json()) as { name?: string; email?: string; picture?: string };
             onSuccessRef.current({
               name: data.name ?? "",
               email: data.email ?? "",
@@ -127,7 +130,8 @@ export function useGoogleSignIn({ onSuccess, onError }: UseGoogleSignInOptions) 
     script.async = true;
     script.defer = true;
     script.onload = init;
-    script.onerror = () => onErrorRef.current?.("Failed to load Google Sign-In. Check your internet connection.");
+    script.onerror = () =>
+      onErrorRef.current?.("Failed to load Google Sign-In. Check your internet connection.");
     document.head.appendChild(script);
   }, []); // intentionally empty — we only load the script once
 

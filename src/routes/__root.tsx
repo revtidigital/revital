@@ -1,9 +1,17 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } from "@tanstack/react-router";
+import {
+  Outlet,
+  Link,
+  createRootRoute,
+  HeadContent,
+  Scripts,
+  useRouterState,
+} from "@tanstack/react-router";
 import { useEffect } from "react";
 import appCss from "../styles.css?url";
 import revitalLogo from "@/assets/revital-logo.png?url";
 
-const socialShareOgImage = "https://revital.revtilabs.com/assets/revital-hero-wordmark-DN1KXeZP.png";
+const socialShareOgImage =
+  "https://revital.revtilabs.com/assets/revital-hero-wordmark-DN1KXeZP.png";
 import { CookieConsent } from "@/components/CookieConsent";
 import { Footer } from "@/components/Footer";
 
@@ -164,7 +172,6 @@ function RootComponent() {
           gInline.id = "_ga4_inline";
           gInline.textContent = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${ga4Id}');`;
           document.head.appendChild(gInline);
-
         }
 
         // Meta Pixel

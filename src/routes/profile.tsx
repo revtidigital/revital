@@ -121,7 +121,9 @@ function Profile() {
   const hasSavedEmail = Boolean(safeUser.email?.trim());
   const finalPercentage = totalToPercentage(safeUser.total).toFixed(2);
   const hasCompletedRun =
-    safeUser.scores.reflex !== null && safeUser.scores.memory !== null && safeUser.scores.balance !== null;
+    safeUser.scores.reflex !== null &&
+    safeUser.scores.memory !== null &&
+    safeUser.scores.balance !== null;
   const hasPlayedBefore = Boolean((safeUser.playAttempts?.length ?? 0) > 0 || hasCompletedRun);
   const finalPercentDisplay = hasPlayedBefore ? `${finalPercentage}%` : "—";
   const tierDisplay = hasPlayedBefore ? safeUser.category : "Not started";
@@ -333,14 +335,16 @@ function Profile() {
                   className="w-full text-left sm:text-right text-sm font-semibold font-mono break-all hover:text-primary transition-colors"
                   title="Copy User ID"
                 >
-                  {copiedUserId ? "Copied!" : user.userId}
+                  {copiedUserId ? "Copied!" : safeUser.userId}
                 </button>
               </div>
-              <Row label="Mobile" value={user.contact} />
-              {user.email && <Row label="Email" value={user.email} />}
-              {user.name && <Row label="Name" value={user.name} />}
-              {user.referredBy && <Row label="Referred By ID" value={user.referredBy} mono />}
-              {user.referredBy && <Row label="Referrer Name" value={referrerName || "—"} />}
+              <Row label="Mobile" value={safeUser.contact} />
+              {safeUser.email && <Row label="Email" value={safeUser.email} />}
+              {safeUser.name && <Row label="Name" value={safeUser.name} />}
+              {safeUser.referredBy && (
+                <Row label="Referred By ID" value={safeUser.referredBy} mono />
+              )}
+              {safeUser.referredBy && <Row label="Referrer Name" value={referrerName || "—"} />}
             </div>
 
             <div className="mt-4 bg-background/40 rounded-2xl p-4 text-left">

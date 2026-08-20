@@ -11,15 +11,24 @@ export function Footer() {
           © {new Date().getFullYear()} Revital Energy Challenge. All rights reserved.
         </p>
         <nav className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-          <Link to="/rules" className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]">
+          <Link
+            to="/rules"
+            className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]"
+          >
             Rules
           </Link>
           <span className="text-garnet/30">•</span>
-          <Link to="/privacy" className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]">
+          <Link
+            to="/privacy"
+            className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]"
+          >
             Privacy Policy
           </Link>
           <span className="text-garnet/30">•</span>
-          <Link to="/terms" className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]">
+          <Link
+            to="/terms"
+            className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]"
+          >
             Terms & Conditions
           </Link>
         </nav>

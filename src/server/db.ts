@@ -2,7 +2,7 @@ import { MongoClient, type Db } from "mongodb";
 
 declare global {
   // preserve connection across hot-reloads in dev
-  // eslint-disable-next-line no-var
+
   var _mongoClient: MongoClient | undefined;
 }
 

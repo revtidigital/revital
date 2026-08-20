@@ -23,6 +23,9 @@ dist-ssr
 # Local environment variables
 .env
 
+# Contains plaintext secrets (ADMIN_PASSWORD, GMAIL_APP_PASSWORD) — never commit
+docker-compose.yml
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -10,8 +10,12 @@ function RulesPage() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 max-w-3xl mx-auto px-4 py-12">
-        <h1 className="text-4xl md:text-5xl font-black text-garnet">Revital Energy Challenge — Game Rules</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Last updated: {new Date().toLocaleDateString()}</p>
+        <h1 className="text-4xl md:text-5xl font-black text-garnet">
+          Revital Energy Challenge — Game Rules
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Last updated: {new Date().toLocaleDateString()}
+        </p>
 
         <div className="prose prose-sm md:prose-base mt-8 space-y-5 text-garnet/85">
           <section>

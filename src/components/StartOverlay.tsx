@@ -12,7 +12,9 @@ export function StartOverlay({ emoji, title, lines, onStart }: StartOverlayProps
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    return () => {
+      document.body.style.overflow = prev;
+    };
   }, []);
 
   return (
@@ -32,7 +34,9 @@ export function StartOverlay({ emoji, title, lines, onStart }: StartOverlayProps
         <h2 className="text-2xl md:text-3xl font-black text-gradient-energy">{title}</h2>
         <div className="mt-4 space-y-1.5">
           {lines.map((l, i) => (
-            <p key={i} className="text-sm md:text-base text-muted-foreground">{l}</p>
+            <p key={i} className="text-sm md:text-base text-muted-foreground">
+              {l}
+            </p>
           ))}
         </div>
         <button

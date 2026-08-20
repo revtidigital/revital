@@ -39,8 +39,12 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
   const [consent, setConsent] = useState(false);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
-  const existingUser = useMemo(() => (contact.trim() ? findUserByContact(contact.trim()) : null), [contact]);
-  const [existingRemoteUser, setExistingRemoteUser] = useState<Awaited<ReturnType<typeof findUserByContactRemote>>>(null);
+  const existingUser = useMemo(
+    () => (contact.trim() ? findUserByContact(contact.trim()) : null),
+    [contact],
+  );
+  const [existingRemoteUser, setExistingRemoteUser] =
+    useState<Awaited<ReturnType<typeof findUserByContactRemote>>>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -92,7 +96,11 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
       // Persist local auth state immediately so Header updates to the account icon right away.
       saveUser(payload);
       await saveUserRemote(payload);
-      trackEvent("signup_complete", { is_new_user: !existing, total: payload.total, category: payload.category });
+      trackEvent("signup_complete", {
+        is_new_user: !existing,
+        total: payload.total,
+        category: payload.category,
+      });
       onSuccess();
     } catch {
       setErr("Failed to save your score. Please try again.");
@@ -162,79 +170,76 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
           onSubmit={handleSubmit}
           className="mt-5 space-y-3"
         >
-              <div>
-                <label className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Full Name
-                </label>
-                <input
-                  autoFocus
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                  className="mt-1.5 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-              <div>
-                <label className="text-xs uppercase tracking-wider text-muted-foreground">
-                  UAE Mobile Number
-                </label>
-                <div className="mt-1.5 flex items-center rounded-2xl border border-border bg-background/60 px-3 focus-within:ring-2 focus-within:ring-ring">
-                  <span className="text-sm font-semibold text-muted-foreground">+971</span>
-                  <input
-                    value={contact}
-                    onChange={(e) => setContact(e.target.value)}
-                    placeholder="50 123 4567"
-                    className="w-full border-0 bg-transparent px-2 py-3 focus:outline-none"
-                  />
-                </div>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Enter a UAE mobile number (e.g. +971501234567). We'll send a one-time code.
-                </p>
-                {(existingUser || existingRemoteUser) && (
-                  <p className="mt-1 text-[11px] text-accent">
-                    Existing account detected. Referral code is locked for returning users.
-                  </p>
-                )}
-              </div>
-              {!existingUser && !existingRemoteUser && (
-                <div>
-                  <label className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Referred by{" "}
-                    <span className="text-muted-foreground/60 normal-case font-normal">
-                      (optional)
-                    </span>
-                  </label>
-                  <input
-                    value={referredBy}
-                    onChange={(e) => setReferredBy(e.target.value)}
-                    placeholder="RVT-AB12CD34"
-                    className="mt-1.5 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    Enter your friend's User ID who referred you — they'll get more chances to win!
-                    🏆
-                  </p>
-                </div>
-              )}
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={consent}
-                  onChange={(e) => setConsent(e.target.checked)}
-                  className="mt-1 accent-[oklch(0.72_0.19_50)]"
-                />
-                <span className="text-xs text-muted-foreground">
-                  I agree to be contacted by Revital about campaigns & rewards by phone, and accept
-                  the privacy policy (UAE compliant).
-                </span>
+          <div>
+            <label className="text-xs uppercase tracking-wider text-muted-foreground">
+              Full Name
+            </label>
+            <input
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Your name"
+              className="mt-1.5 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="text-xs uppercase tracking-wider text-muted-foreground">
+              UAE Mobile Number
+            </label>
+            <div className="mt-1.5 flex items-center rounded-2xl border border-border bg-background/60 px-3 focus-within:ring-2 focus-within:ring-ring">
+              <span className="text-sm font-semibold text-muted-foreground">+971</span>
+              <input
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                placeholder="50 123 4567"
+                className="w-full border-0 bg-transparent px-2 py-3 focus:outline-none"
+              />
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Enter a UAE mobile number (e.g. +971501234567). We'll send a one-time code.
+            </p>
+            {(existingUser || existingRemoteUser) && (
+              <p className="mt-1 text-[11px] text-accent">
+                Existing account detected. Referral code is locked for returning users.
+              </p>
+            )}
+          </div>
+          {!existingUser && !existingRemoteUser && (
+            <div>
+              <label className="text-xs uppercase tracking-wider text-muted-foreground">
+                Referred by{" "}
+                <span className="text-muted-foreground/60 normal-case font-normal">(optional)</span>
               </label>
-              {err && <p className="text-sm text-destructive">{err}</p>}
-              <button
-                disabled={loading || !consent}
-                className="w-full py-3 rounded-full bg-gradient-energy text-energy-foreground font-bold shadow-button hover:scale-[1.02] active:scale-[0.98] transition-transform disabled:opacity-60"
-              >
-                {loading ? "Saving..." : "Save & Reveal Score →"}
-              </button>
+              <input
+                value={referredBy}
+                onChange={(e) => setReferredBy(e.target.value)}
+                placeholder="RVT-AB12CD34"
+                className="mt-1.5 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Enter your friend's User ID who referred you — they'll get more chances to win! 🏆
+              </p>
+            </div>
+          )}
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              className="mt-1 accent-[oklch(0.72_0.19_50)]"
+            />
+            <span className="text-xs text-muted-foreground">
+              I agree to be contacted by Revital about campaigns & rewards by phone, and accept the
+              privacy policy (UAE compliant).
+            </span>
+          </label>
+          {err && <p className="text-sm text-destructive">{err}</p>}
+          <button
+            disabled={loading || !consent}
+            className="w-full py-3 rounded-full bg-gradient-energy text-energy-foreground font-bold shadow-button hover:scale-[1.02] active:scale-[0.98] transition-transform disabled:opacity-60"
+          >
+            {loading ? "Saving..." : "Save & Reveal Score →"}
+          </button>
         </motion.form>
       </motion.div>
     </motion.div>

@@ -127,7 +127,11 @@ function MemoryGame() {
     const finalScore = Math.round(Math.max(0, Math.min(1500, rawScore)));
 
     saveGameScore("memory", finalScore);
-    trackEvent("game_complete", { game_type: "memory", score: finalScore, matched_pairs: matchedPairs });
+    trackEvent("game_complete", {
+      game_type: "memory",
+      score: finalScore,
+      matched_pairs: matchedPairs,
+    });
     const t = setTimeout(() => nav({ to: "/play/balance" }), 1500);
     return () => clearTimeout(t);
   }, [done, matchedPairs, seconds, capsulesLeft, nav]);

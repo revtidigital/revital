@@ -59,7 +59,6 @@ function ReflexGame() {
     setTimeout(() => nav({ to: "/play/memory" }), 1500);
   };
 
-
   const completeRound = (reactionMs: number, premature = false) => {
     setLastReactionMs(reactionMs);
     const next = [...times, reactionMs];
@@ -126,13 +125,18 @@ function ReflexGame() {
             "The faster you react, the higher your score.",
             "Don’t tap too early!",
           ]}
-          onStart={() => { setShowStart(false); trackEvent("game_start", { game_type: "reflex" }); }}
+          onStart={() => {
+            setShowStart(false);
+            trackEvent("game_start", { game_type: "reflex" });
+          }}
         />
       )}
       <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-6 flex flex-col">
         <div className="text-center">
           <h1 className="text-2xl md:text-4xl font-black">⚡ Reflex Tap</h1>
-          <p className="text-sm text-muted-foreground mt-1">Best reaction time from 3 rounds decides your Reflex score</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Best reaction time from 3 rounds decides your Reflex score
+          </p>
           <ProgressDots current="reflex" />
         </div>
 
@@ -164,7 +168,9 @@ function ReflexGame() {
                 </p>
               )}
               {phase === "tooSoon" && (
-                <p className="mt-2 text-sm md:text-base text-white/85">Wait for the logo to appear.</p>
+                <p className="mt-2 text-sm md:text-base text-white/85">
+                  Wait for the logo to appear.
+                </p>
               )}
               {lastReactionMs !== null && phase !== "done" && (
                 <p className="mt-3 text-sm md:text-base text-white/90">

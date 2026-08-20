@@ -132,7 +132,9 @@ export const verifyCaptchaFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const db = await getDb();
     const settings = await db.collection("platform_settings").findOne({ _key: "main" });
-    const secret = (settings as Record<string, unknown> | null)?.recaptchaSecret as string | undefined;
+    const secret = (settings as Record<string, unknown> | null)?.recaptchaSecret as
+      | string
+      | undefined;
 
     // If reCAPTCHA is not configured, pass through.
     if (!secret) return { ok: true, skipped: true };
@@ -144,13 +146,19 @@ export const verifyCaptchaFn = createServerFn({ method: "POST" })
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ secret, response: data.token }).toString(),
     });
-    const json = (await res.json()) as { success: boolean; score?: number; "error-codes"?: string[] };
+    const json = (await res.json()) as {
+      success: boolean;
+      score?: number;
+      "error-codes"?: string[];
+    };
     // v3: also require a human-like score (≥ 0.5). v2 doesn't include a score.
     const scoreOk = json.score === undefined || json.score >= 0.5;
     return { ok: json.success && scoreOk };
   });
 
-// ── get all ────────────────────────────────────────────────────────────────────
+// ── get all (public-safe fields only — used by leaderboard/referrals) ──────────
+// Deliberately strips email/address/playAttempts so this public, unauthenticated
+// RPC can't be used to scrape PII. Admin screens must use getAllUsersAdminFn instead.
 export const getAllUsersFn = createServerFn({ method: "GET" }).handler(async () => {
   const db = await getDb();
   const docs = await db
@@ -158,5 +166,25 @@ export const getAllUsersFn = createServerFn({ method: "GET" }).handler(async () 
     .find({})
     .sort({ total: -1 })
     .toArray();
-  return docs.map(({ _id: _unused, ...rest }) => rest as UserRecord);
+  return docs.map(
+    ({ _id: _unused, email: _email, address: _address, playAttempts: _playAttempts, ...rest }) =>
+      rest as UserRecord,
+  );
 });
+
+// ── get all (admin only, full record incl. email/address/playAttempts) ────────
+const adminAuthSchema = z.object({ password: z.string() });
+export const getAllUsersAdminFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => adminAuthSchema.parse(data))
+  .handler(async ({ data }) => {
+    if (data.password !== (process.env.ADMIN_PASSWORD ?? "admin123")) {
+      throw new Error("Unauthorized");
+    }
+    const db = await getDb();
+    const docs = await db
+      .collection<UserRecord & { _id: unknown }>("users")
+      .find({})
+      .sort({ total: -1 })
+      .toArray();
+    return docs.map(({ _id: _unused, ...rest }) => rest as UserRecord);
+  });

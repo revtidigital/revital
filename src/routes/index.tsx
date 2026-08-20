@@ -36,24 +36,25 @@ function Landing() {
           return;
         }
         if (settings.homeAnnouncementMode === "leaderboard") {
-            getDailyLeaderboard().then((entries) => {
-              const leaderboardTexts = entries
-                .slice(0, 10)
-                .map((entry, index) => `🏅 #${index + 1} ${entry.name} — ${entry.total} pts`);
-              setAnnouncements(leaderboardTexts.length ? leaderboardTexts : [defaultAnnouncement]);
-            });
-            return;
-          }
-          import("@/server/adminFns").then((mod) => mod.getPreviousDayWinnersFn()).then(({ date, winners }) => {
+          getDailyLeaderboard().then((entries) => {
+            const leaderboardTexts = entries
+              .slice(0, 10)
+              .map((entry, index) => `🏅 #${index + 1} ${entry.name} — ${entry.total} pts`);
+            setAnnouncements(leaderboardTexts.length ? leaderboardTexts : [defaultAnnouncement]);
+          });
+          return;
+        }
+        import("@/server/adminFns")
+          .then((mod) => mod.getPreviousDayWinnersFn())
+          .then(({ date, winners }) => {
             if (!winners.length) {
               setAnnouncements([defaultAnnouncement]);
               return;
             }
-            const texts = winners.map(
-              (w) => `🏆 Winner (${date}): ${w.name} — ${w.score} pts`
-            );
+            const texts = winners.map((w) => `🏆 Winner (${date}): ${w.name} — ${w.score} pts`);
             setAnnouncements(texts);
-          }).catch(() => setAnnouncements([defaultAnnouncement]));
+          })
+          .catch(() => setAnnouncements([defaultAnnouncement]));
       })
       .catch(() => null);
 
@@ -195,7 +196,9 @@ function Landing() {
                 key={s.label}
                 className="bg-white/90 border-2 border-[var(--garnet)]/10 rounded-2xl p-2 sm:p-4 backdrop-blur shadow-card min-w-0"
               >
-                <div className="text-xl sm:text-2xl md:text-4xl font-black text-gradient-energy">{s.n}</div>
+                <div className="text-xl sm:text-2xl md:text-4xl font-black text-gradient-energy">
+                  {s.n}
+                </div>
                 <div className="text-[9px] sm:text-[11px] md:text-sm text-muted-foreground uppercase tracking-wide sm:tracking-wider mt-1 font-semibold whitespace-nowrap sm:whitespace-normal">
                   {s.label}
                 </div>

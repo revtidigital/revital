@@ -35,7 +35,7 @@ import {
 } from "lucide-react";
 import { Leaderboard } from "@/components/Leaderboard";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
-import { getAllUsersRemote, calcStreak, dedupeAttempts, type UserRecord } from "@/lib/storage";
+import { calcStreak, dedupeAttempts, type UserRecord } from "@/lib/storage";
 import type { AdminLog, PlatformSettings } from "@/server/adminFns";
 
 export const Route = createFileRoute("/admin")({
@@ -210,12 +210,10 @@ function groupByDate(users: UserRecord[]): DateWiseEntry[] {
     const lockedIds = lockedWinnersByDate.get(date);
     const winners = (
       lockedIds && lockedIds.size > 0
-        // Use the DB-locked winners for this date (cron already selected them).
-        ? [...userList]
-            .filter((u) => lockedIds.has(u.userId))
-            .sort((a, b) => b.total - a.total)
-        // Fallback: date not yet locked — exclude anyone who has ever won before.
-        : [...userList]
+        ? // Use the DB-locked winners for this date (cron already selected them).
+          [...userList].filter((u) => lockedIds.has(u.userId)).sort((a, b) => b.total - a.total)
+        : // Fallback: date not yet locked — exclude anyone who has ever won before.
+          [...userList]
             .filter((u) => !everWonUserIds.has(u.userId))
             .sort((a, b) => b.total - a.total)
             .slice(0, 1)
@@ -250,7 +248,7 @@ async function downloadDailyWinnersImage(
   });
   if (!templateImage) return;
 
-  await document.fonts.load('600 16px Duplit');
+  await document.fonts.load("600 16px Duplit");
 
   const canvas = document.createElement("canvas");
   canvas.width = templateImage.width;
@@ -259,9 +257,7 @@ async function downloadDailyWinnersImage(
   if (!ctx) return;
   ctx.drawImage(templateImage, 0, 0);
 
-  const nameSlots = [
-    { x: 537.5, y: 1128.5 },
-  ];
+  const nameSlots = [{ x: 537.5, y: 1128.5 }];
 
   const templateWidth = 1080;
   const templateHeight = 1920;
@@ -500,8 +496,9 @@ function Admin() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
+      const { getAllUsersAdminFn } = await import("@/server/userFns");
       const [u, adminMod, daily, global] = await Promise.all([
-        getAllUsersRemote(),
+        getAllUsersAdminFn({ data: { password: sessionStorage.getItem("adminPass") ?? "" } }),
         import("@/server/adminFns"),
         getDailyLeaderboard(),
         getGlobalLeaderboard(),
@@ -536,6 +533,7 @@ function Admin() {
       const result = await verifyAdminPasswordFn({ data: { password: passInput } });
       if (result.ok) {
         sessionStorage.setItem("adminAuth", "true");
+        sessionStorage.setItem("adminPass", passInput);
         setAuthenticated(true);
         setPassError(false);
       } else {
@@ -777,7 +775,9 @@ function Admin() {
   // ── Consistent players ──────────────────────────────────────────────────────
   const streaks = useMemo(() => {
     // Use start of UAE day to match the server-side global leaderboard formula exactly
-    const uaeToday = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dubai" }).format(new Date());
+    const uaeToday = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dubai" }).format(
+      new Date(),
+    );
     const todayMs = new Date(uaeToday + "T00:00:00+04:00").getTime();
     const campaignStartMs = settings.campaignStartDate
       ? new Date(settings.campaignStartDate + "T00:00:00+04:00").getTime()
@@ -796,13 +796,16 @@ function Admin() {
         attempts
           .filter((a) => a.date === date)
           .reduce((best, cur) => {
-            const curSum = (cur.scores.reflex ?? 0) + (cur.scores.memory ?? 0) + (cur.scores.balance ?? 0);
-            const bestSum = (best.scores.reflex ?? 0) + (best.scores.memory ?? 0) + (best.scores.balance ?? 0);
+            const curSum =
+              (cur.scores.reflex ?? 0) + (cur.scores.memory ?? 0) + (cur.scores.balance ?? 0);
+            const bestSum =
+              (best.scores.reflex ?? 0) + (best.scores.memory ?? 0) + (best.scores.balance ?? 0);
             return curSum > bestSum ? cur : best;
-          })
+          }),
       );
       const sumDailyBest = dailyBests.reduce(
-        (s, a) => s + (a.scores.reflex ?? 0) + (a.scores.memory ?? 0) + (a.scores.balance ?? 0), 0
+        (s, a) => s + (a.scores.reflex ?? 0) + (a.scores.memory ?? 0) + (a.scores.balance ?? 0),
+        0,
       );
       const performanceScore = sumDailyBest / activeDays;
       const consistencyMultiplier = 1 + (activeDays / totalCampaignDays) * 0.2;
@@ -811,7 +814,11 @@ function Admin() {
     };
 
     return [...users]
-      .map((u) => ({ ...u, streak: calcStreak(u.playDates ?? []), globalScore: computeGlobalScore(u) }))
+      .map((u) => ({
+        ...u,
+        streak: calcStreak(u.playDates ?? []),
+        globalScore: computeGlobalScore(u),
+      }))
       .filter((u) => u.globalScore > 0)
       .sort((a, b) => {
         if (b.globalScore !== a.globalScore) return b.globalScore - a.globalScore;
@@ -2321,7 +2328,13 @@ function KpiCard({
         </span>
         {anchorRect && (
           <span
-            style={{ position: "fixed", top: anchorRect.bottom + 6, left: tooltipLeft, width: 256, zIndex: 9999 }}
+            style={{
+              position: "fixed",
+              top: anchorRect.bottom + 6,
+              left: tooltipLeft,
+              width: 256,
+              zIndex: 9999,
+            }}
             className="pointer-events-none rounded-xl border border-border bg-background/95 p-2 text-[10px] font-medium leading-relaxed text-foreground shadow-lg backdrop-blur-sm whitespace-normal"
           >
             {info}
@@ -2347,10 +2360,7 @@ function InfoHint({ text }: { text: string }) {
   const handleMouseLeave = () => setAnchorRect(null);
 
   const tooltipLeft = anchorRect
-    ? Math.min(
-        Math.max(8, anchorRect.left + anchorRect.width / 2 - 112),
-        window.innerWidth - 232,
-      )
+    ? Math.min(Math.max(8, anchorRect.left + anchorRect.width / 2 - 112), window.innerWidth - 232)
     : 0;
 
   return (
@@ -2368,7 +2378,13 @@ function InfoHint({ text }: { text: string }) {
       </span>
       {anchorRect && (
         <span
-          style={{ position: "fixed", top: anchorRect.bottom + 6, left: tooltipLeft, width: 224, zIndex: 9999 }}
+          style={{
+            position: "fixed",
+            top: anchorRect.bottom + 6,
+            left: tooltipLeft,
+            width: 224,
+            zIndex: 9999,
+          }}
           className="pointer-events-none rounded-xl border border-border bg-background/95 p-2 text-[10px] normal-case font-medium leading-relaxed tracking-normal text-foreground shadow-lg backdrop-blur-sm"
         >
           {text}
