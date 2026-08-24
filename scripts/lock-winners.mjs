@@ -127,18 +127,10 @@ async function sendViaGmailSmtp(to, subject, body, attachment) {
 }
 
 // ── PNG generation ────────────────────────────────────────────────────────────
-const NAME_SLOTS = [
-  { x: 321.5, y: 735.5 },
-  { x: 779.5, y: 735.5 },
-  { x: 321.5, y: 842.5 },
-  { x: 779.5, y: 842.5 },
-  { x: 321.5, y: 949.5 },
-  { x: 779.5, y: 949.5 },
-  { x: 321.5, y: 1056.5 },
-  { x: 779.5, y: 1056.5 },
-  { x: 321.5, y: 1163.5 },
-  { x: 779.5, y: 1163.5 },
-];
+// Single-winner layout — mirrors src/server/adminFns.ts:generateWinnersPng
+// exactly (same template, slot, and font sizing) so both code paths render
+// identically. The old 10-slot layout/template is no longer used.
+const NAME_SLOTS = [{ x: 537.5, y: 1128.5 }];
 const TEMPLATE_WIDTH = 1080;
 const TEMPLATE_HEIGHT = 1920;
 
@@ -146,7 +138,7 @@ async function generateWinnersPng(winners) {
   const fontPath = join(__dirname, "../public/fonts/Duplet-Semibold-BF642a34066f658.otf");
   registerFont(fontPath, { family: "Duplet", weight: "600" });
 
-  const templatePath = join(__dirname, "../public/winners-template.png");
+  const templatePath = join(__dirname, "../public/winner-template.png");
   const templateData = await readFile(templatePath);
   const img = await loadImage(templateData);
 
@@ -157,20 +149,20 @@ async function generateWinnersPng(winners) {
   const scaleX = img.width / TEMPLATE_WIDTH;
   const scaleY = img.height / TEMPLATE_HEIGHT;
 
-  winners.slice(0, 10).forEach((winner, index) => {
+  winners.slice(0, 1).forEach((winner, index) => {
     const slot = NAME_SLOTS[index];
     if (!slot) return;
 
     const displayName = winner.name?.trim() || winner.contact || "";
-    const maxTextWidth = 280 * scaleX;
-    const nameX = slot.x * scaleX - maxTextWidth / 2;
+    const maxTextWidth = 660 * scaleX;
+    const nameX = slot.x * scaleX;
     const nameY = slot.y * scaleY;
-    const fontSize = Math.round(35 * Math.min(scaleX, scaleY));
+    const fontSize = Math.round(96.03 * Math.min(scaleX, scaleY));
     const ellipsis = "...";
 
-    ctx.textAlign = "left";
+    ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillStyle = "#461901";
+    ctx.fillStyle = "#371812";
     ctx.font = `600 ${fontSize}px Duplet, sans-serif`;
 
     let textToDraw = displayName;
@@ -211,14 +203,18 @@ async function main() {
     const ranked = users
       .filter((u) => !u.winnerLockDates || u.winnerLockDates.length === 0) // never re-select a past winner
       .map((u) => {
-        const best = (u.playAttempts ?? [])
-          .filter((a) => a.date === lockDate)
-          .reduce((m, a) => Math.max(m, a.total), -1);
-        return { userId: u.userId, name: u.name || u.contact, score: best };
+        const todayAttempts = (u.playAttempts ?? []).filter((a) => a.date === lockDate);
+        const best = todayAttempts.reduce((m, a) => Math.max(m, a.total), -1);
+        // Earliest attempt that achieved the best score (tiebreaker) — matches
+        // src/server/adminFns.ts:lockDailyTopTenAndNotifyFn exactly.
+        const firstBestAt = todayAttempts
+          .filter((a) => a.total === best)
+          .reduce((min, a) => (!min || a.playedAt < min ? a.playedAt : min), "");
+        return { userId: u.userId, name: u.name || u.contact, score: best, firstBestAt };
       })
       .filter((u) => u.score >= 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
+      .sort((a, b) => b.score - a.score || a.firstBestAt.localeCompare(b.firstBestAt))
+      .slice(0, 1); // exactly one winner per day
 
     if (!ranked.length) {
       console.log(`[lock-winners] No players found for ${lockDate} — nothing to lock.`);
@@ -245,14 +241,15 @@ async function main() {
       weekday: "long",
     }).format(new Date(`${lockDate}T12:00:00+04:00`));
 
-    const subject = `Winners Locked: ${lockDate} (${dayName}) UAE`;
-    const text = ranked.map((w, i) => `#${i + 1} ${w.name} — ${w.score}`).join("\n");
+    const winner = ranked[0];
+    const subject = `Winner Locked: ${lockDate} (${dayName}) UAE`;
+    const text = `Daily Winner\n\n${winner.name} — Score: ${winner.score}`;
     const winnersPng = await generateWinnersPng(ranked);
 
     await Promise.all(
       adminEmails.map((email) =>
         sendViaGmailSmtp(email, subject, text, {
-          filename: `revital-winners-${lockDate}.png`,
+          filename: `revital-winner-${lockDate}.png`,
           contentType: "image/png",
           content: winnersPng,
         }),
