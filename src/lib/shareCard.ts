@@ -81,11 +81,10 @@ export async function buildShareCard(data: ShareCardData): Promise<Blob> {
   ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * pct);
   ctx.stroke();
 
-  // Percentage number
-  const percentage = Math.max(0, Math.min(100, (data.total / 1500) * 100));
+  // Score number
   ctx.fillStyle = "#fff";
   ctx.font = "900 132px system-ui, -apple-system, sans-serif";
-  ctx.fillText(`${percentage.toFixed(2)}%`, cx, cy + 35);
+  ctx.fillText(`${data.total}`, cx, cy + 35);
 
   // Category pill
   ctx.font = "800 48px system-ui, -apple-system, sans-serif";
@@ -157,15 +156,13 @@ export async function buildShareCardFromTemplate(data: ShareCardData): Promise<B
   const sy = canvas.height / H;
   const scale = Math.min(sx, sy);
 
-  const percentage = Math.max(0, Math.min(100, (data.total / 1500) * 100));
-
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
   // Score — 203px, Duplit, #4D1002
   ctx.fillStyle = "#4D1002";
   ctx.font = `600 ${Math.round(203 * scale)}px Duplit, sans-serif`;
-  ctx.fillText(`${percentage.toFixed(2)}%`, 539 * sx, 745.5 * sy, 700 * sx);
+  ctx.fillText(`${data.total}`, 539 * sx, 745.5 * sy, 700 * sx);
 
   // Name — Duplit Semibold Italic, 45px, #FFF2B0
   if (data.name) {

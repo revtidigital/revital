@@ -8,7 +8,6 @@ import {
   getAllUsersRemote,
   getUser,
   saveUserRemote,
-  totalToPercentage,
   resetScores,
   type UserRecord,
 } from "@/lib/storage";
@@ -119,13 +118,12 @@ function Profile() {
       ? `${window.location.origin}/?ref=${encodeURIComponent(safeUser.userId)}`
       : `/?ref=${encodeURIComponent(safeUser.userId)}`;
   const hasSavedEmail = Boolean(safeUser.email?.trim());
-  const finalPercentage = totalToPercentage(safeUser.total).toFixed(2);
   const hasCompletedRun =
     safeUser.scores.reflex !== null &&
     safeUser.scores.memory !== null &&
     safeUser.scores.balance !== null;
   const hasPlayedBefore = Boolean((safeUser.playAttempts?.length ?? 0) > 0 || hasCompletedRun);
-  const finalPercentDisplay = hasPlayedBefore ? `${finalPercentage}%` : "—";
+  const finalPercentDisplay = hasPlayedBefore ? `${safeUser.total}` : "—";
   const tierDisplay = hasPlayedBefore ? safeUser.category : "Not started";
   const eligibleDisplay = hasPlayedBefore ? "✓" : "Not yet";
   const currentScoreTier = hasPlayedBefore
@@ -260,7 +258,7 @@ function Profile() {
             )}
 
             <div className="mt-4 grid grid-cols-3 gap-3">
-              <Stat label="Final %" value={finalPercentDisplay} />
+              <Stat label="Final Score" value={finalPercentDisplay} />
               <Stat label="Tier" value={tierDisplay} />
               <Stat label="Eligible" value={eligibleDisplay} />
             </div>
@@ -434,7 +432,7 @@ function Profile() {
         >
           <h2 className="font-black text-lg">Date-wise Score History</h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Your saved attempts grouped by play date and final percentage.
+            Your saved attempts grouped by play date and final score.
           </p>
           <div className="mt-4 max-h-80 overflow-auto rounded-2xl border border-border/50">
             <table className="w-full text-sm min-w-[420px]">
@@ -442,7 +440,7 @@ function Profile() {
                 <tr className="sticky top-0 bg-card/95 text-left text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border backdrop-blur">
                   <th className="py-2 pr-3">Date</th>
                   <th className="py-2 pr-3">Time (UAE)</th>
-                  <th className="py-2 pr-3">Final %</th>
+                  <th className="py-2 pr-3">Final Score</th>
                   <th className="py-2 pr-3">Category</th>
                 </tr>
               </thead>
@@ -461,7 +459,7 @@ function Profile() {
                         {formatAttemptTime(attempt.playedAt)}
                       </td>
                       <td className="py-2 pr-3 font-bold text-gradient-energy">
-                        {totalToPercentage(attempt.total).toFixed(2)}%
+                        {attempt.total}
                       </td>
                       <td className="py-2 pr-3">{attempt.category}</td>
                     </tr>
