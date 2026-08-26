@@ -1357,33 +1357,41 @@ function Admin() {
 
                     <div className="bg-gradient-card border border-border rounded-3xl p-5 shadow-card">
                       <h3 className="font-black text-sm mb-3">Type of User</h3>
-                      <ResponsiveContainer width="100%" height={200}>
-                        <PieChart>
-                          <Pie
-                            data={stats.typeDist}
-                            dataKey="count"
-                            nameKey="label"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={70}
-                            label={({ name, value }: { name: string; value: number }) =>
-                              `${name}: ${value}`
-                            }
-                          >
-                            {stats.typeDist.map((_, i) => (
-                              <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Legend />
-                          <Tooltip
-                            contentStyle={{
-                              background: "var(--background)",
-                              border: "1px solid var(--border)",
-                              borderRadius: 12,
-                            }}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
+                      {stats.typeDist.some((t) => t.count > 0) ? (
+                        <ResponsiveContainer width="100%" height={200}>
+                          <PieChart>
+                            <Pie
+                              data={stats.typeDist.filter((t) => t.count > 0)}
+                              dataKey="count"
+                              nameKey="label"
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={70}
+                              label={({ name, value }: { name: string; value: number }) =>
+                                `${name}: ${value}`
+                              }
+                            >
+                              {stats.typeDist
+                                .filter((t) => t.count > 0)
+                                .map((_, i) => (
+                                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <Legend />
+                            <Tooltip
+                              contentStyle={{
+                                background: "var(--background)",
+                                border: "1px solid var(--border)",
+                                borderRadius: 12,
+                              }}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="h-[200px] flex items-center justify-center text-xs text-muted-foreground">
+                          No data yet.
+                        </div>
+                      )}
                     </div>
                   </div>
 
