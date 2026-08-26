@@ -165,6 +165,13 @@ export const getCurrentScores = (): GameScores => {
 
 export const saveGameScore = (game: GameKey, score: number) => {
   const cur = getCurrentScores();
+  // Playing reflex always starts a fresh attempt — clear any leftover scores
+  // from a prior finished attempt today so a single game can't be replayed
+  // in isolation to reroll just that score.
+  if (game === "reflex") {
+    cur.memory = null;
+    cur.balance = null;
+  }
   cur[game] = score;
   localStorage.setItem(SCORES_KEY, JSON.stringify(cur));
   localStorage.setItem(SCORES_DATE_KEY, todayDateString());

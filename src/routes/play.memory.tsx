@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/Header";
 import { ProgressDots } from "@/components/ProgressDots";
 import { StartOverlay } from "@/components/StartOverlay";
-import { isGameUnlocked, saveGameScore } from "@/lib/storage";
+import { getCurrentScores, isGameUnlocked, saveGameScore } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
 import revitalLogo from "@/assets/revital-logo.png";
 
@@ -61,7 +61,13 @@ function MemoryGame() {
   const [isPreviewing, setIsPreviewing] = useState(false);
 
   useEffect(() => {
-    if (!isGameUnlocked("memory")) nav({ to: "/challenges" });
+    if (!isGameUnlocked("memory")) {
+      nav({ to: "/challenges" });
+      return;
+    }
+    // Memory was already scored in this attempt (e.g. opened directly by URL
+    // after a completed run) — force a fresh attempt instead of rerolling it.
+    if (getCurrentScores().memory !== null) nav({ to: "/play/reflex" });
   }, [nav]);
 
   useEffect(() => {

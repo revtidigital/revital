@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Header } from "@/components/Header";
 import { ProgressDots } from "@/components/ProgressDots";
 import { StartOverlay } from "@/components/StartOverlay";
-import { isGameUnlocked, saveGameScore } from "@/lib/storage";
+import { getCurrentScores, isGameUnlocked, saveGameScore } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/play/balance")({
@@ -32,7 +32,14 @@ function BalanceGame() {
   const startedAt = useRef(0);
 
   useEffect(() => {
-    if (!isGameUnlocked("balance")) nav({ to: "/challenges" });
+    if (!isGameUnlocked("balance")) {
+      nav({ to: "/challenges" });
+      return;
+    }
+    // Balance was already scored in this attempt (e.g. opened directly by
+    // URL after a completed run) — force a fresh attempt instead of
+    // rerolling just this one game.
+    if (getCurrentScores().balance !== null) nav({ to: "/play/reflex" });
   }, [nav]);
 
   const start = () => {
