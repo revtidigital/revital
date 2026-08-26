@@ -1602,7 +1602,24 @@ function Admin() {
                   </div>
 
                   <div className="mt-3 bg-gradient-card border border-border rounded-2xl overflow-x-auto shadow-card">
-                    <table className="w-full text-sm min-w-[900px]">
+                    <table className="w-full text-sm min-w-[1500px] table-fixed">
+                      <colgroup>
+                        <col className="w-[130px]" />
+                        <col className="w-[100px]" />
+                        <col className="w-[120px]" />
+                        <col className="w-[110px]" />
+                        <col className="w-[100px]" />
+                        <col className="w-[150px]" />
+                        <col className="w-[90px]" />
+                        <col className="w-[140px]" />
+                        <col className="w-[110px]" />
+                        <col className="w-[110px]" />
+                        <col className="w-[100px]" />
+                        <col className="w-[100px]" />
+                        <col className="w-[110px]" />
+                        <col className="w-[100px]" />
+                        <col className="w-[110px]" />
+                      </colgroup>
                       <thead>
                         <tr className="text-left text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/10">
                           <SortableTh
@@ -1711,25 +1728,25 @@ function Admin() {
                             }
                             className="border-b border-border/40 hover:bg-muted/10 transition-colors cursor-pointer"
                           >
-                            <Td className="font-mono text-[11px]">{u.userId}</Td>
-                            <Td className="text-muted-foreground text-[11px]">
+                            <Td className="font-mono text-[11px] truncate">{u.userId}</Td>
+                            <Td className="text-muted-foreground text-[11px] truncate">
                               {u.joinedAtIso ? new Date(u.joinedAtIso).toLocaleDateString() : "—"}
                             </Td>
-                            <Td className="font-mono text-[11px]">{u.contact}</Td>
-                            <Td>{u.name || "—"}</Td>
+                            <Td className="font-mono text-[11px] truncate">{u.contact}</Td>
+                            <Td className="truncate">{u.name || "—"}</Td>
                             <Td>
                               <ParticipantTypeBadge type={u.participantType} />
                             </Td>
-                            <Td className="font-mono text-[11px]">{u.email || "—"}</Td>
+                            <Td className="font-mono text-[11px] truncate">{u.email || "—"}</Td>
                             <Td className="font-bold text-center">{u.referCount ?? 0}</Td>
-                            <Td className="font-mono text-[11px]">{u.referredBy || "—"}</Td>
+                            <Td className="font-mono text-[11px] truncate">{u.referredBy || "—"}</Td>
                             <Td className="font-medium text-center">{u.completedAll3Days}</Td>
                             <Td className="font-bold text-center">{u.completedAll3Plays}</Td>
-                            <Td className="font-mono text-[11px]">{u.utmSource || "—"}</Td>
-                            <Td className="font-mono text-[11px]">{u.utmMedium || "—"}</Td>
-                            <Td className="font-mono text-[11px]">{u.utmCampaign || "—"}</Td>
-                            <Td className="font-mono text-[11px]">{u.utmTerm || "—"}</Td>
-                            <Td className="font-mono text-[11px]">{u.utmContent || "—"}</Td>
+                            <Td className="font-mono text-[11px] truncate">{u.utmSource || "—"}</Td>
+                            <Td className="font-mono text-[11px] truncate">{u.utmMedium || "—"}</Td>
+                            <Td className="font-mono text-[11px] truncate">{u.utmCampaign || "—"}</Td>
+                            <Td className="font-mono text-[11px] truncate">{u.utmTerm || "—"}</Td>
+                            <Td className="font-mono text-[11px] truncate">{u.utmContent || "—"}</Td>
                           </tr>
                         ))}
                       </tbody>
