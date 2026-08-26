@@ -16,7 +16,7 @@ import {
   type ParticipantType,
 } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
-import { executeRecaptcha } from "@/lib/recaptcha";
+import { executeRecaptcha, loadRecaptcha } from "@/lib/recaptcha";
 
 export const Route = createFileRoute("/auth")({
   component: Auth,
@@ -33,6 +33,10 @@ function Auth() {
   const [existingUser, setExistingUser] =
     useState<Awaited<ReturnType<typeof findUserByContactRemote>>>(null);
   const isNewUser = !existingUser;
+
+  useEffect(() => {
+    loadRecaptcha();
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

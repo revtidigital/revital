@@ -189,16 +189,6 @@ function RootComponent() {
           clScript.textContent = `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)})(window,document,"clarity","script","${s.clarity}");`;
           document.head.appendChild(clScript);
         }
-
-        // Google reCAPTCHA v3
-        if (s.recaptchaSite && !document.getElementById("_recaptcha")) {
-          const rcScript = document.createElement("script");
-          rcScript.id = "_recaptcha";
-          rcScript.async = true;
-          rcScript.src = `https://www.google.com/recaptcha/api.js?render=${s.recaptchaSite}`;
-          document.head.appendChild(rcScript);
-          (window as typeof window & { __rcSiteKey?: string }).__rcSiteKey = s.recaptchaSite;
-        }
       } catch (e) {
         // Tracking injection is best-effort — never throw to the user.
         // If settings API fails, still try GA4 from env for resiliency.

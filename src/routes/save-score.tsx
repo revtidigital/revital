@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Header } from "@/components/Header";
 import { SignupGate } from "@/components/SignupGate";
 import { getCurrentScores, isLoggedIn } from "@/lib/storage";
+import { loadRecaptcha } from "@/lib/recaptcha";
 
 export const Route = createFileRoute("/save-score")({
   component: SaveScore,
@@ -10,6 +11,10 @@ export const Route = createFileRoute("/save-score")({
 
 function SaveScore() {
   const nav = useNavigate();
+
+  useEffect(() => {
+    loadRecaptcha();
+  }, []);
 
   useEffect(() => {
     const s = getCurrentScores();
