@@ -242,6 +242,9 @@ function Landing() {
                 </div>
               </div>
             </div>
+            <p className="mt-3 text-center text-sm font-semibold text-garnet/70">
+              Daily winners announced on our Instagram.
+            </p>
           </motion.div>
 
           <motion.div
