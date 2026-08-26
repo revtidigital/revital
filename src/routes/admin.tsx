@@ -871,7 +871,6 @@ function Admin() {
         "Phone Number",
         "Name",
         "Email",
-        "Category",
         "Type",
         "Refer Count",
         "Referral By",
@@ -889,7 +888,6 @@ function Admin() {
         u.contact,
         u.name || "",
         u.email || "",
-        u.selectedCategory || "",
         u.participantType || "",
         u.referCount ?? 0,
         u.referredBy || "",
@@ -914,7 +912,6 @@ function Admin() {
         "Phone Number",
         "Name",
         "Email",
-        "Category",
         "Type",
         "Refer Count",
         "Referral By",
@@ -932,7 +929,6 @@ function Admin() {
         u.contact,
         u.name || "",
         u.email || "",
-        u.selectedCategory || "",
         u.participantType || "",
         u.referCount ?? 0,
         u.referredBy || "",
@@ -957,7 +953,6 @@ function Admin() {
         "Phone Number",
         "Name",
         "Email",
-        "Category",
         "Type",
         "Refer Count",
         "Referral By",
@@ -975,7 +970,6 @@ function Admin() {
         u.contact,
         u.name || "",
         u.email || "",
-        u.selectedCategory || "",
         u.participantType || "",
         u.referCount ?? 0,
         u.referredBy || "",
@@ -1636,7 +1630,6 @@ function Admin() {
                             sort={userSort}
                             onSort={toggleUserSort}
                           />
-                          <Th>Category</Th>
                           <Th>Type</Th>
                           <SortableTh
                             label="Refer Count"
@@ -1698,7 +1691,7 @@ function Admin() {
                         {filtered.length === 0 && (
                           <tr>
                             <td
-                              colSpan={16}
+                              colSpan={15}
                               className="py-10 text-center text-muted-foreground text-sm"
                             >
                               No users match filters.
@@ -1720,9 +1713,6 @@ function Admin() {
                             <Td className="font-mono text-[11px]">{u.contact}</Td>
                             <Td>{u.name || "—"}</Td>
                             <Td className="font-mono text-[11px]">{u.email || "—"}</Td>
-                            <Td>
-                              <CategoryBadge cat={u.selectedCategory} />
-                            </Td>
                             <Td>
                               <ParticipantTypeBadge type={u.participantType} />
                             </Td>
