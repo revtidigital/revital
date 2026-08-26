@@ -24,6 +24,7 @@ export const Route = createFileRoute("/auth")({
 
 function Auth() {
   const nav = useNavigate();
+  const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [referredBy, setReferredBy] = useState("");
   const [participantType, setParticipantType] = useState<ParticipantType | "">("");
@@ -33,6 +34,13 @@ function Auth() {
   const [existingUser, setExistingUser] =
     useState<Awaited<ReturnType<typeof findUserByContactRemote>>>(null);
   const isNewUser = !existingUser;
+  const canSubmit =
+    !!name.trim() &&
+    NAME_REGEX.test(name.trim()) &&
+    isValidUaePhone(contact) &&
+    (!isNewUser || !!participantType) &&
+    (!referredBy.trim() || REFERRAL_CODE_REGEX.test(referredBy.trim().toUpperCase())) &&
+    consent;
 
   useEffect(() => {
     loadRecaptcha();
@@ -75,12 +83,20 @@ function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr("");
+    if (!name.trim() || !NAME_REGEX.test(name.trim())) {
+      setErr("Please enter your full name (letters only)");
+      return;
+    }
     if (!isValidUaePhone(contact)) {
       setErr("Enter a valid UAE mobile number");
       return;
     }
     if (isNewUser && !participantType) {
       setErr("Please select who you are");
+      return;
+    }
+    if (referredBy.trim() && !REFERRAL_CODE_REGEX.test(referredBy.trim().toUpperCase())) {
+      setErr("Enter a valid referral code (e.g. RVT-A1B2C3D4E5)");
       return;
     }
     if (!consent) {
@@ -115,7 +131,7 @@ function Auth() {
       ...getPersistedUtmParams(),
       userId: existing?.userId ?? generateUserId(),
       contact: normalizedContact,
-      name: existing?.name,
+      name: name.trim() || existing?.name,
       email: existing?.email,
       address: existing?.address,
       participantType: existing?.participantType ?? (participantType || undefined),
@@ -165,14 +181,26 @@ function Auth() {
           >
             <div>
               <label className="text-xs uppercase tracking-wider text-muted-foreground">
+                Full Name
+              </label>
+              <input
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value.replace(/[^A-Za-z\s'.-]/g, ""))}
+                placeholder="Your name"
+                className="mt-2 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+              />
+            </div>
+            <div>
+              <label className="text-xs uppercase tracking-wider text-muted-foreground">
                 UAE Mobile Number
               </label>
               <div className="mt-2 flex items-center rounded-2xl border border-border bg-background/60 px-3 focus-within:ring-2 focus-within:ring-ring">
                 <span className="text-sm font-semibold text-muted-foreground">+971</span>
                 <input
-                  autoFocus
                   value={contact}
-                  onChange={(e) => setContact(e.target.value)}
+                  onChange={(e) => setContact(e.target.value.replace(/[^\d]/g, "").slice(0, 9))}
+                  inputMode="numeric"
                   placeholder="50 123 4567"
                   className="w-full border-0 bg-transparent px-2 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
                 />
@@ -212,8 +240,8 @@ function Auth() {
                 </label>
                 <input
                   value={referredBy}
-                  onChange={(e) => setReferredBy(e.target.value)}
-                  placeholder="RVT-AB12CD34"
+                  onChange={(e) => setReferredBy(e.target.value.toUpperCase())}
+                  placeholder="RVT-A1B2C3D4E5"
                   className="mt-2 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring transition-all"
                 />
                 <p className="mt-1.5 text-[11px] text-muted-foreground">
@@ -235,7 +263,7 @@ function Auth() {
             </label>
             {err && <p className="text-sm text-destructive">{err}</p>}
             <button
-              disabled={loading || !consent}
+              disabled={loading || !canSubmit}
               className="w-full py-3 rounded-full bg-gradient-energy text-energy-foreground font-bold shadow-button hover:scale-[1.02] active:scale-[0.98] transition-transform disabled:opacity-60"
             >
               {loading ? "Saving..." : "Save My Score"}
@@ -267,3 +295,5 @@ const isValidUaePhone = (value: string): boolean => {
   const normalized = normalizeUaePhone(value);
   return /^(?:\+971|00971|0)?5\d{8}$/.test(normalized);
 };
+const NAME_REGEX = /^[A-Za-z][A-Za-z\s'.-]*$/;
+const REFERRAL_CODE_REGEX = /^RVT-[A-Z0-9]{10}$/;

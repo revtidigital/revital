@@ -33,6 +33,8 @@ const isValidUaePhone = (value: string): boolean => {
   const normalized = normalizeUaePhone(value);
   return /^(?:\+971|00971|0)?5\d{8}$/.test(normalized);
 };
+const NAME_REGEX = /^[A-Za-z][A-Za-z\s'.-]*$/;
+const REFERRAL_CODE_REGEX = /^RVT-[A-Z0-9]{10}$/;
 
 export function SignupGate({ onSuccess }: SignupGateProps) {
   const [name, setName] = useState("");
@@ -49,6 +51,13 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
   const [existingRemoteUser, setExistingRemoteUser] =
     useState<Awaited<ReturnType<typeof findUserByContactRemote>>>(null);
   const isNewUser = !existingUser && !existingRemoteUser;
+  const canSubmit =
+    !!name.trim() &&
+    NAME_REGEX.test(name.trim()) &&
+    isValidUaePhone(contact) &&
+    (!isNewUser || !!participantType) &&
+    (!referredBy.trim() || REFERRAL_CODE_REGEX.test(referredBy.trim().toUpperCase())) &&
+    consent;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -116,9 +125,12 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr("");
-    if (!name.trim()) return setErr("Please enter your name");
+    if (!name.trim() || !NAME_REGEX.test(name.trim()))
+      return setErr("Please enter your full name (letters only)");
     if (!isValidUaePhone(contact)) return setErr("Enter a valid UAE mobile number");
     if (isNewUser && !participantType) return setErr("Please select who you are");
+    if (referredBy.trim() && !REFERRAL_CODE_REGEX.test(referredBy.trim().toUpperCase()))
+      return setErr("Enter a valid referral code (e.g. RVT-A1B2C3D4E5)");
     if (!consent) return setErr("Please accept the consent to continue");
     setLoading(true);
     try {
@@ -183,7 +195,7 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
             <input
               autoFocus
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value.replace(/[^A-Za-z\s'.-]/g, ""))}
               placeholder="Your name"
               className="mt-1.5 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ring"
             />
@@ -196,7 +208,8 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
               <span className="text-sm font-semibold text-muted-foreground">+971</span>
               <input
                 value={contact}
-                onChange={(e) => setContact(e.target.value)}
+                onChange={(e) => setContact(e.target.value.replace(/[^\d]/g, "").slice(0, 9))}
+                inputMode="numeric"
                 placeholder="50 123 4567"
                 className="w-full border-0 bg-transparent px-2 py-3 focus:outline-none"
               />
@@ -239,8 +252,8 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
               </label>
               <input
                 value={referredBy}
-                onChange={(e) => setReferredBy(e.target.value)}
-                placeholder="RVT-AB12CD34"
+                onChange={(e) => setReferredBy(e.target.value.toUpperCase())}
+                placeholder="RVT-A1B2C3D4E5"
                 className="mt-1.5 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ring"
               />
               <p className="mt-1 text-[11px] text-muted-foreground">
@@ -262,7 +275,7 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
           </label>
           {err && <p className="text-sm text-destructive">{err}</p>}
           <button
-            disabled={loading || !consent}
+            disabled={loading || !canSubmit}
             className="w-full py-3 rounded-full bg-gradient-energy text-energy-foreground font-bold shadow-button hover:scale-[1.02] active:scale-[0.98] transition-transform disabled:opacity-60"
           >
             {loading ? "Saving..." : "Save & Reveal Score →"}
