@@ -270,6 +270,9 @@ function Result() {
           transition={{ delay: 1.4 }}
           className="mt-8 space-y-3"
         >
+          <p className="text-sm font-semibold text-garnet">
+            Follow us on Instagram for the winner updates
+          </p>
           <div className="bg-gradient-card border border-accent/40 rounded-3xl p-5 text-left">
             <div className="flex items-center gap-2">
               <span className="text-2xl">📸</span>
@@ -287,6 +290,9 @@ function Result() {
               Share on Instagram →
             </button>
           </div>
+          <p className="text-sm font-semibold text-garnet">
+            Follow us on Instagram for the winner updates
+          </p>
           <div className="flex gap-2">
             <button
               onClick={share}
