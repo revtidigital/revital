@@ -473,41 +473,22 @@ export const lockDailyTopTenAndNotifyFn = createServerFn({ method: "POST" })
 export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(async () => {
   const db = await getDb();
   // Projected: this computation only needs name/contact/scores/refer data — never email/address.
-  const [users, settingsDoc] = await Promise.all([
-    db
-      .collection<UserRecord>("users")
-      .find(
-        {},
-        {
-          projection: {
-            name: 1,
-            contact: 1,
-            category: 1,
-            playAttempts: 1,
-            referCount: 1,
-            createdAt: 1,
-          },
+  const users = await db
+    .collection<UserRecord>("users")
+    .find(
+      {},
+      {
+        projection: {
+          name: 1,
+          contact: 1,
+          category: 1,
+          playAttempts: 1,
+          referCount: 1,
+          createdAt: 1,
         },
-      )
-      .toArray(),
-    db.collection("platform_settings").findOne({ _key: "main" }),
-  ]);
-  const settings = (settingsDoc ?? {}) as Partial<PlatformSettings>;
-
-  // Total campaign days — from configured start date or earliest user createdAt
-  const today = formatUaeDate(new Date());
-  const todayMs = new Date(today + "T00:00:00+04:00").getTime();
-  let campaignStartMs: number;
-  if (settings.campaignStartDate) {
-    campaignStartMs = new Date(settings.campaignStartDate + "T00:00:00+04:00").getTime();
-  } else {
-    const earliest = users.reduce<string | null>((min, u) => {
-      if (!u.createdAt) return min;
-      return !min || u.createdAt < min ? u.createdAt : min;
-    }, null);
-    campaignStartMs = earliest ? new Date(earliest).getTime() : todayMs;
-  }
-  const totalCampaignDays = Math.max(1, Math.round((todayMs - campaignStartMs) / 86_400_000) + 1);
+      },
+    )
+    .toArray();
 
   const mask = (c: string) => {
     if (c.includes("@")) {
@@ -542,14 +523,39 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
         (s, a) => s + (a.scores.reflex ?? 0) + (a.scores.memory ?? 0) + (a.scores.balance ?? 0),
         0,
       );
-      const performanceScore = sumDailyBest / activeDays;
-      const consistencyMultiplier = 1 + (activeDays / totalCampaignDays) * 0.2;
-      const adjustedPerformance = performanceScore * consistencyMultiplier;
+      // Average Gameplay Performance — max 1,500 (average Daily Total across active days).
+      const avgGameplayPerformance = sumDailyBest / activeDays;
 
-      const validReferrals = Math.min(u.referCount ?? 0, 20);
-      const referralScore = validReferrals * 50;
+      // Consistency Bonus — max 1,000, scaled against a fixed 30-day campaign.
+      const consistencyBonus = Math.min(1000, (activeDays / 30) * 1000);
 
-      const finalScore = adjustedPerformance * 0.8 + referralScore * 0.2;
+      // Performance Streak Bonus — max 500, based on the longest consecutive-day streak.
+      const sortedDates = [...uniqueDates].sort();
+      let longestStreak = 0;
+      let currentStreak = 0;
+      let prevMs: number | null = null;
+      for (const date of sortedDates) {
+        const ms = new Date(date + "T00:00:00Z").getTime();
+        currentStreak = prevMs !== null && ms - prevMs === 86_400_000 ? currentStreak + 1 : 1;
+        longestStreak = Math.max(longestStreak, currentStreak);
+        prevMs = ms;
+      }
+      const streakBonus =
+        longestStreak >= 30
+          ? 500
+          : longestStreak >= 21
+            ? 350
+            : longestStreak >= 14
+              ? 200
+              : longestStreak >= 7
+                ? 100
+                : 0;
+
+      const gameplayScore = avgGameplayPerformance + consistencyBonus + streakBonus;
+
+      const referralScore = (u.referCount ?? 0) * 100;
+
+      const finalScore = gameplayScore + referralScore;
 
       // Tiebreaker data
       const avgReflex = dailyBests.reduce((s, a) => s + (a.scores.reflex ?? 0), 0) / activeDays;
