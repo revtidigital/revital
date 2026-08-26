@@ -1356,7 +1356,7 @@ function Admin() {
                     </div>
 
                     <div className="bg-gradient-card border border-border rounded-3xl p-5 shadow-card">
-                      <h3 className="font-black text-sm mb-3">Participant Type</h3>
+                      <h3 className="font-black text-sm mb-3">Type of User</h3>
                       <ResponsiveContainer width="100%" height={200}>
                         <PieChart>
                           <Pie
