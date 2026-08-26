@@ -28,14 +28,19 @@ let indexesEnsured = false;
 async function ensureIndexes(db: Db): Promise<void> {
   if (indexesEnsured) return;
   indexesEnsured = true;
+  // Run each index creation independently and swallow "already exists under a
+  // different name" conflicts (code 85) — retrying that on every request just
+  // adds latency without ever succeeding, since the index is already there.
   await Promise.all([
     db.collection("users").createIndex({ contact: 1 }, { unique: true }),
     db.collection("users").createIndex({ userId: 1 }),
     db.collection("admin_logs").createIndex({ timestamp: -1 }),
     db.collection("rate_limits").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
   ]).catch((err) => {
-    indexesEnsured = false;
-    console.error("Failed to ensure indexes", err);
+    if (err?.code !== 85) {
+      indexesEnsured = false;
+      console.error("Failed to ensure indexes", err);
+    }
   });
 }
 
