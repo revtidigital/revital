@@ -59,7 +59,7 @@ export function Header() {
           {!user && (
             <Link
               to="/auth"
-              className="px-2.5 sm:px-3 py-2 rounded-full text-garnet/80 hover:text-garnet hover:bg-[var(--marigold)]/30 transition-colors font-medium whitespace-nowrap"
+              className="px-4 py-2 rounded-full bg-gradient-energy text-white font-semibold shadow-button hover:scale-105 active:scale-95 transition-transform whitespace-nowrap"
             >
               My Score
             </Link>
@@ -91,14 +91,7 @@ export function Header() {
                 </button>
               </div>
             </div>
-          ) : (
-            <Link
-              to="/auth"
-              className="px-4 py-2 rounded-full bg-gradient-energy text-white font-semibold shadow-button hover:scale-105 active:scale-95 transition-transform"
-            >
-              Login
-            </Link>
-          )}
+          ) : null}
         </div>
       </div>
     </header>
