@@ -1,11 +1,19 @@
+import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { hasConsent } from "@/lib/storage";
 
 export function Footer() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [needsConsentSpace, setNeedsConsentSpace] = useState(false);
+  useEffect(() => {
+    setNeedsConsentSpace(!hasConsent());
+  }, []);
   if (pathname.toLowerCase().startsWith("/admin")) return null;
 
   return (
-    <footer className="mt-16 border-t border-[var(--garnet)]/10 bg-white/60">
+    <footer
+      className={`mt-16 border-t border-[var(--garnet)]/10 bg-white/60 ${needsConsentSpace ? "pb-28 md:pb-0" : ""}`}
+    >
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-2 px-3 py-2 text-xs sm:px-4 sm:py-3 sm:text-sm md:flex-row md:gap-4 md:py-8">
         <p className="text-center font-medium text-garnet/70">
           © {new Date().getFullYear()} Revital Energy Challenge. All rights reserved.
@@ -17,7 +25,7 @@ export function Footer() {
           aria-label="Follow us on Instagram"
           className="inline-flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
         >
-          <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 24 24" className="w-5 h-5 md:w-7 md:h-7" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="ig-footer-gradient" x1="0%" y1="100%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#FEDA75" />
