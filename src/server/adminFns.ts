@@ -661,6 +661,131 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
     );
 });
 
+// Public: given a userId, return that user's global rank + score using the
+// identical canonical formula as getGlobalLeaderboardFn (kept duplicated on
+// purpose to avoid touching the already-verified leaderboard function).
+export const getUserRankFn = createServerFn({ method: "GET" })
+  .inputValidator((data: unknown) => z.object({ userId: z.string() }).parse(data))
+  .handler(async ({ data }) => {
+    const db = await getDb();
+    const users = await db
+      .collection<UserRecord>("users")
+      .find(
+        {},
+        {
+          projection: {
+            userId: 1,
+            playAttempts: 1,
+            referCount: 1,
+          },
+        },
+      )
+      .toArray();
+
+    const scored = users
+      .map((u) => {
+        const attempts = u.playAttempts ?? [];
+        const uniqueDates = [...new Set(attempts.map((a) => a.date))];
+        const activeDays = uniqueDates.length;
+        if (activeDays === 0) return null;
+
+        const dailyBests = uniqueDates.map((date) =>
+          attempts
+            .filter((a) => a.date === date)
+            .reduce((best, cur) => {
+              const curSum =
+                (cur.scores.reflex ?? 0) + (cur.scores.memory ?? 0) + (cur.scores.balance ?? 0);
+              const bestSum =
+                (best.scores.reflex ?? 0) + (best.scores.memory ?? 0) + (best.scores.balance ?? 0);
+              return curSum > bestSum ? cur : best;
+            }),
+        );
+
+        const sumDailyTotals = dailyBests.reduce(
+          (s, a) =>
+            s +
+            ((a.scores.reflex ?? 0) + (a.scores.memory ?? 0) + (a.scores.balance ?? 0)) / 3,
+          0,
+        );
+        const avgGameplayPerformance = sumDailyTotals / activeDays;
+
+        const consistencyBonus =
+          activeDays >= 26
+            ? 1000
+            : activeDays >= 21
+              ? 850
+              : activeDays >= 16
+                ? 650
+                : activeDays >= 11
+                  ? 450
+                  : activeDays >= 6
+                    ? 250
+                    : activeDays >= 1
+                      ? 100
+                      : 0;
+
+        const sortedDates = [...uniqueDates].sort();
+        let currentStreak = 0;
+        let prevMs: number | null = null;
+        for (const date of sortedDates) {
+          const ms = new Date(date + "T00:00:00Z").getTime();
+          currentStreak = prevMs !== null && ms - prevMs === 86_400_000 ? currentStreak + 1 : 1;
+          prevMs = ms;
+        }
+        const todayMs = new Date(formatUaeDate(new Date()) + "T00:00:00Z").getTime();
+        const isStreakActive = prevMs !== null && todayMs - prevMs <= 86_400_000;
+        const activeStreak = isStreakActive ? currentStreak : 0;
+        const streakBonus =
+          activeStreak >= 30
+            ? 500
+            : activeStreak >= 21
+              ? 350
+              : activeStreak >= 14
+                ? 200
+                : activeStreak >= 7
+                  ? 100
+                  : 0;
+
+        const gameplayScore = avgGameplayPerformance + consistencyBonus + streakBonus;
+        const referralScore = (u.referCount ?? 0) * 100;
+        const finalScore = gameplayScore + referralScore;
+
+        const avgReflex = dailyBests.reduce((s, a) => s + (a.scores.reflex ?? 0), 0) / activeDays;
+        const avgMemory = dailyBests.reduce((s, a) => s + (a.scores.memory ?? 0), 0) / activeDays;
+        const avgBalance = dailyBests.reduce((s, a) => s + (a.scores.balance ?? 0), 0) / activeDays;
+        const earliestPlayedAt = attempts.reduce(
+          (min, a) => (a.playedAt < min ? a.playedAt : min),
+          attempts[0]?.playedAt ?? "",
+        );
+
+        return {
+          userId: u.userId,
+          total: Math.round(finalScore),
+          _activeDays: activeDays,
+          _avgReflex: avgReflex,
+          _avgMemory: avgMemory,
+          _avgBalance: avgBalance,
+          _referCount: u.referCount ?? 0,
+          _earliestPlayedAt: earliestPlayedAt,
+        };
+      })
+      .filter((u): u is NonNullable<typeof u> => u !== null);
+
+    scored.sort((a, b) => {
+      if (b.total !== a.total) return b.total - a.total;
+      if (b._activeDays !== a._activeDays) return b._activeDays - a._activeDays;
+      if (b._avgReflex !== a._avgReflex) return b._avgReflex - a._avgReflex;
+      if (b._avgMemory !== a._avgMemory) return b._avgMemory - a._avgMemory;
+      if (b._avgBalance !== a._avgBalance) return b._avgBalance - a._avgBalance;
+      if (b._referCount !== a._referCount) return b._referCount - a._referCount;
+      return a._earliestPlayedAt.localeCompare(b._earliestPlayedAt);
+    });
+
+    const idx = scored.findIndex((u) => u.userId === data.userId);
+    if (idx === -1) return { rank: null, score: null, totalPlayers: scored.length };
+    return { rank: idx + 1, score: scored[idx].total, totalPlayers: scored.length };
+  });
+
 export const getPreviousDayWinnersFn = createServerFn({ method: "GET" }).handler(async () => {
   const db = await getDb();
   const yesterday = formatUaeDate(new Date(Date.now() - 24 * 60 * 60 * 1000));

@@ -28,6 +28,8 @@ function Result() {
   const [unlocked, setUnlocked] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const noticeTimeout = useRef<number | null>(null);
+  const [globalRank, setGlobalRank] = useState<number | null>(null);
+  const [globalScore, setGlobalScore] = useState<number | null>(null);
 
   useEffect(() => {
     const s = getCurrentScores();
@@ -196,6 +198,24 @@ function Result() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!unlocked) return;
+    const user = getUser();
+    if (!user) return;
+    const loadGlobalRank = async () => {
+      try {
+        const { getUserRankFn } = await import("@/server/adminFns");
+        const result = await getUserRankFn({ data: { userId: user.userId } });
+        setGlobalRank(result.rank);
+        setGlobalScore(result.score);
+      } catch {
+        setGlobalRank(null);
+        setGlobalScore(null);
+      }
+    };
+    loadGlobalRank();
+  }, [unlocked]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -270,6 +290,27 @@ function Result() {
           transition={{ delay: 1.4 }}
           className="mt-8 space-y-3"
         >
+          {(globalRank !== null || globalScore !== null) && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-background/40 rounded-2xl p-3">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Global Rank
+                </div>
+                <div className="text-lg font-black text-gradient-energy">
+                  {globalRank !== null ? `#${globalRank}` : "—"}
+                </div>
+              </div>
+              <div className="bg-background/40 rounded-2xl p-3">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Global Score
+                </div>
+                <div className="text-lg font-black text-gradient-energy">
+                  {globalScore !== null ? globalScore : "—"}
+                </div>
+              </div>
+            </div>
+          )}
+
           <p className="text-sm font-semibold text-garnet">
             Follow us on Instagram for the winner updates
           </p>

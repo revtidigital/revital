@@ -17,6 +17,7 @@ import {
 } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
 import { executeRecaptcha, loadRecaptcha } from "@/lib/recaptcha";
+import { containsProfanity } from "@/lib/profanity";
 
 export const Route = createFileRoute("/auth")({
   component: Auth,
@@ -31,16 +32,36 @@ function Auth() {
   const [consent, setConsent] = useState(false);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+  const [nameFlagged, setNameFlagged] = useState(false);
+  const [checkingName, setCheckingName] = useState(false);
   const [existingUser, setExistingUser] =
     useState<Awaited<ReturnType<typeof findUserByContactRemote>>>(null);
   const isNewUser = !existingUser;
   const canSubmit =
     !!name.trim() &&
     NAME_REGEX.test(name.trim()) &&
+    !nameFlagged &&
+    !checkingName &&
     isValidUaePhone(contact) &&
     (!isNewUser || !!participantType) &&
     (!referredBy.trim() || REFERRAL_SUFFIX_REGEX.test(referredBy.trim())) &&
     consent;
+
+  useEffect(() => {
+    const trimmed = name.trim();
+    if (!trimmed || !NAME_REGEX.test(trimmed)) {
+      setNameFlagged(false);
+      setCheckingName(false);
+      return;
+    }
+    setCheckingName(true);
+    const timer = window.setTimeout(async () => {
+      const flagged = await containsProfanity(trimmed);
+      setNameFlagged(flagged);
+      setCheckingName(false);
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [name]);
 
   useEffect(() => {
     loadRecaptcha();
@@ -88,6 +109,11 @@ function Auth() {
     setErr("");
     if (!name.trim() || !NAME_REGEX.test(name.trim())) {
       setErr("Please enter your full name (letters only)");
+      return;
+    }
+    if (await containsProfanity(name.trim())) {
+      setNameFlagged(true);
+      setErr("Please enter an appropriate name.");
       return;
     }
     if (!isValidUaePhone(contact)) {
@@ -191,8 +217,15 @@ function Auth() {
                 value={name}
                 onChange={(e) => setName(e.target.value.replace(/[^A-Za-z\s'.-]/g, ""))}
                 placeholder="Your name"
-                className="mt-2 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+                className={`mt-2 w-full bg-background/60 border rounded-2xl px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all ${
+                  nameFlagged ? "border-destructive focus:ring-destructive" : "border-border focus:ring-ring"
+                }`}
               />
+              {nameFlagged && (
+                <p className="mt-1.5 text-[11px] text-destructive">
+                  Please enter an appropriate name.
+                </p>
+              )}
             </div>
             <div>
               <label className="text-xs uppercase tracking-wider text-muted-foreground">

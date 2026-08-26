@@ -11,6 +11,7 @@ import {
   resetScores,
   type UserRecord,
 } from "@/lib/storage";
+import { containsProfanity } from "@/lib/profanity";
 
 export const Route = createFileRoute("/profile")({
   component: Profile,
@@ -49,6 +50,26 @@ function Profile() {
   const [copiedUserId, setCopiedUserId] = useState(false);
   const [referrerName, setReferrerName] = useState("");
   const [referralUsers, setReferralUsers] = useState<UserRecord[]>([]);
+  const [globalRank, setGlobalRank] = useState<number | null>(null);
+  const [globalScore, setGlobalScore] = useState<number | null>(null);
+  const [nameFlagged, setNameFlagged] = useState(false);
+  const [checkingName, setCheckingName] = useState(false);
+
+  useEffect(() => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setNameFlagged(false);
+      setCheckingName(false);
+      return;
+    }
+    setCheckingName(true);
+    const timer = window.setTimeout(async () => {
+      const flagged = await containsProfanity(trimmed);
+      setNameFlagged(flagged);
+      setCheckingName(false);
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [name]);
 
   useEffect(() => {
     const u = getUser();
@@ -88,6 +109,19 @@ function Profile() {
       }
     };
     loadReferralData();
+
+    const loadGlobalRank = async () => {
+      try {
+        const { getUserRankFn } = await import("@/server/adminFns");
+        const result = await getUserRankFn({ data: { userId: u.userId } });
+        setGlobalRank(result.rank);
+        setGlobalScore(result.score);
+      } catch {
+        setGlobalRank(null);
+        setGlobalScore(null);
+      }
+    };
+    loadGlobalRank();
   }, [nav]);
 
   const safeUser = useMemo(() => {
@@ -133,6 +167,11 @@ function Profile() {
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    if (name.trim() && (await containsProfanity(name.trim()))) {
+      setNameFlagged(true);
+      setError("Please enter an appropriate name.");
+      return;
+    }
     const normalizedEmail = email.trim().toLowerCase();
     if (!hasSavedEmail && normalizedEmail && !/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
       setError("Please enter a valid email address.");
@@ -262,6 +301,19 @@ function Profile() {
               <Stat label="Tier" value={tierDisplay} />
               <Stat label="Eligible" value={eligibleDisplay} />
             </div>
+
+            {hasPlayedBefore && (
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <Stat
+                  label="Global Rank"
+                  value={globalRank !== null ? `#${globalRank}` : "—"}
+                />
+                <Stat
+                  label="Global Score"
+                  value={globalScore !== null ? `${globalScore}` : "—"}
+                />
+              </div>
+            )}
 
             <div className="mt-4 bg-background/40 rounded-2xl p-4 text-left">
               <div className="flex items-center justify-between gap-3">
@@ -393,8 +445,15 @@ function Profile() {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-2 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ring"
+              className={`mt-2 w-full bg-background/60 border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 ${
+                nameFlagged ? "border-destructive focus:ring-destructive" : "border-border focus:ring-ring"
+              }`}
             />
+            {nameFlagged && (
+              <p className="mt-1.5 text-[11px] text-destructive">
+                Please enter an appropriate name.
+              </p>
+            )}
           </div>
           {!hasSavedEmail && (
             <div>
@@ -421,7 +480,10 @@ function Profile() {
             />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <button className="w-full py-3 rounded-full bg-gradient-energy text-energy-foreground font-bold shadow-button hover:scale-[1.02] active:scale-[0.98] transition-transform">
+          <button
+            disabled={nameFlagged || checkingName}
+            className="w-full py-3 rounded-full bg-gradient-energy text-energy-foreground font-bold shadow-button hover:scale-[1.02] active:scale-[0.98] transition-transform disabled:opacity-60"
+          >
             {saved ? "✓ Saved!" : "Save Profile"}
           </button>
         </motion.form>

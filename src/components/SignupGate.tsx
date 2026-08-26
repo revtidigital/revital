@@ -15,6 +15,7 @@ import {
 } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
 import { executeRecaptcha } from "@/lib/recaptcha";
+import { containsProfanity } from "@/lib/profanity";
 
 interface SignupGateProps {
   onSuccess: () => void;
@@ -47,6 +48,8 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
   const [consent, setConsent] = useState(false);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+  const [nameFlagged, setNameFlagged] = useState(false);
+  const [checkingName, setCheckingName] = useState(false);
   const existingUser = useMemo(
     () => (contact.trim() ? findUserByContact(contact.trim()) : null),
     [contact],
@@ -57,10 +60,28 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
   const canSubmit =
     !!name.trim() &&
     NAME_REGEX.test(name.trim()) &&
+    !nameFlagged &&
+    !checkingName &&
     isValidUaePhone(contact) &&
     (!isNewUser || !!participantType) &&
     (!referredBy.trim() || REFERRAL_SUFFIX_REGEX.test(referredBy.trim())) &&
     consent;
+
+  useEffect(() => {
+    const trimmed = name.trim();
+    if (!trimmed || !NAME_REGEX.test(trimmed)) {
+      setNameFlagged(false);
+      setCheckingName(false);
+      return;
+    }
+    setCheckingName(true);
+    const timer = window.setTimeout(async () => {
+      const flagged = await containsProfanity(trimmed);
+      setNameFlagged(flagged);
+      setCheckingName(false);
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [name]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -133,6 +154,10 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
     setErr("");
     if (!name.trim() || !NAME_REGEX.test(name.trim()))
       return setErr("Please enter your full name (letters only)");
+    if (await containsProfanity(name.trim())) {
+      setNameFlagged(true);
+      return setErr("Please enter an appropriate name.");
+    }
     if (!isValidUaePhone(contact)) return setErr("Enter a valid UAE mobile number");
     if (isNewUser && !participantType) return setErr("Please select who you are");
     if (referredBy.trim() && !REFERRAL_SUFFIX_REGEX.test(referredBy.trim()))
@@ -207,8 +232,15 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
               value={name}
               onChange={(e) => setName(e.target.value.replace(/[^A-Za-z\s'.-]/g, ""))}
               placeholder="Your name"
-              className="mt-1.5 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ring"
+              className={`mt-1.5 w-full bg-background/60 border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 ${
+                nameFlagged ? "border-destructive focus:ring-destructive" : "border-border focus:ring-ring"
+              }`}
             />
+            {nameFlagged && (
+              <p className="mt-1 text-[11px] text-destructive">
+                Please enter an appropriate name.
+              </p>
+            )}
           </div>
           <div>
             <label className="text-xs uppercase tracking-wider text-muted-foreground">
