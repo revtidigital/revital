@@ -7,6 +7,8 @@ import { getUser } from "@/lib/storage";
 import { Leaderboard } from "@/components/Leaderboard";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
 import heroWordmark from "@/assets/revital-hero-wordmark.png";
+import readyDesktop from "@/assets/ready-desktop.png";
+import readyMobile from "@/assets/ready-mobile.png";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -354,9 +356,10 @@ function Landing() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.6 }}
-            className="mt-8 flex items-center justify-center rounded-2xl border-2 border-dashed border-[var(--garnet)]/20 bg-white/60 backdrop-blur h-56 md:h-72 overflow-hidden"
+            className="mt-8 rounded-2xl overflow-hidden"
           >
-            <span className="text-sm text-muted-foreground">Image placeholder</span>
+            <img src={readyMobile} alt="" className="block md:hidden w-full h-auto" />
+            <img src={readyDesktop} alt="" className="hidden md:block w-full h-auto" />
           </motion.div>
         </section>
 

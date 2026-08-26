@@ -34,7 +34,10 @@ const isValidUaePhone = (value: string): boolean => {
   return /^(?:\+971|00971|0)?5\d{8}$/.test(normalized);
 };
 const NAME_REGEX = /^[A-Za-z][A-Za-z\s'.-]*$/;
-const REFERRAL_CODE_REGEX = /^RVT-[A-Z0-9]{10}$/;
+// referredBy state holds just the 10-char suffix — the "RVT-" prefix is fixed in the UI.
+const REFERRAL_SUFFIX_REGEX = /^[A-Z0-9]{10}$/;
+const stripReferralPrefix = (value: string): string =>
+  value.trim().toUpperCase().replace(/^RVT-/, "");
 
 export function SignupGate({ onSuccess }: SignupGateProps) {
   const [name, setName] = useState("");
@@ -56,7 +59,7 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
     NAME_REGEX.test(name.trim()) &&
     isValidUaePhone(contact) &&
     (!isNewUser || !!participantType) &&
-    (!referredBy.trim() || REFERRAL_CODE_REGEX.test(referredBy.trim().toUpperCase())) &&
+    (!referredBy.trim() || REFERRAL_SUFFIX_REGEX.test(referredBy.trim())) &&
     consent;
 
   useEffect(() => {
@@ -66,8 +69,11 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
     const persistedRef = window.localStorage.getItem("revital_referral_code")?.trim();
     const referralCode = (refFromUrl || persistedRef || "").toUpperCase();
     if (referralCode) {
-      setReferredBy(referralCode);
-      window.localStorage.setItem("revital_referral_code", referralCode);
+      setReferredBy(stripReferralPrefix(referralCode));
+      window.localStorage.setItem(
+        "revital_referral_code",
+        referralCode.startsWith("RVT-") ? referralCode : `RVT-${referralCode}`,
+      );
     }
   }, []);
 
@@ -129,8 +135,8 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
       return setErr("Please enter your full name (letters only)");
     if (!isValidUaePhone(contact)) return setErr("Enter a valid UAE mobile number");
     if (isNewUser && !participantType) return setErr("Please select who you are");
-    if (referredBy.trim() && !REFERRAL_CODE_REGEX.test(referredBy.trim().toUpperCase()))
-      return setErr("Enter a valid referral code (e.g. RVT-A1B2C3D4E5)");
+    if (referredBy.trim() && !REFERRAL_SUFFIX_REGEX.test(referredBy.trim()))
+      return setErr("Enter a valid referral code (e.g. A1B2C3D4E5)");
     if (!consent) return setErr("Please accept the consent to continue");
     setLoading(true);
     try {
@@ -148,7 +154,11 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
       // Best-effort — never block the user if reCAPTCHA errors.
     }
     trackEvent("signup_started", { source: "result_gate" });
-    await completeSignup(normalizeUaePhone(contact), name, referredBy || undefined);
+    await completeSignup(
+      normalizeUaePhone(contact),
+      name,
+      referredBy.trim() ? `RVT-${referredBy.trim()}` : undefined,
+    );
   };
 
   useEffect(() => {
@@ -250,12 +260,17 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
                 Referred by{" "}
                 <span className="text-muted-foreground/60 normal-case font-normal">(optional)</span>
               </label>
-              <input
-                value={referredBy}
-                onChange={(e) => setReferredBy(e.target.value.toUpperCase())}
-                placeholder="RVT-A1B2C3D4E5"
-                className="mt-1.5 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+              <div className="mt-1.5 flex items-center rounded-2xl border border-border bg-background/60 px-3 focus-within:ring-2 focus-within:ring-ring">
+                <span className="text-sm font-semibold text-muted-foreground">RVT-</span>
+                <input
+                  value={referredBy}
+                  onChange={(e) =>
+                    setReferredBy(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10))
+                  }
+                  placeholder="A1B2C3D4E5"
+                  className="w-full border-0 bg-transparent px-2 py-3 focus:outline-none"
+                />
+              </div>
               <p className="mt-1 text-[11px] text-muted-foreground">
                 Enter your friend's User ID who referred you — they'll get more chances to win! 🏆
               </p>

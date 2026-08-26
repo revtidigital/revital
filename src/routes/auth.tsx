@@ -39,7 +39,7 @@ function Auth() {
     NAME_REGEX.test(name.trim()) &&
     isValidUaePhone(contact) &&
     (!isNewUser || !!participantType) &&
-    (!referredBy.trim() || REFERRAL_CODE_REGEX.test(referredBy.trim().toUpperCase())) &&
+    (!referredBy.trim() || REFERRAL_SUFFIX_REGEX.test(referredBy.trim())) &&
     consent;
 
   useEffect(() => {
@@ -53,8 +53,11 @@ function Auth() {
     const storedRef = window.localStorage.getItem("revital_referral_code")?.trim();
     const normalizedRef = (refFromUrl || storedRef || "").toUpperCase();
     if (!normalizedRef) return;
-    window.localStorage.setItem("revital_referral_code", normalizedRef);
-    setReferredBy(normalizedRef);
+    window.localStorage.setItem(
+      "revital_referral_code",
+      normalizedRef.startsWith("RVT-") ? normalizedRef : `RVT-${normalizedRef}`,
+    );
+    setReferredBy(stripReferralPrefix(normalizedRef));
   }, [nav]);
 
   useEffect(() => {
@@ -95,8 +98,8 @@ function Auth() {
       setErr("Please select who you are");
       return;
     }
-    if (referredBy.trim() && !REFERRAL_CODE_REGEX.test(referredBy.trim().toUpperCase())) {
-      setErr("Enter a valid referral code (e.g. RVT-A1B2C3D4E5)");
+    if (referredBy.trim() && !REFERRAL_SUFFIX_REGEX.test(referredBy.trim())) {
+      setErr("Enter a valid referral code (e.g. A1B2C3D4E5)");
       return;
     }
     if (!consent) {
@@ -140,7 +143,7 @@ function Auth() {
       category: cat.label,
       consent: true,
       createdAt: existing?.createdAt ?? new Date().toISOString(),
-      referredBy: referredBy.trim().toUpperCase() || existing?.referredBy,
+      referredBy: (referredBy.trim() ? `RVT-${referredBy.trim().toUpperCase()}` : "") || existing?.referredBy,
       referCount: existing?.referCount ?? 0,
     };
     try {
@@ -238,12 +241,19 @@ function Auth() {
                     (optional)
                   </span>
                 </label>
-                <input
-                  value={referredBy}
-                  onChange={(e) => setReferredBy(e.target.value.toUpperCase())}
-                  placeholder="RVT-A1B2C3D4E5"
-                  className="mt-2 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring transition-all"
-                />
+                <div className="mt-2 flex items-center rounded-2xl border border-border bg-background/60 px-3 focus-within:ring-2 focus-within:ring-ring">
+                  <span className="text-sm font-semibold text-muted-foreground">RVT-</span>
+                  <input
+                    value={referredBy}
+                    onChange={(e) =>
+                      setReferredBy(
+                        e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10),
+                      )
+                    }
+                    placeholder="A1B2C3D4E5"
+                    className="w-full border-0 bg-transparent px-2 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
+                  />
+                </div>
                 <p className="mt-1.5 text-[11px] text-muted-foreground">
                   Enter your friend's User ID who referred you — they'll get more chances to win! 🏆
                 </p>
@@ -296,4 +306,7 @@ const isValidUaePhone = (value: string): boolean => {
   return /^(?:\+971|00971|0)?5\d{8}$/.test(normalized);
 };
 const NAME_REGEX = /^[A-Za-z][A-Za-z\s'.-]*$/;
-const REFERRAL_CODE_REGEX = /^RVT-[A-Z0-9]{10}$/;
+// referredBy state holds just the 10-char suffix — the "RVT-" prefix is fixed in the UI.
+const REFERRAL_SUFFIX_REGEX = /^[A-Z0-9]{10}$/;
+const stripReferralPrefix = (value: string): string =>
+  value.trim().toUpperCase().replace(/^RVT-/, "");
