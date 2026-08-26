@@ -110,11 +110,10 @@ export const getDailyLeaderboard = async (): Promise<LeaderEntry[]> => {
   try {
     const { getDailyLeaderboardFn } = await import("@/server/adminFns");
     const entries = await getDailyLeaderboardFn();
-    if (entries.length > 0) return entries;
+    return [...entries, ...SAMPLE_DAILY].sort((a, b) => b.total - a.total).slice(0, 10);
   } catch {
-    // fall through to sample data
+    return SAMPLE_DAILY;
   }
-  return SAMPLE_DAILY;
 };
 
 export const getGlobalLeaderboard = async (): Promise<LeaderEntry[]> => {
