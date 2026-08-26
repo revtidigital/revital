@@ -209,12 +209,13 @@ function Auth() {
           </motion.form>
         </div>
 
-        <Link
-          to="/result"
-          className="mt-4 block text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+        <button
+          type="button"
+          onClick={() => window.history.back()}
+          className="mt-4 block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          ← Back to result
-        </Link>
+          ← Back
+        </button>
       </main>
     </div>
   );
