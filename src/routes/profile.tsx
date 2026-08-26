@@ -17,11 +17,11 @@ export const Route = createFileRoute("/profile")({
 });
 
 const SCORE_TIERS = [
-  { tier: "S", label: "Peak Performer", threshold: "≥ 80%" },
-  { tier: "A", label: "High Energy", threshold: "≥ 60%" },
-  { tier: "B", label: "Charged Up", threshold: "≥ 40%" },
-  { tier: "C", label: "Warming Up", threshold: "≥ 20%" },
-  { tier: "D", label: "Recharge Needed", threshold: "< 20%" },
+  { tier: "S", label: "Peak Performer", threshold: "1,200 – 1,500 Points" },
+  { tier: "A", label: "High Energy", threshold: "900 – 1,199 Points" },
+  { tier: "B", label: "Charged Up", threshold: "600 – 899 Points" },
+  { tier: "C", label: "Warming Up", threshold: "300 – 599 Points" },
+  { tier: "D", label: "Recharge Needed", threshold: "0 – 299 Points" },
 ] as const;
 
 function formatAttemptTime(playedAt: string): string {
@@ -348,6 +348,9 @@ function Profile() {
             <div className="mt-4 bg-background/40 rounded-2xl p-4 text-left">
               <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
                 Your Referral URL
+              </p>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                For each referral you will get 100 points.
               </p>
               <div className="mt-2 flex flex-col sm:flex-row gap-2">
                 <input

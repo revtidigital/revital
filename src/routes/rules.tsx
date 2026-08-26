@@ -20,13 +20,40 @@ function RulesPage() {
         <div className="prose prose-sm md:prose-base mt-8 space-y-5 text-garnet/85">
           <section>
             <h2 className="text-xl font-bold text-garnet">General Energy Rank Bands (All Games)</h2>
-            <ul>
-              <li>S / Peak Performer: ≥ 80%</li>
-              <li>A / High Energy: ≥ 60%</li>
-              <li>B / Charged Up: ≥ 40%</li>
-              <li>C / Warming Up: ≥ 20%</li>
-              <li>D / Recharge Needed: &lt; 20%</li>
-            </ul>
+            <div className="mt-3 overflow-hidden rounded-2xl border border-border">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="bg-garnet/10">
+                    <th className="text-left px-4 py-2 font-bold text-garnet">Rank</th>
+                    <th className="text-left px-4 py-2 font-bold text-garnet">
+                      Daily Score (Out of 1,500)
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t border-border">
+                    <td className="px-4 py-2">S / Peak Performer</td>
+                    <td className="px-4 py-2">1,200 – 1,500 Points</td>
+                  </tr>
+                  <tr className="border-t border-border">
+                    <td className="px-4 py-2">A / High Energy</td>
+                    <td className="px-4 py-2">900 – 1,199 Points</td>
+                  </tr>
+                  <tr className="border-t border-border">
+                    <td className="px-4 py-2">B / Charged Up</td>
+                    <td className="px-4 py-2">600 – 899 Points</td>
+                  </tr>
+                  <tr className="border-t border-border">
+                    <td className="px-4 py-2">C / Warming Up</td>
+                    <td className="px-4 py-2">300 – 599 Points</td>
+                  </tr>
+                  <tr className="border-t border-border">
+                    <td className="px-4 py-2">D / Recharge Needed</td>
+                    <td className="px-4 py-2">0 – 299 Points</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </section>
           <section>
             <h2 className="text-xl font-bold text-garnet">1. Focus Reflex Test</h2>

@@ -7,7 +7,7 @@ import { getUser } from "@/lib/storage";
 import { Leaderboard } from "@/components/Leaderboard";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
 import heroWordmark from "@/assets/revital-hero-wordmark.png";
-import readyDesktop from "@/assets/ready-desktop.png";
+import readyDesktop from "@/assets/ready-desktop-new.png";
 import readyMobile from "@/assets/ready-mobile.png";
 
 export const Route = createFileRoute("/")({

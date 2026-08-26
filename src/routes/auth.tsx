@@ -170,9 +170,9 @@ function Auth() {
           className="text-center"
         >
           <h1 className="text-3xl md:text-4xl font-black">
-            Save Your <span className="text-gradient-energy">Score</span>
+            View Your <span className="text-gradient-energy">Score</span>
           </h1>
-          <p className="text-sm text-muted-foreground mt-2">Enter your number to save your score</p>
+          <p className="text-sm text-muted-foreground mt-2">Enter your number to view your score</p>
         </motion.div>
 
         <div className="mt-8 bg-gradient-card border border-border rounded-3xl p-6 shadow-card">
@@ -276,7 +276,7 @@ function Auth() {
               disabled={loading || !canSubmit}
               className="w-full py-3 rounded-full bg-gradient-energy text-energy-foreground font-bold shadow-button hover:scale-[1.02] active:scale-[0.98] transition-transform disabled:opacity-60"
             >
-              {loading ? "Saving..." : "Save My Score"}
+              {loading ? "Loading..." : "View Score"}
             </button>
           </motion.form>
         </div>
