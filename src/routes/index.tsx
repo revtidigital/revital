@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { Header } from "@/components/Header";
@@ -18,6 +18,7 @@ function Landing() {
   const [global, setGlobal] = useState<LeaderEntry[]>([]);
   const [announcements, setAnnouncements] = useState<string[]>([defaultAnnouncement]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showInstaBadge, setShowInstaBadge] = useState(true);
   useEffect(() => {
     setIsLoggedIn(Boolean(getUser()));
     const syncAuth = () => setIsLoggedIn(Boolean(getUser()));
@@ -68,6 +69,68 @@ function Landing() {
         className="absolute top-40 -left-32 w-96 h-96 bg-[var(--tiger)] rounded-full blur-3xl opacity-30 float-anim"
         style={{ animationDelay: "1.5s" }}
       />
+
+      <AnimatePresence>
+        {showInstaBadge && (
+          <motion.a
+            href="https://www.instagram.com/revital.uae"
+            target="_blank"
+            rel="noopener noreferrer"
+            initial={{ x: "100%", opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "100%", opacity: 0 }}
+            transition={{ type: "spring", damping: 20, stiffness: 200 }}
+            className="fixed top-1/2 right-0 -translate-y-1/2 z-50 flex flex-col items-center gap-1 bg-white/95 backdrop-blur border-2 border-r-0 border-[var(--garnet)]/15 rounded-l-2xl shadow-card px-2.5 py-3 sm:px-3 sm:py-4 max-w-[72px] sm:max-w-[110px] text-center"
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowInstaBadge(false);
+              }}
+              aria-label="Close"
+              className="absolute -top-2 -left-2 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[var(--garnet)] text-white text-xs flex items-center justify-center shadow-button hover:scale-110 active:scale-95 transition-transform"
+            >
+              ✕
+            </button>
+            <svg
+              viewBox="0 0 24 24"
+              className="w-6 h-6 sm:w-7 sm:h-7 shrink-0"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient id="ig-gradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#FEDA75" />
+                  <stop offset="25%" stopColor="#FA7E1E" />
+                  <stop offset="50%" stopColor="#D62976" />
+                  <stop offset="75%" stopColor="#962FBF" />
+                  <stop offset="100%" stopColor="#4F5BD5" />
+                </linearGradient>
+              </defs>
+              <rect x="2" y="2" width="20" height="20" rx="6" fill="url(#ig-gradient)" />
+              <rect
+                x="6.5"
+                y="6.5"
+                width="11"
+                height="11"
+                rx="3.5"
+                stroke="white"
+                strokeWidth="1.6"
+              />
+              <circle cx="12" cy="12" r="3.2" stroke="white" strokeWidth="1.6" />
+              <circle cx="16.2" cy="7.8" r="1" fill="white" />
+            </svg>
+            <span className="text-[9px] sm:text-[12px] font-bold leading-tight text-garnet">
+              Follow us on Instagram
+            </span>
+            <span className="text-[8px] sm:text-[11px] font-medium leading-tight text-garnet/70">
+              for the winner updates
+            </span>
+          </motion.a>
+        )}
+      </AnimatePresence>
 
       <div className="announcement-track">
         <div className="announcement-marquee">
@@ -281,6 +344,16 @@ function Landing() {
             >
               I'm Ready — Let's Go! →
             </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.6 }}
+            className="mt-8 flex items-center justify-center rounded-2xl border-2 border-dashed border-[var(--garnet)]/20 bg-white/60 backdrop-blur h-56 md:h-72 overflow-hidden"
+          >
+            <span className="text-sm text-muted-foreground">Image placeholder</span>
           </motion.div>
         </section>
 
