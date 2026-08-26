@@ -1,19 +1,11 @@
-import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { hasConsent } from "@/lib/storage";
 
 export function Footer() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [needsConsentSpace, setNeedsConsentSpace] = useState(false);
-  useEffect(() => {
-    setNeedsConsentSpace(!hasConsent());
-  }, []);
   if (pathname.toLowerCase().startsWith("/admin")) return null;
 
   return (
-    <footer
-      className={`mt-16 border-t border-[var(--garnet)]/10 bg-white/60 ${needsConsentSpace ? "pb-28 md:pb-0" : ""}`}
-    >
+    <footer className="mt-16 border-t border-[var(--garnet)]/10 bg-white/60">
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-2 px-3 py-2 text-xs sm:px-4 sm:py-3 sm:text-sm md:flex-row md:gap-4 md:py-8">
         <p className="text-center font-medium text-garnet/70">
           © {new Date().getFullYear()} Revital Energy Challenge. All rights reserved.
