@@ -1367,9 +1367,6 @@ function Admin() {
                               cx="50%"
                               cy="50%"
                               outerRadius={70}
-                              label={({ name, value }: { name: string; value: number }) =>
-                                `${name}: ${value}`
-                              }
                             >
                               {stats.typeDist
                                 .filter((t) => t.count > 0)
