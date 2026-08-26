@@ -870,8 +870,8 @@ function Admin() {
         "Joined Date",
         "Phone Number",
         "Name",
+        "Type of User",
         "Email",
-        "Type",
         "Refer Count",
         "Referral By",
         "Number of Days (All 3 Games)",
@@ -887,8 +887,8 @@ function Admin() {
         u.joinedAtIso ? new Date(u.joinedAtIso).toLocaleDateString() : "",
         u.contact,
         u.name || "",
-        u.email || "",
         u.participantType || "",
+        u.email || "",
         u.referCount ?? 0,
         u.referredBy || "",
         u.completedAll3Days,
@@ -911,8 +911,8 @@ function Admin() {
         "Joined Date",
         "Phone Number",
         "Name",
+        "Type of User",
         "Email",
-        "Type",
         "Refer Count",
         "Referral By",
         "Number of Days (All 3 Games)",
@@ -928,8 +928,8 @@ function Admin() {
         u.joinedAtIso ? new Date(u.joinedAtIso).toLocaleDateString() : "",
         u.contact,
         u.name || "",
-        u.email || "",
         u.participantType || "",
+        u.email || "",
         u.referCount ?? 0,
         u.referredBy || "",
         u.completedAll3Days,
@@ -952,8 +952,8 @@ function Admin() {
         "Joined Date",
         "Phone Number",
         "Name",
+        "Type of User",
         "Email",
-        "Type",
         "Refer Count",
         "Referral By",
         "Number of Days (All 3 Games)",
@@ -969,8 +969,8 @@ function Admin() {
         u.joinedAtIso ? new Date(u.joinedAtIso).toLocaleDateString() : "",
         u.contact,
         u.name || "",
-        u.email || "",
         u.participantType || "",
+        u.email || "",
         u.referCount ?? 0,
         u.referredBy || "",
         u.completedAll3Days,
@@ -1624,13 +1624,13 @@ function Admin() {
                             sort={userSort}
                             onSort={toggleUserSort}
                           />
+                          <Th>Type of User</Th>
                           <SortableTh
                             label="Email"
                             sortKey="email"
                             sort={userSort}
                             onSort={toggleUserSort}
                           />
-                          <Th>Type</Th>
                           <SortableTh
                             label="Refer Count"
                             sortKey="referCount"
@@ -1712,10 +1712,10 @@ function Admin() {
                             </Td>
                             <Td className="font-mono text-[11px]">{u.contact}</Td>
                             <Td>{u.name || "—"}</Td>
-                            <Td className="font-mono text-[11px]">{u.email || "—"}</Td>
                             <Td>
                               <ParticipantTypeBadge type={u.participantType} />
                             </Td>
+                            <Td className="font-mono text-[11px]">{u.email || "—"}</Td>
                             <Td className="font-bold text-center">{u.referCount ?? 0}</Td>
                             <Td className="font-mono text-[11px]">{u.referredBy || "—"}</Td>
                             <Td className="font-medium text-center">{u.completedAll3Days}</Td>
