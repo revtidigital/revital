@@ -290,9 +290,6 @@ function Result() {
               Share on Instagram →
             </button>
           </div>
-          <p className="text-sm font-semibold text-garnet">
-            Follow us on Instagram for the winner updates
-          </p>
           <div className="flex gap-2">
             <button
               onClick={share}
