@@ -297,7 +297,7 @@ function Profile() {
             )}
 
             <div className="mt-4 grid grid-cols-3 gap-3">
-              <Stat label="Final Score" value={finalPercentDisplay} />
+              <Stat label="Best Score" value={finalPercentDisplay} />
               <Stat label="Tier" value={tierDisplay} />
               <Stat label="Eligible" value={eligibleDisplay} />
             </div>
