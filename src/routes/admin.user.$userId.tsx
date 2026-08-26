@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Shield, ArrowLeft, CircleHelp } from "lucide-react";
 import type { UserRecord } from "@/lib/storage";
 import { dedupeAttempts } from "@/lib/storage";
+import { ParticipantTypeBadge } from "@/components/AdminBadges";
 
 export const Route = createFileRoute("/admin/user/$userId")({
   component: AdminUserDetail,
@@ -217,6 +218,12 @@ function AdminUserDetail() {
             <InfoRow label="Address" value={user.address || "—"} />
             <InfoRow label="Joined" value={new Date(user.createdAt).toLocaleString()} />
             <InfoRow label="Category" value={user.category} />
+            <div>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">
+                Type
+              </span>
+              <ParticipantTypeBadge type={user.participantType} />
+            </div>
             <InfoRow label="Total (Best)" value={String(user.total)} />
             {user.referredBy && <InfoRow label="Referred By" value={user.referredBy} mono />}
           </div>

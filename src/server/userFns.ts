@@ -32,6 +32,7 @@ const userRecordSchema = z.object({
   email: z.string().nullish(),
   name: z.string().nullish(),
   address: z.string().nullish(),
+  participantType: z.enum(["Participant", "Doctor", "Pharmacist"]).nullish(),
   scores: gameScoresSchema,
   total: z.number(),
   category: z.string(),

@@ -46,12 +46,16 @@ export const getBestAttemptForDate = (attempts: PlayAttempt[], date: string): Pl
       return current.total > best.total ? current : best;
     }, null);
 
+export type ParticipantType = "Participant" | "Doctor" | "Pharmacist";
+export const PARTICIPANT_TYPES: ParticipantType[] = ["Participant", "Doctor", "Pharmacist"];
+
 export interface UserRecord {
   userId: string; // generated unique id
   contact: string; // mobile number used for login
   email?: string; // optional profile email
   name?: string;
   address?: string;
+  participantType?: ParticipantType; // set at first-time signup only
   scores: GameScores;
   total: number;
   category: string;

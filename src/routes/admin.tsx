@@ -35,7 +35,8 @@ import {
 } from "lucide-react";
 import { Leaderboard } from "@/components/Leaderboard";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
-import { calcStreak, dedupeAttempts, type UserRecord } from "@/lib/storage";
+import { calcStreak, dedupeAttempts, PARTICIPANT_TYPES, type UserRecord } from "@/lib/storage";
+import { CategoryBadge, ParticipantTypeBadge } from "@/components/AdminBadges";
 import type { AdminLog, PlatformSettings } from "@/server/adminFns";
 
 export const Route = createFileRoute("/admin")({
@@ -466,6 +467,7 @@ function Admin() {
 
   // Filters
   const [filterCat, setFilterCat] = useState("all");
+  const [filterType, setFilterType] = useState("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [search, setSearch] = useState("");
@@ -575,6 +577,7 @@ function Admin() {
         .filter((u): u is AdminUserRow => !!u)
         .filter((u) => {
           if (filterCat !== "all" && u.selectedCategory !== filterCat) return false;
+          if (filterType !== "all" && u.participantType !== filterType) return false;
           const selectedDate = getSafeDate(u.selectedPlayedAt);
           if (from && selectedDate && selectedDate < new Date(from)) return false;
           if (to && selectedDate && selectedDate > new Date(to + "T23:59:59")) return false;
@@ -588,7 +591,7 @@ function Admin() {
             return false;
           return true;
         }),
-    [users, filterCat, from, to, search],
+    [users, filterCat, filterType, from, to, search],
   );
 
   const sortedFiltered = useMemo(() => {
@@ -648,7 +651,7 @@ function Admin() {
 
   useEffect(() => {
     setUsersPage(1);
-  }, [search, filterCat, from, to, userSort, usersPerPage]);
+  }, [search, filterCat, filterType, from, to, userSort, usersPerPage]);
 
   useEffect(() => {
     if (usersPage > totalUserPages) {
@@ -676,6 +679,10 @@ function Admin() {
     const dist = CATEGORIES.map((label) => ({
       label,
       count: users.filter((u) => u.category === label).length,
+    }));
+    const typeDist = PARTICIPANT_TYPES.map((label) => ({
+      label,
+      count: users.filter((u) => u.participantType === label).length,
     }));
     const completed = users.filter(
       (u) => u.scores.reflex !== null && u.scores.memory !== null && u.scores.balance !== null,
@@ -724,6 +731,7 @@ function Admin() {
       median,
       bestScore,
       dist,
+      typeDist,
       completed,
       completionRate,
       participation,
@@ -863,6 +871,8 @@ function Admin() {
         "Phone Number",
         "Name",
         "Email",
+        "Category",
+        "Type",
         "Refer Count",
         "Referral By",
         "Number of Days (All 3 Games)",
@@ -879,6 +889,8 @@ function Admin() {
         u.contact,
         u.name || "",
         u.email || "",
+        u.selectedCategory || "",
+        u.participantType || "",
         u.referCount ?? 0,
         u.referredBy || "",
         u.completedAll3Days,
@@ -902,6 +914,8 @@ function Admin() {
         "Phone Number",
         "Name",
         "Email",
+        "Category",
+        "Type",
         "Refer Count",
         "Referral By",
         "Number of Days (All 3 Games)",
@@ -918,6 +932,8 @@ function Admin() {
         u.contact,
         u.name || "",
         u.email || "",
+        u.selectedCategory || "",
+        u.participantType || "",
         u.referCount ?? 0,
         u.referredBy || "",
         u.completedAll3Days,
@@ -941,6 +957,8 @@ function Admin() {
         "Phone Number",
         "Name",
         "Email",
+        "Category",
+        "Type",
         "Refer Count",
         "Referral By",
         "Number of Days (All 3 Games)",
@@ -957,6 +975,8 @@ function Admin() {
         u.contact,
         u.name || "",
         u.email || "",
+        u.selectedCategory || "",
+        u.participantType || "",
         u.referCount ?? 0,
         u.referredBy || "",
         u.completedAll3Days,
@@ -1276,7 +1296,7 @@ function Admin() {
                     />
                   </div>
 
-                  <div className="mt-5 grid md:grid-cols-2 gap-4">
+                  <div className="mt-5 grid md:grid-cols-2 xl:grid-cols-3 gap-4">
                     <div className="bg-gradient-card border border-border rounded-3xl p-5 shadow-card">
                       <h3 className="font-black text-sm mb-3">Score Distribution</h3>
                       <ResponsiveContainer width="100%" height={200}>
@@ -1340,6 +1360,37 @@ function Admin() {
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
+
+                    <div className="bg-gradient-card border border-border rounded-3xl p-5 shadow-card">
+                      <h3 className="font-black text-sm mb-3">Participant Type</h3>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <PieChart>
+                          <Pie
+                            data={stats.typeDist}
+                            dataKey="count"
+                            nameKey="label"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={70}
+                            label={({ name, value }: { name: string; value: number }) =>
+                              `${name}: ${value}`
+                            }
+                          >
+                            {stats.typeDist.map((_, i) => (
+                              <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Legend />
+                          <Tooltip
+                            contentStyle={{
+                              background: "var(--background)",
+                              border: "1px solid var(--border)",
+                              borderRadius: 12,
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
 
                   <div className="mt-5 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
@@ -1368,6 +1419,17 @@ function Admin() {
                       value={stats.returningUsers}
                       info="Users who returned and completed more than one run/day."
                     />
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {stats.typeDist.map((t) => (
+                      <KpiCard
+                        key={t.label}
+                        title={`${t.label}s`}
+                        value={t.count}
+                        info={`Number of registered users who signed up as a ${t.label}.`}
+                      />
+                    ))}
                   </div>
 
                   <div className="mt-5 grid gap-4 xl:grid-cols-2">
@@ -1474,6 +1536,16 @@ function Admin() {
                         <option key={c}>{c}</option>
                       ))}
                     </select>
+                    <select
+                      value={filterType}
+                      onChange={(e) => setFilterType(e.target.value)}
+                      className="bg-background/60 border border-border rounded-full px-3 py-1.5 text-xs"
+                    >
+                      <option value="all">All types</option>
+                      {PARTICIPANT_TYPES.map((t) => (
+                        <option key={t}>{t}</option>
+                      ))}
+                    </select>
                     <input
                       type="date"
                       value={from}
@@ -1487,11 +1559,12 @@ function Admin() {
                       onChange={(e) => setTo(e.target.value)}
                       className="bg-background/60 border border-border rounded-full px-3 py-1.5 text-xs"
                     />
-                    {(search || filterCat !== "all" || from || to) && (
+                    {(search || filterCat !== "all" || filterType !== "all" || from || to) && (
                       <button
                         onClick={() => {
                           setSearch("");
                           setFilterCat("all");
+                          setFilterType("all");
                           setFrom("");
                           setTo("");
                         }}
@@ -1563,6 +1636,8 @@ function Admin() {
                             sort={userSort}
                             onSort={toggleUserSort}
                           />
+                          <Th>Category</Th>
+                          <Th>Type</Th>
                           <SortableTh
                             label="Refer Count"
                             sortKey="referCount"
@@ -1623,7 +1698,7 @@ function Admin() {
                         {filtered.length === 0 && (
                           <tr>
                             <td
-                              colSpan={14}
+                              colSpan={16}
                               className="py-10 text-center text-muted-foreground text-sm"
                             >
                               No users match filters.
@@ -1645,6 +1720,12 @@ function Admin() {
                             <Td className="font-mono text-[11px]">{u.contact}</Td>
                             <Td>{u.name || "—"}</Td>
                             <Td className="font-mono text-[11px]">{u.email || "—"}</Td>
+                            <Td>
+                              <CategoryBadge cat={u.selectedCategory} />
+                            </Td>
+                            <Td>
+                              <ParticipantTypeBadge type={u.participantType} />
+                            </Td>
                             <Td className="font-bold text-center">{u.referCount ?? 0}</Td>
                             <Td className="font-mono text-[11px]">{u.referredBy || "—"}</Td>
                             <Td className="font-medium text-center">{u.completedAll3Days}</Td>
@@ -2435,24 +2516,6 @@ function SortableTh({
         )}
       </button>
     </Th>
-  );
-}
-
-const catColors: Record<string, string> = {
-  "Peak Performer": "bg-orange-500/15 text-orange-400",
-  "High Energy": "bg-yellow-500/15 text-yellow-400",
-  "Charged Up": "bg-green-500/15 text-green-400",
-  "Warming Up": "bg-blue-500/15 text-blue-400",
-  "Recharge Needed": "bg-purple-500/15 text-purple-400",
-};
-
-function CategoryBadge({ cat }: { cat: string }) {
-  return (
-    <span
-      className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${catColors[cat] ?? "bg-muted/30"}`}
-    >
-      {cat}
-    </span>
   );
 }
 

@@ -10,8 +10,10 @@ import {
   generateUserId,
   getPersistedUtmParams,
   getCurrentScores,
+  PARTICIPANT_TYPES,
   saveUser,
   saveUserRemote,
+  type ParticipantType,
 } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
 import { executeRecaptcha } from "@/lib/recaptcha";
@@ -24,11 +26,13 @@ function Auth() {
   const nav = useNavigate();
   const [contact, setContact] = useState("");
   const [referredBy, setReferredBy] = useState("");
+  const [participantType, setParticipantType] = useState<ParticipantType | "">("");
   const [consent, setConsent] = useState(false);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const [existingUser, setExistingUser] =
     useState<Awaited<ReturnType<typeof findUserByContactRemote>>>(null);
+  const isNewUser = !existingUser;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -71,6 +75,10 @@ function Auth() {
       setErr("Enter a valid UAE mobile number");
       return;
     }
+    if (isNewUser && !participantType) {
+      setErr("Please select who you are");
+      return;
+    }
     if (!consent) {
       setErr("Please accept the consent to continue");
       return;
@@ -106,6 +114,7 @@ function Auth() {
       name: existing?.name,
       email: existing?.email,
       address: existing?.address,
+      participantType: existing?.participantType ?? (participantType || undefined),
       scores,
       total,
       category: cat.label,
@@ -168,7 +177,28 @@ function Auth() {
                 Enter a UAE mobile number (e.g. +971501234567).
               </p>
             </div>
-            {!existingUser && (
+            {isNewUser && (
+              <div>
+                <label className="text-xs uppercase tracking-wider text-muted-foreground">
+                  You are a
+                </label>
+                <select
+                  value={participantType}
+                  onChange={(e) => setParticipantType(e.target.value as ParticipantType)}
+                  className="mt-2 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+                >
+                  <option value="" disabled>
+                    Select one
+                  </option>
+                  {PARTICIPANT_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {isNewUser && (
               <div>
                 <label className="text-xs uppercase tracking-wider text-muted-foreground">
                   Referred by{" "}

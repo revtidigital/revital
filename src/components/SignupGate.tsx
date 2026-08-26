@@ -8,8 +8,10 @@ import {
   generateUserId,
   getPersistedUtmParams,
   getCurrentScores,
+  PARTICIPANT_TYPES,
   saveUser,
   saveUserRemote,
+  type ParticipantType,
 } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
 import { executeRecaptcha } from "@/lib/recaptcha";
@@ -36,6 +38,7 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [referredBy, setReferredBy] = useState("");
+  const [participantType, setParticipantType] = useState<ParticipantType | "">("");
   const [consent, setConsent] = useState(false);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
@@ -45,6 +48,7 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
   );
   const [existingRemoteUser, setExistingRemoteUser] =
     useState<Awaited<ReturnType<typeof findUserByContactRemote>>>(null);
+  const isNewUser = !existingUser && !existingRemoteUser;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -85,6 +89,7 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
         contact: contactValue.trim(),
         name: displayName.trim() || existing?.name,
         address: existing?.address,
+        participantType: existing?.participantType ?? (participantType || undefined),
         scores,
         total,
         category: cat.label,
@@ -113,6 +118,7 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
     setErr("");
     if (!name.trim()) return setErr("Please enter your name");
     if (!isValidUaePhone(contact)) return setErr("Enter a valid UAE mobile number");
+    if (isNewUser && !participantType) return setErr("Please select who you are");
     if (!consent) return setErr("Please accept the consent to continue");
     setLoading(true);
     try {
@@ -204,7 +210,28 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
               </p>
             )}
           </div>
-          {!existingUser && !existingRemoteUser && (
+          {isNewUser && (
+            <div>
+              <label className="text-xs uppercase tracking-wider text-muted-foreground">
+                You are a
+              </label>
+              <select
+                value={participantType}
+                onChange={(e) => setParticipantType(e.target.value as ParticipantType)}
+                className="mt-1.5 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="" disabled>
+                  Select one
+                </option>
+                {PARTICIPANT_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {isNewUser && (
             <div>
               <label className="text-xs uppercase tracking-wider text-muted-foreground">
                 Referred by{" "}
