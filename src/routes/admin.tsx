@@ -2128,7 +2128,7 @@ function Admin() {
                           <Th>
                             <span className="inline-flex items-center gap-1">
                               Global Score
-                              <InfoHint text="Weighted composite score: (avg daily best × consistency multiplier × 0.8) + (referrals × 50 × 0.2). Same formula as the global leaderboard." />
+                              <InfoHint text="Gameplay Score (avg daily total up to 1,500 + consistency bonus up to 1,000 + streak bonus up to 500, max 3,000) + referrals × 100. Same formula as the global leaderboard." />
                             </span>
                           </Th>
                         </tr>
@@ -2369,7 +2369,7 @@ function Admin() {
                             setSettings((prev) => ({ ...prev, campaignStartDate: v }))
                           }
                           placeholder="YYYY-MM-DD"
-                          hint="Used for global leaderboard consistency multiplier. If blank, auto-detected from earliest user."
+                          hint="Reference date for reporting only — the current Global Score formula (consistency/streak bonuses) is not based on this field."
                         />
                       </div>
                       <div className="flex flex-wrap items-center gap-3">
