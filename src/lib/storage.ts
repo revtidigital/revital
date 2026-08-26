@@ -122,41 +122,11 @@ export const logout = () => {
 };
 
 const SCORES_KEY = "revital.currentScores";
+const SCORES_DATE_KEY = "revital.currentScoresDate";
 const USER_KEY = "revital.user";
 const ALL_USERS_KEY = "revital.allUsers";
 const CONSENT_KEY = "revital.cookieConsent";
 const RUN_COMPLETED_AT_KEY = "revital.runCompletedAt";
-
-export const getCurrentScores = (): GameScores => {
-  if (typeof window === "undefined") return { reflex: null, memory: null, balance: null };
-  try {
-    return JSON.parse(localStorage.getItem(SCORES_KEY) || "") as GameScores;
-  } catch {
-    return { reflex: null, memory: null, balance: null };
-  }
-};
-
-export const saveGameScore = (game: GameKey, score: number) => {
-  const cur = getCurrentScores();
-  cur[game] = score;
-  localStorage.setItem(SCORES_KEY, JSON.stringify(cur));
-  if (game === "balance") {
-    localStorage.setItem(RUN_COMPLETED_AT_KEY, new Date().toISOString());
-    const user = getUser();
-    if (user?.consent) {
-      const total = computeTotal(cur);
-      const nextCategory = categorize(total).label;
-      void saveUserRemote({
-        ...user,
-        scores: cur,
-        total,
-        category: nextCategory,
-      }).catch((error) => {
-        console.warn("Auto-save after completing balance failed", error);
-      });
-    }
-  }
-};
 
 const toLocalDateString = (d: Date): string => {
   const y = d.getFullYear();
@@ -175,6 +145,46 @@ const toLocalDateTimeString = (d: Date): string => {
 
 /** Returns today's local date as YYYY-MM-DD. */
 export const todayDateString = (): string => toLocalDateString(new Date());
+
+export const getCurrentScores = (): GameScores => {
+  if (typeof window === "undefined") return { reflex: null, memory: null, balance: null };
+  // Scores from a previous day are stale — require a fresh run each day so
+  // direct URLs into later games can't be unlocked by an old completed run.
+  if (localStorage.getItem(SCORES_DATE_KEY) !== todayDateString()) {
+    localStorage.removeItem(SCORES_KEY);
+    localStorage.removeItem(RUN_COMPLETED_AT_KEY);
+    localStorage.setItem(SCORES_DATE_KEY, todayDateString());
+    return { reflex: null, memory: null, balance: null };
+  }
+  try {
+    return JSON.parse(localStorage.getItem(SCORES_KEY) || "") as GameScores;
+  } catch {
+    return { reflex: null, memory: null, balance: null };
+  }
+};
+
+export const saveGameScore = (game: GameKey, score: number) => {
+  const cur = getCurrentScores();
+  cur[game] = score;
+  localStorage.setItem(SCORES_KEY, JSON.stringify(cur));
+  localStorage.setItem(SCORES_DATE_KEY, todayDateString());
+  if (game === "balance") {
+    localStorage.setItem(RUN_COMPLETED_AT_KEY, new Date().toISOString());
+    const user = getUser();
+    if (user?.consent) {
+      const total = computeTotal(cur);
+      const nextCategory = categorize(total).label;
+      void saveUserRemote({
+        ...user,
+        scores: cur,
+        total,
+        category: nextCategory,
+      }).catch((error) => {
+        console.warn("Auto-save after completing balance failed", error);
+      });
+    }
+  }
+};
 
 const MS_PER_DAY = 86_400_000; // milliseconds in one day
 

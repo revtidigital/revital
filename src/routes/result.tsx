@@ -2,7 +2,6 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Header } from "@/components/Header";
-import { SignupGate } from "@/components/SignupGate";
 import {
   categorize,
   computeTotal,
@@ -32,12 +31,16 @@ function Result() {
 
   useEffect(() => {
     const s = getCurrentScores();
-    setScores(s);
     if (s.reflex === null || s.memory === null || s.balance === null) {
       nav({ to: "/challenges" });
       return;
     }
-    setUnlocked(isLoggedIn());
+    if (!isLoggedIn()) {
+      nav({ to: "/save-score" });
+      return;
+    }
+    setScores(s);
+    setUnlocked(true);
   }, [nav]);
 
   useEffect(() => {
@@ -196,10 +199,7 @@ function Result() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      {!unlocked && <SignupGate onSuccess={() => setUnlocked(true)} />}
-      <main
-        className={`flex-1 max-w-2xl mx-auto px-4 py-8 text-center ${!unlocked ? "blur-sm pointer-events-none select-none" : ""}`}
-      >
+      <main className="flex-1 max-w-2xl mx-auto px-4 py-8 text-center">
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
