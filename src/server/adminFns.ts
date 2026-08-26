@@ -470,6 +470,44 @@ export const lockDailyTopTenAndNotifyFn = createServerFn({ method: "POST" })
     return { ok: true, lockDate, winners: ranked.length, mailed: true, adminEmails };
   });
 
+export const getDailyLeaderboardFn = createServerFn({ method: "GET" }).handler(async () => {
+  const db = await getDb();
+  const today = formatUaeDate(new Date());
+  const users = await db
+    .collection<UserRecord>("users")
+    .find(
+      { "playAttempts.date": today },
+      { projection: { name: 1, contact: 1, category: 1, playAttempts: 1 } },
+    )
+    .toArray();
+
+  const mask = (c: string) => {
+    if (c.includes("@")) {
+      const [a, b] = c.split("@");
+      return a.slice(0, 2) + "•••@" + b;
+    }
+    if (c.length > 4) return c.slice(0, 3) + "•••" + c.slice(-2);
+    return c;
+  };
+
+  const scored = users
+    .map((u) => {
+      const todaysAttempts = (u.playAttempts ?? []).filter((a) => a.date === today);
+      if (todaysAttempts.length === 0) return null;
+      const best = todaysAttempts.reduce((best, cur) => (cur.total > best.total ? cur : best));
+      return {
+        name: u.name || "Player",
+        contact: mask(u.contact),
+        total: best.total,
+        category: u.category,
+        when: "Today",
+      };
+    })
+    .filter((u): u is NonNullable<typeof u> => u !== null);
+
+  return scored.sort((a, b) => b.total - a.total).slice(0, 10);
+});
+
 export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(async () => {
   const db = await getDb();
   // Projected: this computation only needs name/contact/scores/refer data — never email/address.
@@ -506,7 +544,7 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
       const activeDays = uniqueDates.length;
       if (activeDays === 0) return null;
 
-      // Best attempt per day — use sum of 3 game scores (max 4500/day per spec)
+      // Daily Total per active day — best attempt per game per day, averaged across the 3 games (max 1,500/day).
       const dailyBests = uniqueDates.map((date) =>
         attempts
           .filter((a) => a.date === date)
@@ -519,35 +557,51 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
           }),
       );
 
-      const sumDailyBest = dailyBests.reduce(
-        (s, a) => s + (a.scores.reflex ?? 0) + (a.scores.memory ?? 0) + (a.scores.balance ?? 0),
+      const sumDailyTotals = dailyBests.reduce(
+        (s, a) =>
+          s +
+          ((a.scores.reflex ?? 0) + (a.scores.memory ?? 0) + (a.scores.balance ?? 0)) / 3,
         0,
       );
       // Average Gameplay Performance — max 1,500 (average Daily Total across active days).
-      const avgGameplayPerformance = sumDailyBest / activeDays;
+      const avgGameplayPerformance = sumDailyTotals / activeDays;
 
-      // Consistency Bonus — max 1,000, scaled against a fixed 30-day campaign.
-      const consistencyBonus = Math.min(1000, (activeDays / 30) * 1000);
+      // Consistency Bonus — max 1,000, step table based on unique active days played.
+      const consistencyBonus =
+        activeDays >= 26
+          ? 1000
+          : activeDays >= 21
+            ? 850
+            : activeDays >= 16
+              ? 650
+              : activeDays >= 11
+                ? 450
+                : activeDays >= 6
+                  ? 250
+                  : activeDays >= 1
+                    ? 100
+                    : 0;
 
-      // Performance Streak Bonus — max 500, based on the longest consecutive-day streak.
+      // Performance Streak Bonus — max 500, based on the current active consecutive-day streak.
       const sortedDates = [...uniqueDates].sort();
-      let longestStreak = 0;
       let currentStreak = 0;
       let prevMs: number | null = null;
       for (const date of sortedDates) {
         const ms = new Date(date + "T00:00:00Z").getTime();
         currentStreak = prevMs !== null && ms - prevMs === 86_400_000 ? currentStreak + 1 : 1;
-        longestStreak = Math.max(longestStreak, currentStreak);
         prevMs = ms;
       }
+      const todayMs = new Date(formatUaeDate(new Date()) + "T00:00:00Z").getTime();
+      const isStreakActive = prevMs !== null && todayMs - prevMs <= 86_400_000;
+      const activeStreak = isStreakActive ? currentStreak : 0;
       const streakBonus =
-        longestStreak >= 30
+        activeStreak >= 30
           ? 500
-          : longestStreak >= 21
+          : activeStreak >= 21
             ? 350
-            : longestStreak >= 14
+            : activeStreak >= 14
               ? 200
-              : longestStreak >= 7
+              : activeStreak >= 7
                 ? 100
                 : 0;
 

@@ -789,20 +789,15 @@ function Admin() {
     const uaeToday = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dubai" }).format(
       new Date(),
     );
-    const todayMs = new Date(uaeToday + "T00:00:00+04:00").getTime();
-    const campaignStartMs = settings.campaignStartDate
-      ? new Date(settings.campaignStartDate + "T00:00:00+04:00").getTime()
-      : users.reduce<number>((min, u) => {
-          const t = u.createdAt ? new Date(u.createdAt).getTime() : Infinity;
-          return t < min ? t : min;
-        }, todayMs);
-    const totalCampaignDays = Math.max(1, Math.round((todayMs - campaignStartMs) / 86_400_000) + 1);
 
+    // Same formula as the canonical Global Leaderboard (getGlobalLeaderboardFn in adminFns.ts):
+    // Gameplay Score (avg daily total + consistency bonus + streak bonus) + referral points.
     const computeGlobalScore = (u: UserRecord): number => {
       const attempts = u.playAttempts ?? [];
       const uniqueDates = [...new Set(attempts.map((a) => a.date))];
       const activeDays = uniqueDates.length;
       if (activeDays === 0) return 0;
+
       const dailyBests = uniqueDates.map((date) =>
         attempts
           .filter((a) => a.date === date)
@@ -814,14 +809,53 @@ function Admin() {
             return curSum > bestSum ? cur : best;
           }),
       );
-      const sumDailyBest = dailyBests.reduce(
-        (s, a) => s + (a.scores.reflex ?? 0) + (a.scores.memory ?? 0) + (a.scores.balance ?? 0),
+      const sumDailyTotals = dailyBests.reduce(
+        (s, a) =>
+          s + ((a.scores.reflex ?? 0) + (a.scores.memory ?? 0) + (a.scores.balance ?? 0)) / 3,
         0,
       );
-      const performanceScore = sumDailyBest / activeDays;
-      const consistencyMultiplier = 1 + (activeDays / totalCampaignDays) * 0.2;
-      const referralScore = Math.min(u.referCount ?? 0, 20) * 50;
-      return Math.round(performanceScore * consistencyMultiplier * 0.8 + referralScore * 0.2);
+      const avgGameplayPerformance = sumDailyTotals / activeDays;
+
+      const consistencyBonus =
+        activeDays >= 26
+          ? 1000
+          : activeDays >= 21
+            ? 850
+            : activeDays >= 16
+              ? 650
+              : activeDays >= 11
+                ? 450
+                : activeDays >= 6
+                  ? 250
+                  : activeDays >= 1
+                    ? 100
+                    : 0;
+
+      const sortedDates = [...uniqueDates].sort();
+      let currentStreak = 0;
+      let prevMs: number | null = null;
+      for (const date of sortedDates) {
+        const ms = new Date(date + "T00:00:00Z").getTime();
+        currentStreak = prevMs !== null && ms - prevMs === 86_400_000 ? currentStreak + 1 : 1;
+        prevMs = ms;
+      }
+      const streakTodayMs = new Date(uaeToday + "T00:00:00Z").getTime();
+      const isStreakActive = prevMs !== null && streakTodayMs - prevMs <= 86_400_000;
+      const activeStreak = isStreakActive ? currentStreak : 0;
+      const streakBonus =
+        activeStreak >= 30
+          ? 500
+          : activeStreak >= 21
+            ? 350
+            : activeStreak >= 14
+              ? 200
+              : activeStreak >= 7
+                ? 100
+                : 0;
+
+      const gameplayScore = avgGameplayPerformance + consistencyBonus + streakBonus;
+      const referralScore = (u.referCount ?? 0) * 100;
+      return Math.round(gameplayScore + referralScore);
     };
 
     return [...users]
@@ -837,7 +871,7 @@ function Admin() {
           return (b.playDates?.length ?? 0) - (a.playDates?.length ?? 0);
         return b.streak - a.streak;
       });
-  }, [users, settings.campaignStartDate]);
+  }, [users]);
 
   // ── Logs filtered ───────────────────────────────────────────────────────────
   const filteredLogs = useMemo(() => {

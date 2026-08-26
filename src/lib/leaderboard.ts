@@ -1,5 +1,4 @@
 // Leaderboard — data is fetched from MongoDB via server functions.
-import { getAllUsersRemote, type UserRecord } from "./storage";
 
 export interface LeaderEntry {
   name: string;
@@ -107,26 +106,15 @@ const SAMPLE_GLOBAL: LeaderEntry[] = [
   },
 ];
 
-const mask = (c: string) => {
-  if (c.includes("@")) {
-    const [a, b] = c.split("@");
-    return a.slice(0, 2) + "•••@" + b;
-  }
-  if (c.length > 4) return c.slice(0, 3) + "•••" + c.slice(-2);
-  return c;
-};
-
-const fromUser = (u: UserRecord, when: string): LeaderEntry => ({
-  name: u.name || "Player",
-  contact: mask(u.contact),
-  total: u.total,
-  category: u.category,
-  when,
-});
-
 export const getDailyLeaderboard = async (): Promise<LeaderEntry[]> => {
-  const users = (await getAllUsersRemote()).map((u) => fromUser(u, "Today"));
-  return [...users, ...SAMPLE_DAILY].sort((a, b) => b.total - a.total).slice(0, 10);
+  try {
+    const { getDailyLeaderboardFn } = await import("@/server/adminFns");
+    const entries = await getDailyLeaderboardFn();
+    if (entries.length > 0) return entries;
+  } catch {
+    // fall through to sample data
+  }
+  return SAMPLE_DAILY;
 };
 
 export const getGlobalLeaderboard = async (): Promise<LeaderEntry[]> => {

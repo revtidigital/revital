@@ -97,7 +97,10 @@ export const saveUserFn = createServerFn({ method: "POST" })
     const existing = await db
       .collection<UserRecord>("users")
       .findOne({ contact: normalized.contact });
-    const firstTimeReferral = normalized.referredBy && !existing?.referredBy;
+    const firstTimeReferral =
+      normalized.referredBy &&
+      normalized.referredBy !== normalized.userId &&
+      !existing?.referredBy;
 
     // Merge playDates / playAttempts deterministically so repeated saves do not duplicate attempts.
     const mergedPlayDates = [
