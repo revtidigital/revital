@@ -5,7 +5,7 @@ import { Header } from "@/components/Header";
 import {
   dedupeAttempts,
   findUserByContactRemote,
-  getAllUsersRemote,
+  getReferralInfoRemote,
   getUser,
   saveUserRemote,
   resetScores,
@@ -50,7 +50,7 @@ function Profile() {
   const [copyError, setCopyError] = useState(false);
   const [copiedUserId, setCopiedUserId] = useState(false);
   const [referrerName, setReferrerName] = useState("");
-  const [referralUsers, setReferralUsers] = useState<UserRecord[]>([]);
+  const [referralCount, setReferralCount] = useState(0);
   const [globalRank, setGlobalRank] = useState<number | null>(null);
   const [globalScore, setGlobalScore] = useState<number | null>(null);
   const [nameFlagged, setNameFlagged] = useState(false);
@@ -92,21 +92,13 @@ function Profile() {
         setEmail(currentUser.email || "");
         setAddress(currentUser.address || "");
 
-        const allUsers = await getAllUsersRemote();
-        if (currentUser.referredBy) {
-          const referrer = allUsers.find(
-            (candidate) => candidate.userId.toUpperCase() === currentUser.referredBy?.toUpperCase(),
-          );
-          setReferrerName(referrer?.name || referrer?.contact || "");
-        }
-        setReferralUsers(
-          allUsers.filter(
-            (candidate) => candidate.referredBy?.toUpperCase() === currentUser.userId.toUpperCase(),
-          ),
-        );
+        const { referrerName: fetchedReferrerName, referralCount: fetchedReferralCount } =
+          await getReferralInfoRemote(currentUser.userId);
+        setReferrerName(fetchedReferrerName);
+        setReferralCount(fetchedReferralCount);
       } catch {
         setReferrerName("");
-        setReferralUsers([]);
+        setReferralCount(0);
       }
     };
     loadReferralData();
@@ -307,14 +299,8 @@ function Profile() {
 
             {hasPlayedBefore && (
               <div className="mt-4 grid grid-cols-2 gap-3">
-                <Stat
-                  label="Global Rank"
-                  value={globalRank !== null ? `#${globalRank}` : "—"}
-                />
-                <Stat
-                  label="Global Score"
-                  value={globalScore !== null ? `${globalScore}` : "—"}
-                />
+                <Stat label="Global Rank" value={globalRank !== null ? `#${globalRank}` : "—"} />
+                <Stat label="Global Score" value={globalScore !== null ? `${globalScore}` : "—"} />
               </div>
             )}
 
@@ -422,8 +408,7 @@ function Profile() {
                 </button>
               </div>
               <p className="mt-2 text-[11px] text-muted-foreground">
-                Total successful referrals:{" "}
-                <span className="font-bold">{referralUsers.length}</span>
+                Total successful referrals: <span className="font-bold">{referralCount}</span>
               </p>
             </div>
           </div>
@@ -449,7 +434,9 @@ function Profile() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className={`mt-2 w-full bg-background/60 border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 ${
-                nameFlagged ? "border-destructive focus:ring-destructive" : "border-border focus:ring-ring"
+                nameFlagged
+                  ? "border-destructive focus:ring-destructive"
+                  : "border-border focus:ring-ring"
               }`}
             />
             {nameFlagged && (
@@ -526,9 +513,7 @@ function Profile() {
                       <td className="py-2 pr-3 text-muted-foreground text-xs">
                         {formatAttemptTime(attempt.playedAt)}
                       </td>
-                      <td className="py-2 pr-3 font-bold text-gradient-energy">
-                        {attempt.total}
-                      </td>
+                      <td className="py-2 pr-3 font-bold text-gradient-energy">{attempt.total}</td>
                       <td className="py-2 pr-3">{attempt.category}</td>
                     </tr>
                   ))
@@ -542,7 +527,10 @@ function Profile() {
           <button
             type="button"
             onClick={() => {
-              trackEvent("cta_click", { cta_label: hasPlayedBefore ? "play_again" : "play", source: "profile" });
+              trackEvent("cta_click", {
+                cta_label: hasPlayedBefore ? "play_again" : "play",
+                source: "profile",
+              });
               resetScores();
               nav({ to: "/challenges" });
             }}

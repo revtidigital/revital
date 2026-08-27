@@ -371,6 +371,19 @@ export const getAllUsersRemote = async (): Promise<UserRecord[]> => {
   }
 };
 
+/** Fetch referrer name + referral count for a user, without pulling the entire user collection. */
+export const getReferralInfoRemote = async (
+  userId: string,
+): Promise<{ referrerName: string; referralCount: number }> => {
+  try {
+    const { getReferralInfoFn } = await import("@/server/userFns");
+    return await getReferralInfoFn({ data: { userId } });
+  } catch (e) {
+    console.warn("MongoDB getReferralInfo failed", e);
+    return { referrerName: "", referralCount: 0 };
+  }
+};
+
 export const getUser = (): UserRecord | null => {
   try {
     const u = JSON.parse(localStorage.getItem(USER_KEY) || "") as UserRecord;

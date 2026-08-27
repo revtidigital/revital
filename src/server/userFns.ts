@@ -107,9 +107,7 @@ export const saveUserFn = createServerFn({ method: "POST" })
       existing?.consentAcceptedAt ?? (normalized.consent ? new Date().toISOString() : undefined);
 
     const firstTimeReferral =
-      normalized.referredBy &&
-      normalized.referredBy !== normalized.userId &&
-      !existing?.referredBy;
+      normalized.referredBy && normalized.referredBy !== normalized.userId && !existing?.referredBy;
 
     // Merge playDates / playAttempts deterministically so repeated saves do not duplicate attempts.
     const mergedPlayDates = [
@@ -188,6 +186,54 @@ export const getUserByIdFn = createServerFn({ method: "POST" })
     return rest as UserRecord;
   });
 
+// ── referral info (referrer name + referral count) ─────────────────────────────
+// Used by the profile page, which only needs one name and a count — not the
+// entire user collection.
+export const getReferralInfoFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => userIdSchema.parse(data))
+  .handler(async ({ data }) => {
+    await checkRateLimit(`lookup:${getClientIp()}`, 30, 60);
+    const db = await getDb();
+    const collection = db.collection<UserRecord & { _id: unknown }>("users");
+
+    const [user, referralCount] = await Promise.all([
+      collection.findOne({ userId: data.userId }, { projection: { referredBy: 1 } }),
+      collection.countDocuments({ referredBy: data.userId }),
+    ]);
+
+    let referrerName = "";
+    if (user?.referredBy) {
+      const referrer = await collection.findOne(
+        { userId: user.referredBy },
+        { projection: { name: 1, contact: 1 } },
+      );
+      referrerName = referrer?.name || maskContact(referrer?.contact ?? "") || "";
+    }
+
+    return { referrerName, referralCount };
+  });
+
+// ── profanity check (server-side proxy) ─────────────────────────────────────────
+// Proxies to PurgoMalum from the server rather than the browser, so a user's
+// name is never sent to a third-party service directly from their client.
+export const checkProfanityFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ text: z.string() }).parse(data))
+  .handler(async ({ data }) => {
+    const trimmed = data.text.trim();
+    if (!trimmed) return { flagged: false };
+    try {
+      const res = await fetch(
+        `https://www.purgomalum.com/service/containsprofanity?text=${encodeURIComponent(trimmed)}`,
+      );
+      if (!res.ok) return { flagged: false };
+      const body = (await res.text()).trim().toLowerCase();
+      return { flagged: body === "true" };
+    } catch {
+      // Fail open — never block a legitimate user if the third-party service is unreachable.
+      return { flagged: false };
+    }
+  });
+
 // ── reCAPTCHA verification ────────────────────────────────────────────────────
 export const verifyCaptchaFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => z.object({ token: z.string() }).parse(data))
@@ -219,8 +265,18 @@ export const verifyCaptchaFn = createServerFn({ method: "POST" })
   });
 
 // ── get all (public-safe fields only — used by leaderboard/referrals) ──────────
-// Deliberately strips email/address/playAttempts so this public, unauthenticated
-// RPC can't be used to scrape PII. Admin screens must use getAllUsersAdminFn instead.
+// Deliberately strips email/address/playAttempts and masks contact so this
+// public, unauthenticated RPC can't be used to scrape PII. Admin screens must
+// use getAllUsersAdminFn instead.
+const maskContact = (c: string) => {
+  if (c.includes("@")) {
+    const [a, b] = c.split("@");
+    return a.slice(0, 2) + "•••@" + b;
+  }
+  if (c.length > 4) return c.slice(0, 3) + "•••" + c.slice(-2);
+  return c;
+};
+
 export const getAllUsersFn = createServerFn({ method: "GET" }).handler(async () => {
   const db = await getDb();
   const docs = await db
@@ -230,8 +286,18 @@ export const getAllUsersFn = createServerFn({ method: "GET" }).handler(async () 
     .limit(5000)
     .toArray();
   return docs.map(
-    ({ _id: _unused, email: _email, address: _address, playAttempts: _playAttempts, ...rest }) =>
-      rest as UserRecord,
+    ({
+      _id: _unused,
+      email: _email,
+      address: _address,
+      playAttempts: _playAttempts,
+      contact,
+      ...rest
+    }) =>
+      ({
+        ...rest,
+        contact: maskContact(contact),
+      }) as UserRecord,
   );
 });
 

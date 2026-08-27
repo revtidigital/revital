@@ -6,8 +6,6 @@ RUN apk add --no-cache python3 make g++ pkgconfig \
 COPY package*.json ./
 RUN npm ci --legacy-peer-deps --include=dev
 COPY . .
-RUN rm -rf node_modules
-RUN npm install --legacy-peer-deps --include=dev
 RUN npm run build
 
 FROM node:20-alpine
@@ -27,4 +25,4 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
 COPY scripts/ ./scripts/
 EXPOSE 3000
-CMD ["pm2-runtime", "start", "dist/server/server.js", "-i", "2"]
+CMD ["pm2-runtime", "start", "dist/server/server.js", "-i", "max"]

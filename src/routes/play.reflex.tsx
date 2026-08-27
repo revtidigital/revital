@@ -95,7 +95,10 @@ function ReflexGame() {
     if (phase === "waiting") {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-      completeRound(0, true);
+      // Premature taps are penalized as the worst possible reaction time (score 0
+      // for this round), never as 0ms — otherwise Math.min in finish() would let
+      // a premature tap win the round and award the maximum score.
+      completeRound(15000, true);
       return;
     }
 

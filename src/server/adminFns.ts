@@ -117,11 +117,18 @@ export interface PlatformSettings {
   campaignStartDate: string; // YYYY-MM-DD
 }
 
+// Tracking IDs are interpolated directly into an inline <script> tag on every
+// page load (see __root.tsx), so they must be constrained to a safe charset —
+// no quotes, angle brackets, or script-breaking characters can be admitted.
+const trackingIdSchema = z
+  .string()
+  .regex(/^[A-Za-z0-9_-]*$/, "Must be alphanumeric (dashes/underscores allowed)");
+
 const settingsSchema = z.object({
   token: z.string(),
-  ga4: z.string(),
-  metaPixel: z.string(),
-  clarity: z.string(),
+  ga4: trackingIdSchema,
+  metaPixel: trackingIdSchema,
+  clarity: trackingIdSchema,
   recaptchaSite: z.string(),
   recaptchaSecret: z.string(),
   homeAnnouncementMode: z.enum(["winner", "text", "leaderboard"]).default("winner"),
@@ -494,18 +501,26 @@ export const getDailyLeaderboardFn = createServerFn({ method: "GET" }).handler(a
     .map((u) => {
       const todaysAttempts = (u.playAttempts ?? []).filter((a) => a.date === today);
       if (todaysAttempts.length === 0) return null;
-      const best = todaysAttempts.reduce((best, cur) => (cur.total > best.total ? cur : best));
+      const best = todaysAttempts.reduce((best, cur) =>
+        cur.total > best.total || (cur.total === best.total && cur.playedAt < best.playedAt)
+          ? cur
+          : best,
+      );
       return {
         name: u.name || "Player",
         contact: mask(u.contact),
         total: best.total,
+        playedAt: best.playedAt,
         category: u.category,
         when: "Today",
       };
     })
     .filter((u): u is NonNullable<typeof u> => u !== null);
 
-  return scored.sort((a, b) => b.total - a.total).slice(0, 10);
+  return scored
+    .sort((a, b) => b.total - a.total || a.playedAt.localeCompare(b.playedAt))
+    .slice(0, 10)
+    .map(({ playedAt: _playedAt, ...rest }) => rest);
 });
 
 export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(async () => {
@@ -559,30 +574,29 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
 
       const sumDailyTotals = dailyBests.reduce(
         (s, a) =>
-          s +
-          ((a.scores.reflex ?? 0) + (a.scores.memory ?? 0) + (a.scores.balance ?? 0)) / 3,
+          s + ((a.scores.reflex ?? 0) + (a.scores.memory ?? 0) + (a.scores.balance ?? 0)) / 3,
         0,
       );
       // Average Gameplay Performance — max 1,500 (average Daily Total across active days).
       const avgGameplayPerformance = sumDailyTotals / activeDays;
 
-      // Consistency Bonus — max 1,000, step table based on unique active days played.
+      // Consistency Bonus — max 500, step table based on unique active days played.
       const consistencyBonus =
         activeDays >= 26
-          ? 1000
+          ? 500
           : activeDays >= 21
-            ? 850
+            ? 425
             : activeDays >= 16
-              ? 650
+              ? 325
               : activeDays >= 11
-                ? 450
+                ? 225
                 : activeDays >= 6
-                  ? 250
+                  ? 125
                   : activeDays >= 1
-                    ? 100
+                    ? 50
                     : 0;
 
-      // Performance Streak Bonus — max 500, based on the current active consecutive-day streak.
+      // Performance Streak Bonus — max 1,000, based on the current active consecutive-day streak.
       const sortedDates = [...uniqueDates].sort();
       let currentStreak = 0;
       let prevMs: number | null = null;
@@ -596,13 +610,13 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
       const activeStreak = isStreakActive ? currentStreak : 0;
       const streakBonus =
         activeStreak >= 30
-          ? 500
+          ? 1000
           : activeStreak >= 21
-            ? 350
+            ? 700
             : activeStreak >= 14
-              ? 200
+              ? 400
               : activeStreak >= 7
-                ? 100
+                ? 200
                 : 0;
 
       const gameplayScore = avgGameplayPerformance + consistencyBonus + streakBonus;
@@ -703,25 +717,24 @@ export const getUserRankFn = createServerFn({ method: "GET" })
 
         const sumDailyTotals = dailyBests.reduce(
           (s, a) =>
-            s +
-            ((a.scores.reflex ?? 0) + (a.scores.memory ?? 0) + (a.scores.balance ?? 0)) / 3,
+            s + ((a.scores.reflex ?? 0) + (a.scores.memory ?? 0) + (a.scores.balance ?? 0)) / 3,
           0,
         );
         const avgGameplayPerformance = sumDailyTotals / activeDays;
 
         const consistencyBonus =
           activeDays >= 26
-            ? 1000
+            ? 500
             : activeDays >= 21
-              ? 850
+              ? 425
               : activeDays >= 16
-                ? 650
+                ? 325
                 : activeDays >= 11
-                  ? 450
+                  ? 225
                   : activeDays >= 6
-                    ? 250
+                    ? 125
                     : activeDays >= 1
-                      ? 100
+                      ? 50
                       : 0;
 
         const sortedDates = [...uniqueDates].sort();
@@ -737,13 +750,13 @@ export const getUserRankFn = createServerFn({ method: "GET" })
         const activeStreak = isStreakActive ? currentStreak : 0;
         const streakBonus =
           activeStreak >= 30
-            ? 500
+            ? 1000
             : activeStreak >= 21
-              ? 350
+              ? 700
               : activeStreak >= 14
-                ? 200
+                ? 400
                 : activeStreak >= 7
-                  ? 100
+                  ? 200
                   : 0;
 
         const gameplayScore = avgGameplayPerformance + consistencyBonus + streakBonus;

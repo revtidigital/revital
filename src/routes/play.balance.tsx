@@ -11,7 +11,7 @@ export const Route = createFileRoute("/play/balance")({
   component: BalanceGame,
 });
 
-const DURATION = 20; // seconds (aligned with demo)
+const DURATION = 15; // seconds (matches rules text and the 15000ms score scaling below)
 const GRAVITY = 0.35;
 const TAP_BOOST = -6.5;
 const TARGET_Y = 50; // % from top — sweet zone center
