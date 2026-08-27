@@ -300,7 +300,18 @@ function Auth() {
                 className="mt-1 accent-[oklch(0.72_0.19_50)]"
               />
               <span className="text-xs text-muted-foreground">
-                I agree to be contacted via phone about Revital campaigns and to the privacy policy
+                I agree to be contacted via phone about Revital campaigns, and accept the{" "}
+                <Link to="/rules" target="_blank" className="underline hover:text-foreground">
+                  Rules
+                </Link>
+                ,{" "}
+                <Link to="/terms" target="_blank" className="underline hover:text-foreground">
+                  Terms and Conditions
+                </Link>{" "}
+                and{" "}
+                <Link to="/privacy" target="_blank" className="underline hover:text-foreground">
+                  Privacy Policy
+                </Link>{" "}
                 (UAE compliant).
               </span>
             </label>

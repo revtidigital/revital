@@ -316,8 +316,37 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
               className="mt-1 accent-[oklch(0.72_0.19_50)]"
             />
             <span className="text-xs text-muted-foreground">
-              I agree to be contacted by Revital about campaigns & rewards by phone, and accept the
-              privacy policy (UAE compliant).
+              I agree to be contacted by Revital about campaigns & rewards by phone, and accept the{" "}
+              <a
+                href="/rules"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-foreground"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Rules
+              </a>
+              ,{" "}
+              <a
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-foreground"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Terms and Conditions
+              </a>{" "}
+              and{" "}
+              <a
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-foreground"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Privacy Policy
+              </a>{" "}
+              (UAE compliant).
             </span>
           </label>
           {err && <p className="text-sm text-destructive">{err}</p>}
