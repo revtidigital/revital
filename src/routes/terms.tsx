@@ -30,7 +30,6 @@ function TermsPage() {
               compete by playing three mini-games, earning Daily Energy Scores, climbing the
               Global Leaderboard, and becoming eligible for daily and grand rewards.
             </p>
-            <p className="mt-1">Campaign Period: 15 August 2026 – 15 September 2026.</p>
             <p className="mt-1">
               Revital reserves the right to modify, extend, suspend, or terminate the campaign if
               required for operational, legal, or technical reasons.
