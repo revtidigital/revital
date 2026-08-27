@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { ChallengeProgressBar } from "@/components/ChallengeProgressBar";
 import { getCurrentScores, getNextGame, CHALLENGE_ORDER } from "@/lib/storage";
 import { useEffect, useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/challenges")({
   component: Challenges,
@@ -57,6 +58,7 @@ function Challenges() {
           {allDone ? (
             <Link
               to="/result"
+              onClick={() => trackEvent("cta_click", { cta_label: "see_your_score" })}
               className="inline-flex px-8 py-4 rounded-full bg-gradient-energy text-white font-bold shadow-button glow-pulse hover:scale-105 active:scale-95 transition-transform"
             >
               See Your Score →
@@ -64,6 +66,7 @@ function Challenges() {
           ) : next ? (
             <Link
               to={nextRoute[next]}
+              onClick={() => trackEvent("cta_click", { cta_label: "continue_challenge", game_type: next })}
               className="inline-flex px-8 py-4 rounded-full bg-gradient-energy text-white font-bold shadow-button glow-pulse hover:scale-105 active:scale-95 transition-transform"
             >
               ▶ Continue Challenge

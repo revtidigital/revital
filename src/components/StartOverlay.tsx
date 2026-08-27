@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 interface StartOverlayProps {
   emoji?: string;
@@ -40,7 +41,10 @@ export function StartOverlay({ emoji, title, lines, onStart }: StartOverlayProps
           ))}
         </div>
         <button
-          onClick={onStart}
+          onClick={() => {
+            trackEvent("cta_click", { cta_label: "start_now_overlay", overlay_title: title });
+            onStart();
+          }}
           className="mt-6 w-full py-4 rounded-full bg-gradient-energy text-energy-foreground font-bold shadow-button hover:scale-105 active:scale-95 transition-transform"
         >
           ▶ Start Now

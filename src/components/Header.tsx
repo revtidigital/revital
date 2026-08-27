@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import logo from "@/assets/revital-logo.png";
 import { getUser, logout, type UserRecord } from "@/lib/storage";
+import { trackEvent } from "@/lib/analytics";
 
 export function Header() {
   const nav = useNavigate();
@@ -35,18 +36,21 @@ export function Header() {
             <>
               <a
                 href="#hero-section"
+                onClick={() => trackEvent("nav_click", { nav_label: "home" })}
                 className="inline-flex px-2.5 sm:px-3 py-2 rounded-full text-garnet/80 hover:text-garnet hover:bg-[var(--marigold)]/30 transition-colors font-medium whitespace-nowrap"
               >
                 Home
               </a>
               <a
                 href="#how-to-participate"
+                onClick={() => trackEvent("nav_click", { nav_label: "how_to_participate" })}
                 className="inline-flex px-2.5 sm:px-3 py-2 rounded-full text-garnet/80 hover:text-garnet hover:bg-[var(--marigold)]/30 transition-colors font-medium whitespace-nowrap"
               >
                 🎮 How to Participate
               </a>
               <a
                 href="#leaderboard-section"
+                onClick={() => trackEvent("nav_click", { nav_label: "leaderboard" })}
                 className="inline-flex px-2.5 sm:px-3 py-2 rounded-full text-garnet/80 hover:text-garnet hover:bg-[var(--marigold)]/30 transition-colors font-medium whitespace-nowrap"
               >
                 Leaderboard
@@ -59,6 +63,7 @@ export function Header() {
           {!user && (
             <Link
               to="/auth"
+              onClick={() => trackEvent("nav_click", { nav_label: "my_score" })}
               className="px-4 py-2 rounded-full bg-gradient-energy text-white font-semibold shadow-button hover:scale-105 active:scale-95 transition-transform whitespace-nowrap"
             >
               My Score
@@ -67,7 +72,10 @@ export function Header() {
           {user ? (
             <div className="relative group/account">
               <button
-                onClick={() => nav({ to: "/profile" })}
+                onClick={() => {
+                  trackEvent("nav_click", { nav_label: "profile_icon" });
+                  nav({ to: "/profile" });
+                }}
                 aria-label="Go to profile"
                 className="w-10 h-10 rounded-full bg-gradient-energy text-white shadow-button hover:scale-105 active:scale-95 transition-transform flex items-center justify-center"
               >
@@ -82,6 +90,7 @@ export function Header() {
                 <button
                   type="button"
                   onClick={() => {
+                    trackEvent("logout_click");
                     logout();
                     nav({ to: "/auth" });
                   }}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   categorize,
@@ -65,7 +65,32 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
     isValidUaePhone(contact) &&
     (!isNewUser || !!participantType) &&
     (!referredBy.trim() || REFERRAL_SUFFIX_REGEX.test(referredBy.trim())) &&
-    consent;
+    (!isNewUser || consent);
+
+  // Returning users already accepted the T&C on a prior signup — don't ask again.
+  useEffect(() => {
+    if (existingUser || existingRemoteUser) setConsent(true);
+  }, [existingUser, existingRemoteUser]);
+
+  useEffect(() => {
+    trackEvent("form_view", { form: "signup_gate", page_url: window.location.href });
+  }, []);
+
+  const prevExisting = useRef(false);
+  useEffect(() => {
+    const found = !!(existingUser || existingRemoteUser);
+    if (found && !prevExisting.current) {
+      trackEvent("existing_user_detected", { form: "signup_gate" });
+    }
+    prevExisting.current = found;
+  }, [existingUser, existingRemoteUser]);
+
+  const formStarted = useRef(false);
+  const handleFormStart = () => {
+    if (formStarted.current) return;
+    formStarted.current = true;
+    trackEvent("form_start", { form: "signup_gate" });
+  };
 
   useEffect(() => {
     const trimmed = name.trim();
@@ -95,6 +120,7 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
         "revital_referral_code",
         referralCode.startsWith("RVT-") ? referralCode : `RVT-${referralCode}`,
       );
+      trackEvent("referral_prefilled", { form: "signup_gate", referral_code: referralCode });
     }
   }, []);
 
@@ -145,6 +171,7 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
       onSuccess();
     } catch {
       setErr("Failed to save your score. Please try again.");
+      trackEvent("save_failed", { form: "signup_gate" });
       setLoading(false);
     }
   };
@@ -152,17 +179,32 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr("");
-    if (!name.trim() || !NAME_REGEX.test(name.trim()))
+    trackEvent("form_submit_attempt", { form: "signup_gate" });
+    if (!name.trim() || !NAME_REGEX.test(name.trim())) {
+      trackEvent("form_validation_error", { form: "signup_gate", reason: "invalid_name" });
       return setErr("Please enter your full name (letters only)");
+    }
     if (await containsProfanity(name.trim())) {
       setNameFlagged(true);
+      trackEvent("form_validation_error", { form: "signup_gate", reason: "name_flagged" });
       return setErr("Please enter an appropriate name.");
     }
-    if (!isValidUaePhone(contact)) return setErr("Enter a valid UAE mobile number");
-    if (isNewUser && !participantType) return setErr("Please select who you are");
-    if (referredBy.trim() && !REFERRAL_SUFFIX_REGEX.test(referredBy.trim()))
+    if (!isValidUaePhone(contact)) {
+      trackEvent("form_validation_error", { form: "signup_gate", reason: "invalid_phone" });
+      return setErr("Enter a valid UAE mobile number");
+    }
+    if (isNewUser && !participantType) {
+      trackEvent("form_validation_error", { form: "signup_gate", reason: "missing_participant_type" });
+      return setErr("Please select who you are");
+    }
+    if (referredBy.trim() && !REFERRAL_SUFFIX_REGEX.test(referredBy.trim())) {
+      trackEvent("form_validation_error", { form: "signup_gate", reason: "invalid_referral_code" });
       return setErr("Enter a valid referral code (e.g. A1B2C3D4E5)");
-    if (!consent) return setErr("Please accept the consent to continue");
+    }
+    if (isNewUser && !consent) {
+      trackEvent("form_validation_error", { form: "signup_gate", reason: "consent_not_accepted" });
+      return setErr("Please accept the consent to continue");
+    }
     setLoading(true);
     try {
       const token = await executeRecaptcha("save_score");
@@ -171,6 +213,7 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
         const result = await verifyCaptchaFn({ data: { token } });
         if (!result.ok) {
           setErr("Security check failed. Please refresh and try again.");
+          trackEvent("recaptcha_failed", { form: "signup_gate" });
           setLoading(false);
           return;
         }
@@ -231,6 +274,10 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value.replace(/[^A-Za-z\s'.-]/g, ""))}
+              onFocus={handleFormStart}
+              onBlur={() =>
+                name.trim() && trackEvent("form_field_completed", { form: "signup_gate", field: "name" })
+              }
               placeholder="Your name"
               className={`mt-1.5 w-full bg-background/60 border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 ${
                 nameFlagged ? "border-destructive focus:ring-destructive" : "border-border focus:ring-ring"
@@ -251,6 +298,11 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
               <input
                 value={contact}
                 onChange={(e) => setContact(e.target.value.replace(/[^\d]/g, "").slice(0, 9))}
+                onFocus={handleFormStart}
+                onBlur={() =>
+                  isValidUaePhone(contact) &&
+                  trackEvent("form_field_completed", { form: "signup_gate", field: "phone" })
+                }
                 inputMode="numeric"
                 placeholder="50 123 4567"
                 className="w-full border-0 bg-transparent px-2 py-3 focus:outline-none"
@@ -272,7 +324,14 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
               </label>
               <select
                 value={participantType}
-                onChange={(e) => setParticipantType(e.target.value as ParticipantType)}
+                onChange={(e) => {
+                  setParticipantType(e.target.value as ParticipantType);
+                  trackEvent("form_field_completed", {
+                    form: "signup_gate",
+                    field: "participant_type",
+                    value: e.target.value,
+                  });
+                }}
                 className="mt-1.5 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="" disabled>
@@ -308,11 +367,15 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
               </p>
             </div>
           )}
+          {isNewUser && (
           <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"
               checked={consent}
-              onChange={(e) => setConsent(e.target.checked)}
+              onChange={(e) => {
+                setConsent(e.target.checked);
+                if (e.target.checked) trackEvent("consent_checked", { form: "signup_gate" });
+              }}
               className="mt-1 accent-[oklch(0.72_0.19_50)]"
             />
             <span className="text-xs text-muted-foreground">
@@ -349,6 +412,7 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
               (UAE compliant).
             </span>
           </label>
+          )}
           {err && <p className="text-sm text-destructive">{err}</p>}
           <button
             disabled={loading || !canSubmit}

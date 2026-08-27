@@ -225,6 +225,14 @@ function AdminUserDetail() {
               <ParticipantTypeBadge type={user.participantType} />
             </div>
             <InfoRow label="Total (Best)" value={String(user.total)} />
+            <InfoRow
+              label="Accepted"
+              value={
+                user.consentAcceptedAt
+                  ? `Yes (${new Date(user.consentAcceptedAt).toLocaleString()})`
+                  : "No"
+              }
+            />
             {user.referredBy && <InfoRow label="Referred By" value={user.referredBy} mono />}
           </div>
         </div>

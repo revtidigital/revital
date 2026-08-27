@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { hasConsent, setConsent } from "@/lib/storage";
 import { useRouterState } from "@tanstack/react-router";
+import { trackEvent } from "@/lib/analytics";
 
 export function CookieConsent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -31,6 +32,7 @@ export function CookieConsent() {
                 onClick={() => {
                   setConsent(true);
                   setShow(false);
+                  trackEvent("cookie_consent", { choice: "accept" });
                 }}
                 className="flex-1 py-2 rounded-full bg-gradient-energy text-energy-foreground font-semibold text-sm shadow-button active:scale-95 transition-transform"
               >
@@ -40,6 +42,7 @@ export function CookieConsent() {
                 onClick={() => {
                   setConsent(false);
                   setShow(false);
+                  trackEvent("cookie_consent", { choice: "decline" });
                 }}
                 className="px-4 py-2 rounded-full bg-muted text-muted-foreground font-medium text-sm hover:text-foreground transition-colors"
               >

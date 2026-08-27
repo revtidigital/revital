@@ -38,6 +38,7 @@ const userRecordSchema = z.object({
   category: z.string(),
   consent: z.boolean(),
   createdAt: z.string(),
+  consentAcceptedAt: z.string().nullish(),
   playDates: z.array(z.string()).optional(),
   playAttempts: z
     .array(
@@ -97,6 +98,12 @@ export const saveUserFn = createServerFn({ method: "POST" })
     const existing = await db
       .collection<UserRecord>("users")
       .findOne({ contact: normalized.contact });
+
+    // consentAcceptedAt is server-set and never client-trusted: once a user has
+    // accepted, the timestamp is locked to that first acceptance forever.
+    const consentAcceptedAt =
+      existing?.consentAcceptedAt ?? (normalized.consent ? new Date().toISOString() : undefined);
+
     const firstTimeReferral =
       normalized.referredBy &&
       normalized.referredBy !== normalized.userId &&
@@ -125,6 +132,7 @@ export const saveUserFn = createServerFn({ method: "POST" })
       {
         $set: {
           ...normalized,
+          ...(consentAcceptedAt ? { consentAcceptedAt } : {}),
           playDates: mergedPlayDates,
           playAttempts: mergedAttempts,
           scores: bestAttempt?.scores ?? normalized.scores,

@@ -60,6 +60,7 @@ export interface UserRecord {
   total: number;
   category: string;
   consent: boolean;
+  consentAcceptedAt?: string; // ISO timestamp of when consent/T&C was first accepted (server-set)
   createdAt: string;
   playDates?: string[]; // YYYY-MM-DD dates the user played (for streak tracking)
   playAttempts?: PlayAttempt[]; // all completed 3-challenge runs

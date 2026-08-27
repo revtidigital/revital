@@ -18,6 +18,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResultRouteImport } from './routes/result'
 import { Route as RetrieveRouteImport } from './routes/retrieve'
 import { Route as RulesRouteImport } from './routes/rules'
+import { Route as SaveScoreRouteImport } from './routes/save-score'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as PlayBalanceRouteImport } from './routes/play.balance'
 import { Route as PlayMemoryRouteImport } from './routes/play.memory'
@@ -69,6 +70,11 @@ const RulesRoute = RulesRouteImport.update({
   path: '/rules',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SaveScoreRoute = SaveScoreRouteImport.update({
+  id: '/save-score',
+  path: '/save-score',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/result': typeof ResultRoute
   '/retrieve': typeof RetrieveRoute
   '/rules': typeof RulesRoute
+  '/save-score': typeof SaveScoreRoute
   '/terms': typeof TermsRoute
   '/play/balance': typeof PlayBalanceRoute
   '/play/memory': typeof PlayMemoryRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/result': typeof ResultRoute
   '/retrieve': typeof RetrieveRoute
   '/rules': typeof RulesRoute
+  '/save-score': typeof SaveScoreRoute
   '/terms': typeof TermsRoute
   '/play/balance': typeof PlayBalanceRoute
   '/play/memory': typeof PlayMemoryRoute
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/result': typeof ResultRoute
   '/retrieve': typeof RetrieveRoute
   '/rules': typeof RulesRoute
+  '/save-score': typeof SaveScoreRoute
   '/terms': typeof TermsRoute
   '/play/balance': typeof PlayBalanceRoute
   '/play/memory': typeof PlayMemoryRoute
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/result'
     | '/retrieve'
     | '/rules'
+    | '/save-score'
     | '/terms'
     | '/play/balance'
     | '/play/memory'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/result'
     | '/retrieve'
     | '/rules'
+    | '/save-score'
     | '/terms'
     | '/play/balance'
     | '/play/memory'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/result'
     | '/retrieve'
     | '/rules'
+    | '/save-score'
     | '/terms'
     | '/play/balance'
     | '/play/memory'
@@ -205,6 +217,7 @@ export interface RootRouteChildren {
   ResultRoute: typeof ResultRoute
   RetrieveRoute: typeof RetrieveRoute
   RulesRoute: typeof RulesRoute
+  SaveScoreRoute: typeof SaveScoreRoute
   TermsRoute: typeof TermsRoute
   PlayBalanceRoute: typeof PlayBalanceRoute
   PlayMemoryRoute: typeof PlayMemoryRoute
@@ -276,6 +289,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RulesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/save-score': {
+      id: '/save-score'
+      path: '/save-score'
+      fullPath: '/save-score'
+      preLoaderRoute: typeof SaveScoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -334,6 +354,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResultRoute: ResultRoute,
   RetrieveRoute: RetrieveRoute,
   RulesRoute: RulesRoute,
+  SaveScoreRoute: SaveScoreRoute,
   TermsRoute: TermsRoute,
   PlayBalanceRoute: PlayBalanceRoute,
   PlayMemoryRoute: PlayMemoryRoute,

@@ -12,6 +12,7 @@ import {
   type UserRecord,
 } from "@/lib/storage";
 import { containsProfanity } from "@/lib/profanity";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/profile")({
   component: Profile,
@@ -219,6 +220,7 @@ function Profile() {
   };
 
   const copyReferralUrl = async () => {
+    trackEvent("cta_click", { cta_label: "copy_referral_url" });
     try {
       const success = await copyToClipboard(referralUrl);
       if (!success) throw new Error("Copy failed");
@@ -232,6 +234,7 @@ function Profile() {
   };
 
   const copyUserId = async () => {
+    trackEvent("cta_click", { cta_label: "copy_user_id" });
     try {
       const success = await copyToClipboard(safeUser.userId);
       if (!success) throw new Error("Copy failed");
@@ -539,6 +542,7 @@ function Profile() {
           <button
             type="button"
             onClick={() => {
+              trackEvent("cta_click", { cta_label: hasPlayedBefore ? "play_again" : "play", source: "profile" });
               resetScores();
               nav({ to: "/challenges" });
             }}
@@ -548,6 +552,7 @@ function Profile() {
           </button>
           <Link
             to="/"
+            onClick={() => trackEvent("nav_click", { nav_label: "home", source: "profile" })}
             className="flex-1 text-center py-3 rounded-full bg-card border border-border font-semibold hover:bg-muted/50 transition-colors"
           >
             Home

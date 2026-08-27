@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Header } from "@/components/Header";
 import {
   categorize,
@@ -45,7 +45,24 @@ function Auth() {
     isValidUaePhone(contact) &&
     (!isNewUser || !!participantType) &&
     (!referredBy.trim() || REFERRAL_SUFFIX_REGEX.test(referredBy.trim())) &&
-    consent;
+    (!isNewUser || consent);
+
+  // Returning users already accepted the T&C on a prior signup — don't ask again.
+  useEffect(() => {
+    if (existingUser) setConsent(true);
+  }, [existingUser]);
+
+  useEffect(() => {
+    trackEvent("form_view", { form: "auth", page_url: window.location.href });
+  }, []);
+
+  const prevExistingUser = useRef(false);
+  useEffect(() => {
+    if (existingUser && !prevExistingUser.current) {
+      trackEvent("existing_user_detected", { form: "auth" });
+    }
+    prevExistingUser.current = !!existingUser;
+  }, [existingUser]);
 
   useEffect(() => {
     const trimmed = name.trim();
@@ -79,6 +96,7 @@ function Auth() {
       normalizedRef.startsWith("RVT-") ? normalizedRef : `RVT-${normalizedRef}`,
     );
     setReferredBy(stripReferralPrefix(normalizedRef));
+    trackEvent("referral_prefilled", { form: "auth", referral_code: normalizedRef });
   }, [nav]);
 
   useEffect(() => {
@@ -95,6 +113,13 @@ function Auth() {
     return () => window.clearTimeout(timer);
   }, [contact]);
 
+  const formStarted = useRef(false);
+  const handleFormStart = () => {
+    if (formStarted.current) return;
+    formStarted.current = true;
+    trackEvent("form_start", { form: "auth" });
+  };
+
   const goToProfile = async () => {
     try {
       await nav({ to: "/profile" });
@@ -107,29 +132,36 @@ function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr("");
+    trackEvent("form_submit_attempt", { form: "auth" });
     if (!name.trim() || !NAME_REGEX.test(name.trim())) {
       setErr("Please enter your full name (letters only)");
+      trackEvent("form_validation_error", { form: "auth", reason: "invalid_name" });
       return;
     }
     if (await containsProfanity(name.trim())) {
       setNameFlagged(true);
       setErr("Please enter an appropriate name.");
+      trackEvent("form_validation_error", { form: "auth", reason: "name_flagged" });
       return;
     }
     if (!isValidUaePhone(contact)) {
       setErr("Enter a valid UAE mobile number");
+      trackEvent("form_validation_error", { form: "auth", reason: "invalid_phone" });
       return;
     }
     if (isNewUser && !participantType) {
       setErr("Please select who you are");
+      trackEvent("form_validation_error", { form: "auth", reason: "missing_participant_type" });
       return;
     }
     if (referredBy.trim() && !REFERRAL_SUFFIX_REGEX.test(referredBy.trim())) {
       setErr("Enter a valid referral code (e.g. A1B2C3D4E5)");
+      trackEvent("form_validation_error", { form: "auth", reason: "invalid_referral_code" });
       return;
     }
-    if (!consent) {
+    if (isNewUser && !consent) {
       setErr("Please accept the consent to continue");
+      trackEvent("form_validation_error", { form: "auth", reason: "consent_not_accepted" });
       return;
     }
     setLoading(true);
@@ -140,6 +172,7 @@ function Auth() {
         const result = await verifyCaptchaFn({ data: { token } });
         if (!result.ok) {
           setErr("Security check failed. Please refresh and try again.");
+          trackEvent("recaptcha_failed", { form: "auth" });
           setLoading(false);
           return;
         }
@@ -178,6 +211,7 @@ function Auth() {
       await goToProfile();
     } catch (e) {
       console.warn("Save encountered an issue", e);
+      trackEvent("save_failed", { form: "auth" });
       // Keep local login state as a last resort so the user can still reach their profile.
       saveUser(payload);
       await goToProfile();
@@ -216,6 +250,8 @@ function Auth() {
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value.replace(/[^A-Za-z\s'.-]/g, ""))}
+                onFocus={handleFormStart}
+                onBlur={() => name.trim() && trackEvent("form_field_completed", { form: "auth", field: "name" })}
                 placeholder="Your name"
                 className={`mt-2 w-full bg-background/60 border rounded-2xl px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all ${
                   nameFlagged ? "border-destructive focus:ring-destructive" : "border-border focus:ring-ring"
@@ -236,6 +272,11 @@ function Auth() {
                 <input
                   value={contact}
                   onChange={(e) => setContact(e.target.value.replace(/[^\d]/g, "").slice(0, 9))}
+                  onFocus={handleFormStart}
+                  onBlur={() =>
+                    isValidUaePhone(contact) &&
+                    trackEvent("form_field_completed", { form: "auth", field: "phone" })
+                  }
                   inputMode="numeric"
                   placeholder="50 123 4567"
                   className="w-full border-0 bg-transparent px-2 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
@@ -252,7 +293,14 @@ function Auth() {
                 </label>
                 <select
                   value={participantType}
-                  onChange={(e) => setParticipantType(e.target.value as ParticipantType)}
+                  onChange={(e) => {
+                    setParticipantType(e.target.value as ParticipantType);
+                    trackEvent("form_field_completed", {
+                      form: "auth",
+                      field: "participant_type",
+                      value: e.target.value,
+                    });
+                  }}
                   className="mt-2 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
                 >
                   <option value="" disabled>
@@ -292,11 +340,15 @@ function Auth() {
                 </p>
               </div>
             )}
+            {isNewUser && (
             <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
                 checked={consent}
-                onChange={(e) => setConsent(e.target.checked)}
+                onChange={(e) => {
+                  setConsent(e.target.checked);
+                  if (e.target.checked) trackEvent("consent_checked", { form: "auth" });
+                }}
                 className="mt-1 accent-[oklch(0.72_0.19_50)]"
               />
               <span className="text-xs text-muted-foreground">
@@ -315,6 +367,7 @@ function Auth() {
                 (UAE compliant).
               </span>
             </label>
+            )}
             {err && <p className="text-sm text-destructive">{err}</p>}
             <button
               disabled={loading || !canSubmit}
@@ -327,7 +380,10 @@ function Auth() {
 
         <button
           type="button"
-          onClick={() => window.history.back()}
+          onClick={() => {
+            trackEvent("cta_click", { cta_label: "back", form: "auth" });
+            window.history.back();
+          }}
           className="mt-4 block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           ← Back

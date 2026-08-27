@@ -78,6 +78,7 @@ function Landing() {
             href="https://www.instagram.com/revital.uae"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackEvent("social_click", { platform: "instagram", source: "floating_badge" })}
             initial={{ x: "100%", opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
@@ -90,6 +91,7 @@ function Landing() {
                 e.preventDefault();
                 e.stopPropagation();
                 setShowInstaBadge(false);
+                trackEvent("instagram_badge_dismissed");
               }}
               aria-label="Close"
               className="absolute -top-2 -left-2 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[var(--garnet)] text-white text-xs flex items-center justify-center shadow-button hover:scale-110 active:scale-95 transition-transform"

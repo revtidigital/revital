@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Header } from "@/components/Header";
 import { findUserByContactRemote, type UserRecord } from "@/lib/storage";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/retrieve")({
   component: Retrieve,
@@ -17,13 +18,16 @@ function Retrieve() {
   const next = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr("");
+    trackEvent("form_submit_attempt", { form: "retrieve" });
     const u = await findUserByContactRemote(contact.trim());
     if (!u) {
       setErr("No score found for this contact.");
+      trackEvent("form_validation_error", { form: "retrieve", reason: "not_found" });
       return;
     }
     setUser(u);
     setStep("result");
+    trackEvent("score_retrieved", { form: "retrieve" });
   };
 
   return (
@@ -100,6 +104,7 @@ function Retrieve() {
 
         <Link
           to="/"
+          onClick={() => trackEvent("nav_click", { nav_label: "home", source: "retrieve" })}
           className="mt-4 block text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           ← Home

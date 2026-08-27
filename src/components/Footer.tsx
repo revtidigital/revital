@@ -1,4 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { trackEvent } from "@/lib/analytics";
 
 export function Footer() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -14,6 +15,7 @@ export function Footer() {
           href="https://www.instagram.com/revital.uae"
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackEvent("social_click", { platform: "instagram", source: "footer" })}
           aria-label="Follow us on Instagram"
           className="inline-flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
         >
@@ -36,6 +38,7 @@ export function Footer() {
         <nav className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 md:text-base">
           <Link
             to="/rules"
+            onClick={() => trackEvent("nav_click", { nav_label: "rules", source: "footer" })}
             className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]"
           >
             Rules
@@ -43,6 +46,7 @@ export function Footer() {
           <span className="text-garnet/30">•</span>
           <Link
             to="/privacy"
+            onClick={() => trackEvent("nav_click", { nav_label: "privacy", source: "footer" })}
             className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]"
           >
             Privacy Policy
@@ -50,6 +54,7 @@ export function Footer() {
           <span className="text-garnet/30">•</span>
           <Link
             to="/terms"
+            onClick={() => trackEvent("nav_click", { nav_label: "terms", source: "footer" })}
             className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]"
           >
             Terms & Conditions
