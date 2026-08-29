@@ -212,7 +212,7 @@ function AdminUserDetail() {
           <h2 className="font-bold text-sm mb-3">Profile</h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-2 text-sm">
             <InfoRow label="User ID" value={user.userId} mono />
-            <InfoRow label="Contact" value={user.contact} mono />
+            <InfoRow label="Phone" value={user.contact} mono />
             {user.email && <InfoRow label="Email" value={user.email} mono />}
             {user.name && <InfoRow label="Name" value={user.name} />}
             <InfoRow label="Address" value={user.address || "—"} />
