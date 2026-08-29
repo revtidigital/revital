@@ -44,17 +44,15 @@ export function GamesOverviewOverlay({ onPlayNow }: GamesOverviewOverlayProps) {
           Here's what you'll be playing today
         </h2>
 
-        <div className="mt-4 space-y-2.5">
+        <div className="mt-4 grid grid-cols-3 gap-2">
           {GAMES.map((game) => (
             <div
               key={game.title}
-              className="flex items-center gap-3 rounded-2xl border border-border bg-background/40 px-4 py-3 text-left"
+              className="flex flex-col items-center gap-1 rounded-2xl border border-border bg-background/40 px-2 py-3 text-center"
             >
               <span className="text-2xl">{game.emoji}</span>
-              <div>
-                <p className="font-bold text-sm">{game.title}</p>
-                <p className="text-xs text-muted-foreground">{game.description}</p>
-              </div>
+              <p className="font-bold text-xs">{game.title}</p>
+              <p className="text-[10px] text-muted-foreground">{game.description}</p>
             </div>
           ))}
         </div>
