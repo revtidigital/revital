@@ -348,7 +348,7 @@ function Result() {
             >
               <span className="block">Play Again</span>
               <span className="block text-[10px] font-normal text-muted-foreground mt-0.5">
-                To get better Score or Join the Leaderboard →
+                To get better Score
               </span>
             </button>
           </div>
