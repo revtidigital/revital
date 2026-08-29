@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { SignupGate } from "@/components/SignupGate";
 import { getCurrentScores, isLoggedIn } from "@/lib/storage";
@@ -11,6 +11,7 @@ export const Route = createFileRoute("/save-score")({
 
 function SaveScore() {
   const nav = useNavigate();
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     loadRecaptcha();
@@ -24,13 +25,15 @@ function SaveScore() {
     }
     if (isLoggedIn()) {
       nav({ to: "/result" });
+      return;
     }
+    setShowForm(true);
   }, [nav]);
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <SignupGate onSuccess={() => nav({ to: "/result" })} />
+      {showForm && <SignupGate onSuccess={() => nav({ to: "/result" })} />}
     </div>
   );
 }
