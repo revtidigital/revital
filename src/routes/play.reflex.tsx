@@ -12,7 +12,7 @@ export const Route = createFileRoute("/play/reflex")({
   component: ReflexGame,
 });
 
-type Phase = "idle" | "waiting" | "go" | "tooSoon" | "done";
+type Phase = "idle" | "waiting" | "go" | "tooSoon" | "next" | "done";
 const ROUNDS = 3;
 const MIN_DELAY = 1800;
 const MAX_DELAY = 5200;
@@ -80,12 +80,12 @@ function ReflexGame() {
       return;
     }
 
-    setPhase("idle");
+    setPhase("next");
     timeoutRef.current = setTimeout(startRound, 1000);
   };
 
   const handleTap = () => {
-    if (showStart || phase === "done") return;
+    if (showStart || phase === "done" || phase === "next") return;
 
     if (phase === "idle") {
       startRound();
@@ -113,6 +113,7 @@ function ReflexGame() {
     waiting: `Round ${round + 1}`,
     go: "TAP NOW!",
     tooSoon: "Too early!",
+    next: `Get ready for Round ${round + 1}…`,
     done: "Complete!",
   };
 
@@ -145,7 +146,7 @@ function ReflexGame() {
 
         <button
           onClick={handleTap}
-          disabled={showStart || phase === "done"}
+          disabled={showStart || phase === "done" || phase === "next"}
           className="mt-6 flex-1 min-h-[60vh] w-full rounded-3xl border border-white/25 overflow-hidden relative active:scale-[0.99] transition-transform select-none bg-gradient-energy"
           aria-label="Reflex tap area"
         >
