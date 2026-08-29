@@ -39,6 +39,7 @@ function ReflexGame() {
   );
 
   const startRound = () => {
+    setLastReactionMs(null);
     setPhase("waiting");
     // Slightly wider random delay range to make anticipation harder.
     const delay = Math.floor(Math.random() * (MAX_DELAY - MIN_DELAY + 1)) + MIN_DELAY;
