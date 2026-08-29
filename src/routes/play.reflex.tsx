@@ -166,11 +166,11 @@ function ReflexGame() {
                   alt="Revital Ginseng Plus"
                   className="w-[130px] md:w-[180px] h-auto drop-shadow-[0_14px_26px_rgba(0,0,0,0.45)]"
                 />
-              ) : (
+              ) : phase !== "next" ? (
                 <p className="mt-6 text-2xl md:text-5xl font-black text-white drop-shadow-[0_3px_6px_rgba(0,0,0,0.35)]">
                   {label[phase]}
                 </p>
-              )}
+              ) : null}
               {phase === "tooSoon" && (
                 <p className="mt-2 text-sm md:text-base text-white/85">
                   Wait for the logo to appear.
