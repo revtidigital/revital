@@ -346,7 +346,10 @@ function Result() {
               }}
               className="flex-1 py-3 rounded-full bg-card border border-border font-semibold hover:bg-muted/50 transition-colors"
             >
-              Play Again
+              <span className="block">Play Again</span>
+              <span className="block text-[10px] font-normal text-muted-foreground mt-0.5">
+                To get better Score or Join the Leaderboard →
+              </span>
             </button>
           </div>
           {shareNotice && (

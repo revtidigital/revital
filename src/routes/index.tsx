@@ -3,6 +3,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { Header } from "@/components/Header";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { getUser } from "@/lib/storage";
 import { Leaderboard } from "@/components/Leaderboard";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
@@ -13,6 +19,30 @@ import readyMobile from "@/assets/ready-mobile.png";
 export const Route = createFileRoute("/")({
   component: Landing,
 });
+
+const SCORE_BOOST_HACKS = [
+  {
+    title: "PLAY REGULARLY",
+    description: "Play on more days to unlock Consistency Bonus points.",
+  },
+  {
+    title: "BUILD YOUR STREAK",
+    description: "Maintain consecutive days of gameplay to earn Streak Bonus points.",
+  },
+  {
+    title: "IMPROVE YOUR GAMEPLAY",
+    description: "Your Gameplay Score can contribute up to 1,500 points to your Global Score.",
+  },
+  {
+    title: "REFER & CLIMB",
+    description:
+      "Earn 100 bonus points for every successful verified referral, with no limit. Referral points boost your Global Leaderboard score only.",
+  },
+  {
+    title: "KEEP PLAYING, KEEP CLIMBING",
+    description: "Every day and every point can take you closer to the top.",
+  },
+] as const;
 
 function Landing() {
   const defaultAnnouncement = "🔥 Play now and become today's Revital Energy Challenge winner!";
@@ -410,6 +440,28 @@ function Landing() {
             >
               Join the Leaderboard →
             </Link>
+          </div>
+
+          <div className="mt-6 max-w-xl mx-auto bg-background/40 rounded-2xl px-4">
+            <Accordion type="single" collapsible>
+              <AccordionItem value="score-hacks" className="border-none">
+                <AccordionTrigger className="text-xs font-black uppercase tracking-wider text-garnet py-3">
+                  🚀 Hacks to Boost Your Global Score
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-2.5">
+                    {SCORE_BOOST_HACKS.map((hack) => (
+                      <div key={hack.title}>
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-garnet">
+                          {hack.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{hack.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         </section>
       </main>

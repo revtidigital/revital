@@ -90,6 +90,14 @@ export function Footer() {
           >
             Terms & Conditions
           </Link>
+          <span className="text-garnet/30">•</span>
+          <a
+            href="mailto:revitalenergyuae@gmail.com"
+            onClick={() => trackEvent("nav_click", { nav_label: "support", source: "footer" })}
+            className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]"
+          >
+            Support
+          </a>
         </nav>
       </div>
     </footer>
