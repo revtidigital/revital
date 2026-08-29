@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Header } from "@/components/Header";
 import { ProgressDots } from "@/components/ProgressDots";
 import { StartOverlay } from "@/components/StartOverlay";
+import { GamesOverviewOverlay } from "@/components/GamesOverviewOverlay";
 import { saveGameScore } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
 import logo from "@/assets/revital-logo.png";
@@ -19,6 +20,7 @@ const MAX_DELAY = 5200;
 
 function ReflexGame() {
   const nav = useNavigate();
+  const [showGamesOverview, setShowGamesOverview] = useState(true);
   const [showStart, setShowStart] = useState(true);
   const [phase, setPhase] = useState<Phase>("idle");
   const [round, setRound] = useState(0);
@@ -120,7 +122,10 @@ function ReflexGame() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      {showStart && (
+      {showGamesOverview && (
+        <GamesOverviewOverlay onPlayNow={() => setShowGamesOverview(false)} />
+      )}
+      {!showGamesOverview && showStart && (
         <StartOverlay
           emoji="⚡"
           title="Reflex Tap"
