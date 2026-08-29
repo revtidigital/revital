@@ -182,7 +182,7 @@ function ReflexGame() {
                   Wait for the logo to appear.
                 </p>
               )}
-              {lastReactionMs !== null && phase !== "done" && (
+              {lastReactionMs !== null && (
                 <p className="mt-3 text-sm md:text-base text-white/90">
                   Reaction time: <span className="font-bold">{lastReactionMs} ms</span>
                 </p>
