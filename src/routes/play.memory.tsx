@@ -6,7 +6,7 @@ import { ProgressDots } from "@/components/ProgressDots";
 import { StartOverlay } from "@/components/StartOverlay";
 import { getCurrentScores, isGameUnlocked, saveGameScore } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
-import revitalLogo from "@/assets/revital-logo.png";
+import revitalLogo from "@/assets/revital-logo.webp";
 
 export const Route = createFileRoute("/play/memory")({
   component: MemoryGame,

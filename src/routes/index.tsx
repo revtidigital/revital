@@ -12,9 +12,9 @@ import {
 import { getUser } from "@/lib/storage";
 import { Leaderboard } from "@/components/Leaderboard";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
-import heroWordmark from "@/assets/revital-hero-wordmark.png";
-import readyDesktop from "@/assets/ready-desktop-new.png";
-import readyMobile from "@/assets/ready-mobile.png";
+import heroWordmark from "@/assets/revital-hero-wordmark.webp";
+import readyDesktop from "@/assets/ready-desktop-new.webp";
+import readyMobile from "@/assets/ready-mobile.webp";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -390,8 +390,8 @@ function Landing() {
             transition={{ delay: 0.6 }}
             className="mt-8 rounded-2xl overflow-hidden"
           >
-            <img src={readyMobile} alt="" className="block md:hidden w-full h-auto" />
-            <img src={readyDesktop} alt="" className="hidden md:block w-full h-auto" />
+            <img src={readyMobile} alt="" loading="lazy" className="block md:hidden w-full h-auto" />
+            <img src={readyDesktop} alt="" loading="lazy" className="hidden md:block w-full h-auto" />
           </motion.div>
         </section>
 

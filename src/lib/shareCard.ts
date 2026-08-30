@@ -1,5 +1,5 @@
 // Generates a branded share card PNG (1080x1350 — Instagram portrait) with logo, score, category and tag.
-import logoUrl from "@/assets/revital-logo.png";
+import logoUrl from "@/assets/revital-logo.webp";
 
 const loadImage = (src: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {

@@ -8,10 +8,10 @@ import {
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 import appCss from "../styles.css?url";
-import revitalLogo from "@/assets/revital-logo.png?url";
+import revitalLogo from "@/assets/revital-logo.webp?url";
+import heroWordmarkUrl from "@/assets/revital-hero-wordmark.webp?url";
 
-const socialShareOgImage =
-  "https://revital.revtilabs.com/assets/revital-hero-wordmark-DN1KXeZP.png";
+const socialShareOgImage = `https://revital.revtilabs.com${heroWordmarkUrl}`;
 import { CookieConsent } from "@/components/CookieConsent";
 import { Footer } from "@/components/Footer";
 

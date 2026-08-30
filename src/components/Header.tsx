@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import logo from "@/assets/revital-logo.png";
+import logo from "@/assets/revital-logo.webp";
 import { getUser, logout, type UserRecord } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
 

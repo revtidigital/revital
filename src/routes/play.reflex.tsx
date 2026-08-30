@@ -7,7 +7,7 @@ import { StartOverlay } from "@/components/StartOverlay";
 import { GamesOverviewOverlay } from "@/components/GamesOverviewOverlay";
 import { saveGameScore } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
-import logo from "@/assets/revital-logo.png";
+import logo from "@/assets/revital-logo.webp";
 
 export const Route = createFileRoute("/play/reflex")({
   component: ReflexGame,
