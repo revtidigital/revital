@@ -453,6 +453,19 @@ export const lockDailyTopTenAndNotifyFn = createServerFn({ method: "POST" })
       ),
     );
 
+    const alreadyMailed = await db
+      .collection("winner_mail_log")
+      .findOne({ lockDate });
+    if (alreadyMailed) {
+      return {
+        ok: true,
+        lockDate,
+        winners: ranked.length,
+        mailed: false,
+        alreadySent: true,
+      };
+    }
+
     const adminEmails = parseAdminEmails(settings.leaderboardAdminEmail || "");
     if (!adminEmails.length) {
       return { ok: true, lockDate, winners: ranked.length, mailed: false };
@@ -474,6 +487,13 @@ export const lockDailyTopTenAndNotifyFn = createServerFn({ method: "POST" })
         }),
       ),
     );
+    await db
+      .collection("winner_mail_log")
+      .updateOne(
+        { lockDate },
+        { $setOnInsert: { lockDate, sentAt: new Date(), adminEmails } },
+        { upsert: true },
+      );
     return { ok: true, lockDate, winners: ranked.length, mailed: true, adminEmails };
   });
 
