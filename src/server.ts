@@ -3,8 +3,6 @@ import { serve } from "srvx/node";
 import { readFile } from "node:fs/promises";
 import { join, extname, dirname, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import cron from "node-cron";
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // server.js lives at dist/server/server.js; client assets are at dist/client/
 const clientDir = resolve(join(__dirname, "../client"));
@@ -55,66 +53,13 @@ function getCacheControl(pathname: string): string {
   return "public, max-age=0, must-revalidate";
 }
 
-/**
- * TanStack Start server functions (createServerFn) can only run inside an active
- * request — calling the exported function directly from plain Node code (e.g. a
- * cron callback) throws "No Start context found in AsyncLocalStorage", because the
- * framework's per-request context (via runWithStartContext) is only set up while
- * handling a real HTTP request to the function's `/_serverFn/<id>` URL. So instead
- * of importing and calling the handler directly, we make a real self-loopback HTTP
- * request to our own server, exactly like the browser client does: encode the
- * payload with `seroval` (the wire format `handleServerAction` expects — plain
- * `JSON.stringify` is rejected with a seroval parse error) and set an `Origin`
- * header matching our own origin so the framework's same-origin CSRF check passes
- * (a request with no Origin/Referer/Sec-Fetch-Site header is rejected with 403).
- */
-async function callServerFn<T>(
-  fn: { url: string } & ((opts: { data: unknown }) => Promise<T>),
-  data: unknown,
-): Promise<T> {
-  const { toJSONAsync } = await import("seroval");
-  const body = JSON.stringify(await toJSONAsync({ data }, { plugins: [] }));
-  const origin = `http://localhost:${port}`;
-  const res = await fetch(`${origin}${fn.url}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Origin: origin,
-      "x-tsr-serverFn": "true",
-    },
-    body,
-  });
-  const text = await res.text();
-  if (!res.ok) {
-    throw new Error(`Server fn ${fn.url} failed (${res.status}): ${text}`);
-  }
-  // Response is seroval-encoded too; only care about surfacing errors here,
-  // so a lightweight extraction of the serialized `result`/`error` is enough.
-  const parsed = JSON.parse(text);
-  const errorNode = parsed?.p?.v?.[1];
-  if (errorNode && errorNode.c === "$TSR/Error") {
-    throw new Error(errorNode.s?.message?.s ?? "Server fn returned an error");
-  }
-  return parsed;
-}
-
-// Auto-lock today's top winner + email admins every night at 23:59 Asia/Dubai (UAE) time.
-// Runs in every pm2/cluster worker and every Docker replica, but runDailyWinnerLock()
-// claims the day's lockDate atomically in Mongo before sending, so only one worker
-// across the whole fleet actually sends the email — the rest see `alreadySent: true`.
-cron.schedule(
-  "59 23 * * *",
-  async () => {
-    try {
-      const { lockDailyTopTenAndNotifyFn } = await import("./server/adminFns");
-      const { issueAdminToken } = await import("./server/security");
-      await callServerFn(lockDailyTopTenAndNotifyFn, { token: issueAdminToken() });
-    } catch (err) {
-      console.error("[cron] lockDailyTopTenAndNotifyFn failed:", err);
-    }
-  },
-  { timezone: "Asia/Dubai" },
-);
+// Daily winner lock + notify email runs via a separate mechanism, NOT this
+// in-app cron: a server-level crontab entry (`59 19 * * *` UTC = 23:59 Asia/Dubai,
+// see /root/lock-winners-cron.sh) already runs `scripts/lock-winners.mjs`
+// standalone against Mongo/SMTP directly. Do not duplicate it here — two
+// independent cron mechanisms racing to lock the same day's winner and send
+// mail is worse than either one alone (the OS-cron script has no shared
+// dedup with `winner_mail_log`, so both firing would double-send).
 
 serve({
   fetch: async (req: Request) => {
