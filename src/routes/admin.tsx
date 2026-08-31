@@ -459,6 +459,8 @@ function Admin() {
     campaignStartDate: "",
   });
   const [savedFlash, setSavedFlash] = useState(false);
+  const [sendingLastWinnerEmail, setSendingLastWinnerEmail] = useState(false);
+  const [sendLastWinnerEmailStatus, setSendLastWinnerEmailStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const topReferrersRef = useRef<HTMLDivElement | null>(null);
@@ -1074,6 +1076,40 @@ function Admin() {
       setLogs(await getAdminLogsFn({ data: { token } }));
     } catch (e) {
       console.error("Save settings error", e);
+    }
+  };
+
+  const handleSendLastLockedWinnerEmail = async () => {
+    setSendingLastWinnerEmail(true);
+    setSendLastWinnerEmailStatus("");
+    try {
+      const { sendLastLockedWinnerEmailFn } = await import("@/server/adminFns");
+      const token = getAdminToken();
+      const result = await sendLastLockedWinnerEmailFn({ data: { token } });
+
+      if (!result.lockDate) {
+        setSendLastWinnerEmailStatus("No winner has been locked yet.");
+      } else if (!result.mailed) {
+        setSendLastWinnerEmailStatus(
+          result.reason === "no-admin-email"
+            ? `Winner for ${result.lockDate} found, but no admin email is configured.`
+            : `No winner found for ${result.lockDate}.`,
+        );
+      } else {
+        setSendLastWinnerEmailStatus(
+          `Email sent to ${result.adminEmails?.length ?? 0} recipient(s) for ${result.lockDate}.`,
+        );
+      }
+      await addLog(
+        "LEADERBOARD_EMAIL_SEND",
+        `Manual re-send of last locked winner (${result.lockDate ?? "none"})`,
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to send winner email.";
+      setSendLastWinnerEmailStatus(message);
+      console.error("Send last locked winner email error", error);
+    } finally {
+      setSendingLastWinnerEmail(false);
     }
   };
 
@@ -2340,9 +2376,24 @@ function Admin() {
                         />
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Runs automatically every night at 11:59 PM Asia/Dubai time — locks the
-                        daily winner and emails the configured admin addresses. No manual trigger.
+                        Winner locking runs automatically every night at 11:59 PM Asia/Dubai time.
+                        Use "Send" below to re-mail the most recently locked winner (no re-locking).
                       </p>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={handleSendLastLockedWinnerEmail}
+                          disabled={sendingLastWinnerEmail}
+                          className="px-4 py-2 rounded-full border border-accent/50 bg-accent/10 text-accent font-bold text-xs hover:bg-accent/20 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {sendingLastWinnerEmail ? "Sending…" : "Send"}
+                        </button>
+                        {sendLastWinnerEmailStatus && (
+                          <span className="text-xs text-muted-foreground">
+                            {sendLastWinnerEmailStatus}
+                          </span>
+                        )}
+                      </div>
                     </SettingsSection>
 
                     <div className="flex items-center gap-3 pt-2">

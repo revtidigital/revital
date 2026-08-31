@@ -521,6 +521,77 @@ export const lockDailyTopTenAndNotifyFn = createServerFn({ method: "POST" })
     return runDailyWinnerLock();
   });
 
+/**
+ * Manual "Send" button: emails the winner that was already locked on the most
+ * recent day the automatic 23:59 Asia/Dubai cron ran (`winnerLockDates`) — does
+ * NOT re-rank or re-lock anything, just re-sends the same winner's mail.
+ * Uses the same `winnerLockDates` field the cron sets, so it always reflects
+ * whatever was actually locked, not necessarily "yesterday" if the cron missed
+ * a day (e.g. server was down).
+ */
+export const sendLastLockedWinnerEmailFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ token: z.string() }).parse(data))
+  .handler(async ({ data }) => {
+    requireAdminToken(data.token);
+    const db = await getDb();
+
+    const lockedUsers = await db
+      .collection<UserRecord>("users")
+      .find(
+        { winnerLockDates: { $exists: true, $ne: [] } },
+        { projection: { winnerLockDates: 1 } },
+      )
+      .toArray();
+    const allLockDates = lockedUsers.flatMap((u) => u.winnerLockDates ?? []);
+    const lockDate = allLockDates.sort().at(-1);
+    if (!lockDate) {
+      return { ok: true as const, lockDate: null, mailed: false, reason: "no-locked-winner" };
+    }
+
+    const settingsDoc = await db.collection("platform_settings").findOne({ _key: "main" });
+    const settings = (settingsDoc ?? {}) as Partial<PlatformSettings>;
+    const adminEmails = parseAdminEmails(settings.leaderboardAdminEmail || "");
+    if (!adminEmails.length) {
+      return { ok: true as const, lockDate, mailed: false, reason: "no-admin-email" };
+    }
+
+    const users = await db
+      .collection<UserRecord>("users")
+      .find({ winnerLockDates: lockDate })
+      .toArray();
+    const ranked = users
+      .map((u) => {
+        const best = (u.playAttempts ?? [])
+          .filter((a) => a.date === lockDate)
+          .reduce<number>((m, a) => Math.max(m, a.total), 0);
+        return { name: u.name || u.contact || "Player", score: best, contact: u.contact };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 1);
+    if (!ranked.length) {
+      return { ok: true as const, lockDate, mailed: false, reason: "no-locked-winner" };
+    }
+
+    const dayName = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Dubai",
+      weekday: "long",
+    }).format(new Date(`${lockDate}T12:00:00+04:00`));
+    const enrichedSubject = `Winner Locked: ${lockDate} (${dayName}) UAE`;
+    const winner = ranked[0];
+    const text = `Daily Winner\n\n${winner.name} — Score: ${winner.score}`;
+    const winnersPng = await generateWinnersPng(ranked);
+    await Promise.all(
+      adminEmails.map((email) =>
+        sendViaGmailSmtp(email, enrichedSubject, text, {
+          filename: `revital-winner-${lockDate}.png`,
+          contentType: "image/png",
+          content: winnersPng,
+        }),
+      ),
+    );
+    return { ok: true as const, lockDate, mailed: true, adminEmails };
+  });
+
 export const getDailyLeaderboardFn = createServerFn({ method: "GET" }).handler(async () => {
   const db = await getDb();
   const today = formatUaeDate(new Date());
