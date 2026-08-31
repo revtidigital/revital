@@ -376,7 +376,11 @@ async function sendViaGmailSmtp(
     await expectSmtp(socket, [250], "EHLO revital.local");
     await expectSmtp(socket, [334], "AUTH LOGIN");
     await expectSmtp(socket, [334], Buffer.from(GMAIL_FROM_EMAIL).toString("base64"));
-    await expectSmtp(socket, [235], Buffer.from(GMAIL_APP_PASSWORD).toString("base64"));
+    await expectSmtp(
+      socket,
+      [235],
+      Buffer.from(GMAIL_APP_PASSWORD.replace(/\s+/g, "")).toString("base64"),
+    );
     await expectSmtp(socket, [250], `MAIL FROM:<${GMAIL_FROM_EMAIL}>`);
     await expectSmtp(socket, [250, 251], `RCPT TO:<${to}>`);
     await expectSmtp(socket, [354], "DATA");
@@ -419,82 +423,102 @@ const parseAdminEmails = (input: string): string[] =>
 const formatUaeDate = (d: Date): string =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dubai" }).format(d);
 
+/**
+ * Core lock+notify logic, shared by the admin-triggered server fn and the
+ * automatic 23:59 Asia/Dubai cron job. Runs behind an atomic per-lockDate
+ * claim (`winner_mail_log` upsert done BEFORE sending mail, not after) so
+ * that concurrent callers — multiple pm2/cluster workers, multiple Docker
+ * replicas, or an admin manual click racing the cron — can never send more
+ * than one email for the same lockDate.
+ */
+async function runDailyWinnerLock(): Promise<{
+  ok: true;
+  lockDate: string;
+  winners: number;
+  mailed: boolean;
+  alreadySent?: boolean;
+  adminEmails?: string[];
+}> {
+  const db = await getDb();
+  const settingsDoc = await db.collection("platform_settings").findOne({ _key: "main" });
+  const settings = (settingsDoc ?? {}) as Partial<PlatformSettings>;
+  const lockDate = formatUaeDate(new Date());
+
+  const users = await db.collection<UserRecord>("users").find({}).toArray();
+  const ranked = users
+    .map((u) => {
+      const todayAttempts = (u.playAttempts ?? []).filter((a) => a.date === lockDate);
+      const best = todayAttempts.reduce<number>((m, a) => Math.max(m, a.total), -1);
+      // Earliest attempt that achieved the best score (tiebreaker)
+      const firstBestAt = todayAttempts
+        .filter((a) => a.total === best)
+        .reduce<string>((min, a) => (!min || a.playedAt < min ? a.playedAt : min), "");
+      return { userId: u.userId, name: u.name || u.contact, score: best, firstBestAt };
+    })
+    .filter((u) => u.score >= 0)
+    .sort((a, b) => b.score - a.score || a.firstBestAt.localeCompare(b.firstBestAt))
+    .slice(0, 1);
+
+  if (!ranked.length) return { ok: true, lockDate, winners: 0, mailed: false };
+
+  await Promise.all(
+    ranked.map((winner) =>
+      db
+        .collection<UserRecord>("users")
+        .updateOne({ userId: winner.userId }, { $addToSet: { winnerLockDates: lockDate } }),
+    ),
+  );
+
+  const adminEmails = parseAdminEmails(settings.leaderboardAdminEmail || "");
+  if (!adminEmails.length) {
+    return { ok: true, lockDate, winners: ranked.length, mailed: false };
+  }
+
+  // Atomically claim this lockDate before doing any sending. Only the caller
+  // whose upsert actually inserted the document (no pre-existing doc) proceeds.
+  const claim = await db
+    .collection("winner_mail_log")
+    .findOneAndUpdate(
+      { lockDate },
+      { $setOnInsert: { lockDate, sentAt: new Date(), adminEmails } },
+      { upsert: true, returnDocument: "before" },
+    );
+  const alreadyClaimed = claim !== null;
+  if (alreadyClaimed) {
+    return {
+      ok: true,
+      lockDate,
+      winners: ranked.length,
+      mailed: false,
+      alreadySent: true,
+    };
+  }
+
+  const dayName = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Dubai",
+    weekday: "long",
+  }).format(new Date(`${lockDate}T12:00:00+04:00`));
+  const enrichedSubject = `Winner Locked: ${lockDate} (${dayName}) UAE`;
+  const winner = ranked[0];
+  const text = `Daily Winner\n\n${winner.name} — Score: ${winner.score}`;
+  const winnersPng = await generateWinnersPng(ranked);
+  await Promise.all(
+    adminEmails.map((email) =>
+      sendViaGmailSmtp(email, enrichedSubject, text, {
+        filename: `revital-winner-${lockDate}.png`,
+        contentType: "image/png",
+        content: winnersPng,
+      }),
+    ),
+  );
+  return { ok: true, lockDate, winners: ranked.length, mailed: true, adminEmails };
+}
+
 export const lockDailyTopTenAndNotifyFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => z.object({ token: z.string() }).parse(data))
   .handler(async ({ data }) => {
     requireAdminToken(data.token);
-    const db = await getDb();
-    const settingsDoc = await db.collection("platform_settings").findOne({ _key: "main" });
-    const settings = (settingsDoc ?? {}) as Partial<PlatformSettings>;
-    const lockDate = formatUaeDate(new Date());
-
-    const users = await db.collection<UserRecord>("users").find({}).toArray();
-    const ranked = users
-      .map((u) => {
-        const todayAttempts = (u.playAttempts ?? []).filter((a) => a.date === lockDate);
-        const best = todayAttempts.reduce<number>((m, a) => Math.max(m, a.total), -1);
-        // Earliest attempt that achieved the best score (tiebreaker)
-        const firstBestAt = todayAttempts
-          .filter((a) => a.total === best)
-          .reduce<string>((min, a) => (!min || a.playedAt < min ? a.playedAt : min), "");
-        return { userId: u.userId, name: u.name || u.contact, score: best, firstBestAt };
-      })
-      .filter((u) => u.score >= 0)
-      .sort((a, b) => b.score - a.score || a.firstBestAt.localeCompare(b.firstBestAt))
-      .slice(0, 1);
-
-    if (!ranked.length) return { ok: true, lockDate, winners: 0, mailed: false };
-
-    await Promise.all(
-      ranked.map((winner) =>
-        db
-          .collection<UserRecord>("users")
-          .updateOne({ userId: winner.userId }, { $addToSet: { winnerLockDates: lockDate } }),
-      ),
-    );
-
-    const alreadyMailed = await db
-      .collection("winner_mail_log")
-      .findOne({ lockDate });
-    if (alreadyMailed) {
-      return {
-        ok: true,
-        lockDate,
-        winners: ranked.length,
-        mailed: false,
-        alreadySent: true,
-      };
-    }
-
-    const adminEmails = parseAdminEmails(settings.leaderboardAdminEmail || "");
-    if (!adminEmails.length) {
-      return { ok: true, lockDate, winners: ranked.length, mailed: false };
-    }
-    const dayName = new Intl.DateTimeFormat("en-US", {
-      timeZone: "Asia/Dubai",
-      weekday: "long",
-    }).format(new Date(`${lockDate}T12:00:00+04:00`));
-    const enrichedSubject = `Winner Locked: ${lockDate} (${dayName}) UAE`;
-    const winner = ranked[0];
-    const text = `Daily Winner\n\n${winner.name} — Score: ${winner.score}`;
-    const winnersPng = await generateWinnersPng(ranked);
-    await Promise.all(
-      adminEmails.map((email) =>
-        sendViaGmailSmtp(email, enrichedSubject, text, {
-          filename: `revital-winner-${lockDate}.png`,
-          contentType: "image/png",
-          content: winnersPng,
-        }),
-      ),
-    );
-    await db
-      .collection("winner_mail_log")
-      .updateOne(
-        { lockDate },
-        { $setOnInsert: { lockDate, sentAt: new Date(), adminEmails } },
-        { upsert: true },
-      );
-    return { ok: true, lockDate, winners: ranked.length, mailed: true, adminEmails };
+    return runDailyWinnerLock();
   });
 
 export const getDailyLeaderboardFn = createServerFn({ method: "GET" }).handler(async () => {

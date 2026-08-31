@@ -3,6 +3,7 @@ import { serve } from "srvx/node";
 import { readFile } from "node:fs/promises";
 import { join, extname, dirname, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import cron from "node-cron";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // server.js lives at dist/server/server.js; client assets are at dist/client/
@@ -53,6 +54,24 @@ function getCacheControl(pathname: string): string {
   // Non-fingerprinted files (e.g. /favicon.ico) should revalidate frequently.
   return "public, max-age=0, must-revalidate";
 }
+
+// Auto-lock today's top winner + email admins every night at 23:59 Asia/Dubai (UAE) time.
+// Runs in every pm2/cluster worker and every Docker replica, but runDailyWinnerLock()
+// claims the day's lockDate atomically in Mongo before sending, so only one worker
+// across the whole fleet actually sends the email — the rest see `alreadySent: true`.
+cron.schedule(
+  "59 23 * * *",
+  async () => {
+    try {
+      const { lockDailyTopTenAndNotifyFn } = await import("./server/adminFns");
+      const { issueAdminToken } = await import("./server/security");
+      await lockDailyTopTenAndNotifyFn({ data: { token: issueAdminToken() } });
+    } catch (err) {
+      console.error("[cron] runDailyWinnerLock failed:", err);
+    }
+  },
+  { timezone: "Asia/Dubai" },
+);
 
 serve({
   fetch: async (req: Request) => {
