@@ -121,7 +121,8 @@
   body {
     font-family: var(--font-sans);
     background-image: var(--gradient-sunburst);
-    background-attachment: fixed;
+    background-attachment: scroll;
+    background-repeat: no-repeat;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
   }
