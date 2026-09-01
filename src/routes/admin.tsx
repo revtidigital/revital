@@ -1814,6 +1814,33 @@ function Admin() {
                     >
                       Next
                     </button>
+                    <span className="flex items-center gap-1.5 ml-1">
+                      <label htmlFor="users-jump-page" className="text-xs text-muted-foreground">
+                        Jump to
+                      </label>
+                      <input
+                        id="users-jump-page"
+                        type="number"
+                        min={1}
+                        max={totalUserPages}
+                        defaultValue={usersPage}
+                        key={usersPage}
+                        onKeyDown={(e) => {
+                          if (e.key !== "Enter") return;
+                          const val = Number((e.target as HTMLInputElement).value);
+                          if (Number.isFinite(val)) {
+                            setUsersPage(Math.min(totalUserPages, Math.max(1, val)));
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const val = Number(e.target.value);
+                          if (Number.isFinite(val)) {
+                            setUsersPage(Math.min(totalUserPages, Math.max(1, val)));
+                          }
+                        }}
+                        className="w-16 rounded-full border border-border bg-background px-2 py-1.5 text-xs text-center focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </span>
                   </div>
                 </motion.div>
               )}
