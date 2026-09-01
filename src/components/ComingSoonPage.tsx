@@ -53,26 +53,26 @@ export function ComingSoonPage({ endAt }: { endAt: string }) {
   ];
 
   return (
-    <div className="h-screen h-[100dvh] grid grid-rows-[minmax(0,1fr)_auto] bg-background overflow-hidden overscroll-none">
-      <div className="min-h-0 overflow-y-auto flex flex-col items-center justify-center px-4 text-center">
-        <img src={heroWordmarkUrl} alt="Revital Energy Challenge" className="w-36 md:w-48 mb-2" />
-        <h1 className="text-2xl md:text-4xl font-black text-gradient-energy leading-[1.3] pb-1 mb-2">
+    <div className="h-[100dvh] grid grid-rows-[minmax(0,1fr)_auto] bg-background overflow-hidden overscroll-none">
+      <div className="min-h-0 overflow-y-auto flex flex-col items-center justify-center px-4 py-2 text-center">
+        <img src={heroWordmarkUrl} alt="Revital Energy Challenge" className="w-28 md:w-48 mb-1.5" />
+        <h1 className="text-xl md:text-4xl font-black text-gradient-energy leading-[1.3] pb-1 mb-1.5">
           Revealing Soon
         </h1>
-        <p className="text-xs md:text-sm text-muted-foreground mb-4 max-w-md">
+        <p className="text-[11px] md:text-sm text-muted-foreground mb-3 max-w-md">
           The Revital Energy Challenge is almost here. Get ready to play, score, and climb the
           leaderboard.
         </p>
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-1.5 md:gap-4">
           {units.map((u) => (
             <div
               key={u.label}
-              className="flex flex-col items-center bg-gradient-card border border-border rounded-2xl px-3 py-2 md:px-5 md:py-3 shadow-card min-w-[56px] md:min-w-[76px]"
+              className="flex flex-col items-center bg-gradient-card border border-border rounded-2xl px-2 py-1.5 md:px-5 md:py-3 shadow-card min-w-[48px] md:min-w-[76px]"
             >
-              <span className="text-xl md:text-3xl font-black text-gradient-energy tabular-nums">
+              <span className="text-lg md:text-3xl font-black text-gradient-energy tabular-nums">
                 {String(u.value).padStart(2, "0")}
               </span>
-              <span className="text-[9px] md:text-xs uppercase tracking-wider text-muted-foreground mt-1">
+              <span className="text-[8px] md:text-xs uppercase tracking-wider text-muted-foreground mt-0.5">
                 {u.label}
               </span>
             </div>
