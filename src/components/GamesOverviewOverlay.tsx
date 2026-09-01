@@ -44,7 +44,7 @@ export function GamesOverviewOverlay({ onPlayNow }: GamesOverviewOverlayProps) {
           Here's what you'll be playing today
         </h2>
 
-        <div className="mt-4 grid grid-cols-3 gap-2">
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-2">
           {GAMES.map((game) => (
             <div
               key={game.title}
