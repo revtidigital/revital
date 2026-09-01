@@ -1083,8 +1083,11 @@ function Admin() {
     setSendingLastWinnerEmail(true);
     setSendLastWinnerEmailStatus("");
     try {
-      const { sendLastLockedWinnerEmailFn } = await import("@/server/adminFns");
+      const { sendLastLockedWinnerEmailFn, savePlatformSettingsFn } = await import(
+        "@/server/adminFns"
+      );
       const token = getAdminToken();
+      await savePlatformSettingsFn({ data: { token, ...settings } });
       const result = await sendLastLockedWinnerEmailFn({ data: { token } });
 
       if (!result.lockDate) {
