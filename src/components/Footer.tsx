@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { trackEvent } from "@/lib/analytics";
 
-export function Footer() {
+export function Footer({ hideLegalLinks = false }: { hideLegalLinks?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   if (pathname.toLowerCase().startsWith("/admin")) return null;
 
@@ -74,22 +74,26 @@ export function Footer() {
           >
             Rules
           </Link>
-          <span className="text-garnet/30">•</span>
-          <Link
-            to="/privacy"
-            onClick={() => trackEvent("nav_click", { nav_label: "privacy", source: "footer" })}
-            className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]"
-          >
-            Privacy Policy
-          </Link>
-          <span className="text-garnet/30">•</span>
-          <Link
-            to="/terms"
-            onClick={() => trackEvent("nav_click", { nav_label: "terms", source: "footer" })}
-            className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]"
-          >
-            Terms & Conditions
-          </Link>
+          {!hideLegalLinks && (
+            <>
+              <span className="text-garnet/30">•</span>
+              <Link
+                to="/privacy"
+                onClick={() => trackEvent("nav_click", { nav_label: "privacy", source: "footer" })}
+                className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]"
+              >
+                Privacy Policy
+              </Link>
+              <span className="text-garnet/30">•</span>
+              <Link
+                to="/terms"
+                onClick={() => trackEvent("nav_click", { nav_label: "terms", source: "footer" })}
+                className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]"
+              >
+                Terms & Conditions
+              </Link>
+            </>
+          )}
           <span className="text-garnet/30">•</span>
           <a
             href="mailto:revitalenergyuae@gmail.com"
