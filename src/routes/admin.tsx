@@ -1571,23 +1571,23 @@ function Admin() {
                   <div className="flex items-center justify-between flex-wrap gap-3">
                     <SectionTitle>All Users</SectionTitle>
                     <div className="flex items-center gap-3 flex-wrap">
-                      <span className="text-xs text-muted-foreground">
-                        {selectedUserIds.size > 0 ? (
-                          <>
-                            <span className="font-bold text-accent">{selectedUserIds.size}</span> out
-                            of {sortedFiltered.length} selected
-                            <button
-                              type="button"
-                              onClick={() => setSelectedUserIds(new Set())}
-                              className="ml-2 underline hover:text-foreground"
-                            >
-                              Clear
-                            </button>
-                          </>
-                        ) : (
-                          `Select users to export only those — otherwise all ${sortedFiltered.length} filtered users are exported.`
-                        )}
-                      </span>
+                      {selectedUserIds.size > 0 ? (
+                        <span className="flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-full bg-accent/15 border border-accent/40 text-accent">
+                          {selectedUserIds.size} out of {sortedFiltered.length} selected
+                          <button
+                            type="button"
+                            onClick={() => setSelectedUserIds(new Set())}
+                            className="underline decoration-2 underline-offset-2 hover:text-foreground"
+                          >
+                            Clear
+                          </button>
+                        </span>
+                      ) : (
+                        <span className="text-xs font-medium text-garnet/70">
+                          Select users to export only those — otherwise all {sortedFiltered.length}{" "}
+                          filtered users are exported.
+                        </span>
+                      )}
                       <div className="flex gap-2">
                         <button
                           onClick={handleExportCsv}
