@@ -1572,12 +1572,12 @@ function Admin() {
                     <SectionTitle>All Users</SectionTitle>
                     <div className="flex items-center gap-3 flex-wrap">
                       {selectedUserIds.size > 0 ? (
-                        <span className="flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-full bg-accent/15 border border-accent/40 text-accent">
+                        <span className="flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-full bg-accent/25 border border-accent/60 text-garnet">
                           {selectedUserIds.size} out of {sortedFiltered.length} selected
                           <button
                             type="button"
                             onClick={() => setSelectedUserIds(new Set())}
-                            className="underline decoration-2 underline-offset-2 hover:text-foreground"
+                            className="underline decoration-2 underline-offset-2 hover:text-[var(--tiger)]"
                           >
                             Clear
                           </button>
@@ -2549,7 +2549,11 @@ function Admin() {
                       <button className="px-6 py-2.5 rounded-full bg-gradient-energy text-energy-foreground font-bold shadow-button hover:scale-105 active:scale-95 transition-transform text-sm">
                         Save Settings
                       </button>
-                      {savedFlash && <span className="text-sm text-accent">✓ Saved</span>}
+                      {savedFlash && (
+                        <span className="text-sm font-bold px-3 py-1.5 rounded-full bg-accent/25 border border-accent/60 text-garnet">
+                          ✓ Saved
+                        </span>
+                      )}
                     </div>
                   </form>
                 </motion.div>
