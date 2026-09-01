@@ -53,7 +53,7 @@ export function ComingSoonPage({ endAt }: { endAt: string }) {
   ];
 
   return (
-    <div className="h-screen h-[100dvh] grid grid-rows-[1fr_auto] bg-background overflow-hidden overscroll-none">
+    <div className="h-screen h-[100dvh] grid grid-rows-[minmax(0,1fr)_auto] bg-background overflow-hidden overscroll-none">
       <div className="min-h-0 overflow-y-auto flex flex-col items-center justify-center px-4 text-center">
         <img src={heroWordmarkUrl} alt="Revital Energy Challenge" className="w-36 md:w-48 mb-2" />
         <h1 className="text-2xl md:text-4xl font-black text-gradient-energy leading-[1.3] pb-1 mb-2">
