@@ -72,6 +72,7 @@ export interface UserRecord {
   utmTerm?: string;
   utmContent?: string;
   winnerLockDates?: string[]; // YYYY-MM-DD dates where this user finished in the locked top 10
+  lastIp?: string; // server-set IP address from the most recent save (never client-trusted)
 }
 
 export interface UTMParams {

@@ -103,6 +103,9 @@ export const saveUserFn = createServerFn({ method: "POST" })
         const total = computeTotal(scores);
         return { ...a, scores, total, category: categorize(total).label };
       }),
+      // Server-set from the request, never client-trusted — overwritten on every save
+      // so it always reflects the most recent IP this user saved from.
+      lastIp: getClientIp(),
     };
 
     // Check if this is a brand-new referral for this user (to avoid double-counting)

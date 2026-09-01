@@ -234,6 +234,7 @@ function AdminUserDetail() {
               }
             />
             {user.referredBy && <InfoRow label="Referred By" value={user.referredBy} mono />}
+            <InfoRow label="IP Address" value={user.lastIp || "—"} mono />
           </div>
         </div>
 
