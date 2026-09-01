@@ -115,6 +115,8 @@ export interface PlatformSettings {
   homeAnnouncementTexts: string[];
   leaderboardAdminEmail: string;
   campaignStartDate: string; // YYYY-MM-DD
+  comingSoonEnabled: boolean;
+  comingSoonEndAt: string; // ISO UTC timestamp — site auto-unlocks once now >= this
 }
 
 // Tracking IDs are interpolated directly into an inline <script> tag on every
@@ -135,6 +137,8 @@ const settingsSchema = z.object({
   homeAnnouncementTexts: z.array(z.string()).length(5),
   leaderboardAdminEmail: z.string().default(""),
   campaignStartDate: z.string().default(""),
+  comingSoonEnabled: z.boolean().default(false),
+  comingSoonEndAt: z.string().default(""),
 });
 
 /** Requires a valid admin session token — settings include the reCAPTCHA secret key. */
@@ -174,6 +178,8 @@ async function loadPlatformSettings(): Promise<PlatformSettings> {
       ],
       leaderboardAdminEmail: "",
       campaignStartDate: "",
+      comingSoonEnabled: false,
+      comingSoonEndAt: "",
     } as PlatformSettings;
   const { _id: _a, _key: _b, updatedAt: _c, ...rest } = doc as Record<string, unknown>;
 
@@ -192,6 +198,8 @@ async function loadPlatformSettings(): Promise<PlatformSettings> {
     leaderboardAdminEmail:
       typeof rest.leaderboardAdminEmail === "string" ? rest.leaderboardAdminEmail : "",
     campaignStartDate: typeof rest.campaignStartDate === "string" ? rest.campaignStartDate : "",
+    comingSoonEnabled: rest.comingSoonEnabled === true,
+    comingSoonEndAt: typeof rest.comingSoonEndAt === "string" ? rest.comingSoonEndAt : "",
   } as PlatformSettings;
 }
 

@@ -457,6 +457,8 @@ function Admin() {
     ],
     leaderboardAdminEmail: "",
     campaignStartDate: "",
+    comingSoonEnabled: false,
+    comingSoonEndAt: "",
   });
   const [savedFlash, setSavedFlash] = useState(false);
   const [sendingLastWinnerEmail, setSendingLastWinnerEmail] = useState(false);
@@ -2399,6 +2401,51 @@ function Admin() {
                       </div>
                     </SettingsSection>
 
+                    <SettingsSection title="Coming Soon Page">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.comingSoonEnabled}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              comingSoonEnabled: e.target.checked,
+                            }))
+                          }
+                          className="w-4 h-4 accent-accent"
+                        />
+                        <span className="text-sm font-semibold">
+                          Show "Coming Soon" page site-wide
+                        </span>
+                      </label>
+                      <p className="text-[11px] text-muted-foreground mt-1 mb-3">
+                        While enabled, every page (except this admin panel) shows a countdown
+                        instead of the real site. To test the live site while this is on, uncheck
+                        it here, test, then re-check it. The page automatically switches back to
+                        the real site on its own once the end time below passes — no need to
+                        manually turn this off.
+                      </p>
+                      <label className="block max-w-xs">
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                          Reveal date & time (UAE time)
+                        </span>
+                        <input
+                          type="datetime-local"
+                          value={isoToUaeLocalInput(settings.comingSoonEndAt)}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              comingSoonEndAt: uaeLocalInputToIso(e.target.value),
+                            }))
+                          }
+                          className="mt-1 w-full bg-background/60 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Enter this in UAE (GST, UTC+4) time — e.g. 9:30 AM UAE = 11:00 AM IST.
+                        </p>
+                      </label>
+                    </SettingsSection>
+
                     <div className="flex items-center gap-3 pt-2">
                       <button className="px-6 py-2.5 rounded-full bg-gradient-energy text-energy-foreground font-bold shadow-button hover:scale-105 active:scale-95 transition-transform text-sm">
                         Save Settings
@@ -2569,6 +2616,29 @@ function SortableTh({
       </button>
     </Th>
   );
+}
+
+// UAE (Asia/Dubai) is a fixed UTC+4 offset with no DST.
+const UAE_OFFSET_MS = 4 * 60 * 60 * 1000;
+
+/** Converts a stored UTC ISO timestamp into a `datetime-local` input value showing UAE wall-clock time. */
+function isoToUaeLocalInput(iso: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const uae = new Date(d.getTime() + UAE_OFFSET_MS);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${uae.getUTCFullYear()}-${pad(uae.getUTCMonth() + 1)}-${pad(uae.getUTCDate())}T${pad(uae.getUTCHours())}:${pad(uae.getUTCMinutes())}`;
+}
+
+/** Converts a `datetime-local` value (interpreted as UAE wall-clock time) into a UTC ISO string. */
+function uaeLocalInputToIso(localValue: string): string {
+  if (!localValue) return "";
+  const [datePart, timePart] = localValue.split("T");
+  const [y, m, d] = datePart.split("-").map(Number);
+  const [hh, mm] = (timePart || "00:00").split(":").map(Number);
+  const utcMs = Date.UTC(y, m - 1, d, hh, mm) - UAE_OFFSET_MS;
+  return new Date(utcMs).toISOString();
 }
 
 function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {

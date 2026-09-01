@@ -14,6 +14,7 @@ import heroWordmarkUrl from "@/assets/revital-hero-wordmark.webp?url";
 const socialShareOgImage = `https://revital.revtilabs.com${heroWordmarkUrl}`;
 import { CookieConsent } from "@/components/CookieConsent";
 import { Footer } from "@/components/Footer";
+import { ComingSoonPage } from "@/components/ComingSoonPage";
 
 function NotFoundComponent() {
   return (
@@ -36,6 +37,19 @@ function NotFoundComponent() {
 }
 
 export const Route = createRootRoute({
+  loader: async () => {
+    try {
+      const { getPlatformSettingsFn } = await import("@/server/adminFns");
+      const settings = await getPlatformSettingsFn();
+      return {
+        comingSoonEnabled: settings.comingSoonEnabled,
+        comingSoonEndAt: settings.comingSoonEndAt,
+      };
+    } catch {
+      // Never let a settings-fetch failure take the whole site down.
+      return { comingSoonEnabled: false, comingSoonEndAt: "" };
+    }
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -101,6 +115,12 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdminRoute = pathname.toLowerCase().startsWith("/admin");
+  const { comingSoonEnabled, comingSoonEndAt } = Route.useLoaderData();
+  const comingSoonActive =
+    !isAdminRoute &&
+    comingSoonEnabled &&
+    !!comingSoonEndAt &&
+    Date.now() < new Date(comingSoonEndAt).getTime();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -209,6 +229,10 @@ function RootComponent() {
     };
     inject();
   }, []);
+
+  if (comingSoonActive) {
+    return <ComingSoonPage endAt={comingSoonEndAt} />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
