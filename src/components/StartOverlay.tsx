@@ -20,7 +20,7 @@ export function StartOverlay({ emoji, title, lines, onStart }: StartOverlayProps
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       onClick={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
