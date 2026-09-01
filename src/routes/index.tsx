@@ -390,8 +390,18 @@ function Landing() {
             transition={{ delay: 0.6 }}
             className="mt-8 rounded-2xl overflow-hidden"
           >
-            <img src={readyMobile} alt="" loading="lazy" className="block md:hidden w-full h-auto" />
-            <img src={readyDesktop} alt="" loading="lazy" className="hidden md:block w-full h-auto" />
+            <img
+              src={readyMobile}
+              alt="Introducing the new look"
+              loading="lazy"
+              className="block md:hidden w-full h-auto"
+            />
+            <img
+              src={readyDesktop}
+              alt="Introducing the new look"
+              loading="lazy"
+              className="hidden md:block w-full h-auto"
+            />
           </motion.div>
         </section>
 
