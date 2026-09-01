@@ -16,11 +16,11 @@ export function CookieConsent() {
     <AnimatePresence>
       {show && (
         <motion.div
-          initial={{ y: -20, opacity: 0 }}
+          initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -20, opacity: 0 }}
+          exit={{ y: 20, opacity: 0 }}
           transition={{ type: "spring", damping: 22 }}
-          className="fixed top-4 inset-x-4 md:top-auto md:inset-x-auto md:bottom-4 md:right-6 md:max-w-md z-50"
+          className="fixed bottom-4 inset-x-4 md:inset-x-auto md:right-6 md:max-w-md z-50"
         >
           <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-5 shadow-card">
             <p className="text-sm text-foreground/90">
