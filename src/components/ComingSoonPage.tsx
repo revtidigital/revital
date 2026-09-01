@@ -31,6 +31,20 @@ export function ComingSoonPage({ endAt }: { endAt: string }) {
     return () => clearInterval(interval);
   }, [endAt]);
 
+  // The page's own container height alone isn't enough to stop scrolling on
+  // mobile — the document/body itself must also be locked, or a small mismatch
+  // between 100vh/100dvh (mobile browser toolbar show/hide) lets it scroll.
+  useEffect(() => {
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+    };
+  }, []);
+
   const units = [
     { label: "Days", value: remaining.days },
     { label: "Hours", value: remaining.hours },
