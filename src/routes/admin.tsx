@@ -487,6 +487,7 @@ function Admin() {
   });
   const [usersPage, setUsersPage] = useState(1);
   const [usersPerPage, setUsersPerPage] = useState(10);
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
 
   const getAdminToken = () => sessionStorage.getItem("adminToken") ?? "";
 
@@ -660,6 +661,40 @@ function Admin() {
       setUsersPage(totalUserPages);
     }
   }, [usersPage, totalUserPages]);
+
+  // Export uses the selected users if any are checked; otherwise falls back to
+  // exporting every currently-filtered user (previous default behavior).
+  const exportSourceRows = useMemo(
+    () =>
+      selectedUserIds.size > 0
+        ? sortedFiltered.filter((u) => selectedUserIds.has(u.userId))
+        : filtered,
+    [filtered, sortedFiltered, selectedUserIds],
+  );
+
+  const toggleUserSelected = (userId: string) => {
+    setSelectedUserIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+  };
+
+  const allPageSelected =
+    paginatedUsers.length > 0 && paginatedUsers.every((u) => selectedUserIds.has(u.userId));
+
+  const togglePageSelected = () => {
+    setSelectedUserIds((prev) => {
+      const next = new Set(prev);
+      if (allPageSelected) {
+        for (const u of paginatedUsers) next.delete(u.userId);
+      } else {
+        for (const u of paginatedUsers) next.add(u.userId);
+      }
+      return next;
+    });
+  };
 
   const toggleUserSort = (key: UserSortKey) => {
     setUserSort((prev) =>
@@ -918,7 +953,7 @@ function Admin() {
         "UTM Term",
         "UTM Content",
       ],
-      ...filtered.map((u) => [
+      ...exportSourceRows.map((u) => [
         u.userId,
         u.joinedAtIso ? new Date(u.joinedAtIso).toLocaleDateString() : "",
         u.contact,
@@ -937,7 +972,7 @@ function Admin() {
       ]),
     ];
     exportCsv(rows, `revital-users-${Date.now()}.csv`);
-    addLog("EXPORT_CSV", `Exported ${filtered.length} users as CSV`);
+    addLog("EXPORT_CSV", `Exported ${exportSourceRows.length} users as CSV`);
   };
 
   const handleExportExcel = () => {
@@ -959,7 +994,7 @@ function Admin() {
         "UTM Term",
         "UTM Content",
       ],
-      ...filtered.map((u) => [
+      ...exportSourceRows.map((u) => [
         u.userId,
         u.joinedAtIso ? new Date(u.joinedAtIso).toLocaleDateString() : "",
         u.contact,
@@ -978,7 +1013,7 @@ function Admin() {
       ]),
     ];
     exportExcel(rows, `revital-users-${Date.now()}.xls`);
-    addLog("EXPORT_EXCEL", `Exported ${filtered.length} users as Excel`);
+    addLog("EXPORT_EXCEL", `Exported ${exportSourceRows.length} users as Excel`);
   };
 
   const handleExportPdf = () => {
@@ -1000,7 +1035,7 @@ function Admin() {
         "UTM Term",
         "UTM Content",
       ],
-      ...filtered.map((u) => [
+      ...exportSourceRows.map((u) => [
         u.userId,
         u.joinedAtIso ? new Date(u.joinedAtIso).toLocaleDateString() : "",
         u.contact,
@@ -1019,7 +1054,7 @@ function Admin() {
       ]),
     ];
     exportPdf(rows, `revital-users-${Date.now()}.pdf`);
-    addLog("EXPORT_PDF", `Exported ${filtered.length} users as PDF`);
+    addLog("EXPORT_PDF", `Exported ${exportSourceRows.length} users as PDF`);
   };
 
   const buildDateWiseExportRows = () => {
@@ -1535,25 +1570,44 @@ function Admin() {
                 >
                   <div className="flex items-center justify-between flex-wrap gap-3">
                     <SectionTitle>All Users</SectionTitle>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleExportCsv}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-energy text-energy-foreground font-bold shadow-button hover:scale-105 active:scale-95 transition-transform text-xs"
-                      >
-                        <Download className="w-3.5 h-3.5" /> CSV
-                      </button>
-                      <button
-                        onClick={handleExportExcel}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-border hover:bg-muted/30 font-bold transition-colors text-xs"
-                      >
-                        <Download className="w-3.5 h-3.5" /> Excel
-                      </button>
-                      <button
-                        onClick={handleExportPdf}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-border hover:bg-muted/30 font-bold transition-colors text-xs"
-                      >
-                        <Download className="w-3.5 h-3.5" /> PDF
-                      </button>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="text-xs text-muted-foreground">
+                        {selectedUserIds.size > 0 ? (
+                          <>
+                            <span className="font-bold text-accent">{selectedUserIds.size}</span> out
+                            of {sortedFiltered.length} selected
+                            <button
+                              type="button"
+                              onClick={() => setSelectedUserIds(new Set())}
+                              className="ml-2 underline hover:text-foreground"
+                            >
+                              Clear
+                            </button>
+                          </>
+                        ) : (
+                          `Select users to export only those — otherwise all ${sortedFiltered.length} filtered users are exported.`
+                        )}
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleExportCsv}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-energy text-energy-foreground font-bold shadow-button hover:scale-105 active:scale-95 transition-transform text-xs"
+                        >
+                          <Download className="w-3.5 h-3.5" /> CSV
+                        </button>
+                        <button
+                          onClick={handleExportExcel}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-border hover:bg-muted/30 font-bold transition-colors text-xs"
+                        >
+                          <Download className="w-3.5 h-3.5" /> Excel
+                        </button>
+                        <button
+                          onClick={handleExportPdf}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-border hover:bg-muted/30 font-bold transition-colors text-xs"
+                        >
+                          <Download className="w-3.5 h-3.5" /> PDF
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -1646,6 +1700,7 @@ function Admin() {
                   <div className="mt-3 bg-gradient-card border border-border rounded-2xl overflow-x-auto shadow-card">
                     <table className="w-full text-sm min-w-[1500px] table-fixed">
                       <colgroup>
+                        <col className="w-[40px]" />
                         <col className="w-[130px]" />
                         <col className="w-[100px]" />
                         <col className="w-[120px]" />
@@ -1664,6 +1719,15 @@ function Admin() {
                       </colgroup>
                       <thead>
                         <tr className="text-left text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/10">
+                          <th className="px-2 py-2">
+                            <input
+                              type="checkbox"
+                              checked={allPageSelected}
+                              onChange={togglePageSelected}
+                              className="w-3.5 h-3.5 accent-accent cursor-pointer"
+                              aria-label="Select all users on this page"
+                            />
+                          </th>
                           <SortableTh
                             label="User ID"
                             sortKey="userId"
@@ -1755,7 +1819,7 @@ function Admin() {
                         {filtered.length === 0 && (
                           <tr>
                             <td
-                              colSpan={15}
+                              colSpan={16}
                               className="py-10 text-center text-muted-foreground text-sm"
                             >
                               No users match filters.
@@ -1770,6 +1834,15 @@ function Admin() {
                             }
                             className="border-b border-border/40 hover:bg-muted/10 transition-colors cursor-pointer"
                           >
+                            <td className="px-2 py-2" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="checkbox"
+                                checked={selectedUserIds.has(u.userId)}
+                                onChange={() => toggleUserSelected(u.userId)}
+                                className="w-3.5 h-3.5 accent-accent cursor-pointer"
+                                aria-label={`Select ${u.userId}`}
+                              />
+                            </td>
                             <Td className="font-mono text-[11px] truncate">{u.userId}</Td>
                             <Td className="text-muted-foreground text-[11px] truncate">
                               {u.joinedAtIso ? new Date(u.joinedAtIso).toLocaleDateString() : "—"}
