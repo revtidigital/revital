@@ -2326,7 +2326,6 @@ function Admin() {
                             }
                             className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                           >
-                            <option value="winner">Show previous day's winners</option>
                             <option value="text">Show custom text</option>
                             <option value="leaderboard">Show daily leaderboard</option>
                           </select>
