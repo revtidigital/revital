@@ -231,7 +231,12 @@ function RootComponent() {
   }, []);
 
   if (comingSoonActive) {
-    return <ComingSoonPage endAt={comingSoonEndAt} />;
+    return (
+      <>
+        <ComingSoonPage endAt={comingSoonEndAt} />
+        <CookieConsent />
+      </>
+    );
   }
 
   return (

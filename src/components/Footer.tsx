@@ -12,17 +12,17 @@ export function Footer({ hideLegalLinks = false }: { hideLegalLinks?: boolean })
       <div
         className={
           hideLegalLinks
-            ? "mx-auto grid w-full max-w-6xl grid-cols-3 items-center gap-2 px-3 py-2 text-xs sm:px-4 sm:py-3 sm:text-sm"
+            ? "mx-auto flex w-full max-w-6xl flex-col items-center gap-2 px-3 py-2 text-xs sm:px-4 sm:py-3 sm:text-sm md:grid md:grid-cols-3"
             : "mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-2 px-3 py-2 text-xs sm:px-4 sm:py-3 sm:text-sm md:flex-row md:gap-4 md:py-8"
         }
       >
         <p
-          className={`font-medium text-garnet/70 ${hideLegalLinks ? "text-left justify-self-start" : "text-center"}`}
+          className={`font-medium text-garnet/70 ${hideLegalLinks ? "text-center md:text-left md:justify-self-start" : "text-center"}`}
         >
           © {new Date().getFullYear()} Revital Energy Challenge. All rights reserved.
         </p>
         <div
-          className={`flex items-center gap-3 ${hideLegalLinks ? "justify-center justify-self-center" : ""}`}
+          className={`flex items-center gap-3 ${hideLegalLinks ? "justify-center md:justify-self-center" : ""}`}
         >
           <a
             href="https://www.instagram.com/revital.uae"
@@ -80,7 +80,7 @@ export function Footer({ hideLegalLinks = false }: { hideLegalLinks?: boolean })
         </div>
         <nav
           className={`flex flex-wrap items-center gap-x-3 gap-y-1 md:text-base ${
-            hideLegalLinks ? "justify-end justify-self-end" : "justify-center"
+            hideLegalLinks ? "justify-center md:justify-end md:justify-self-end" : "justify-center"
           }`}
         >
           {!hideLegalLinks && (
