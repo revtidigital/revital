@@ -40,7 +40,7 @@ export function ComingSoonPage({ endAt }: { endAt: string }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <div className="flex-1 flex flex-col items-center justify-center px-4 text-center">
+      <div className="flex-1 flex flex-col items-center px-4 pt-12 md:pt-20 text-center">
         <img src={heroWordmarkUrl} alt="Revital Energy Challenge" className="w-56 mb-3" />
         <h1 className="text-3xl md:text-5xl font-black text-gradient-energy mb-3">Coming Soon</h1>
         <p className="text-sm md:text-base text-muted-foreground mb-8 max-w-md">
