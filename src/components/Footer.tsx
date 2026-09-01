@@ -11,7 +11,7 @@ export function Footer({ hideLegalLinks = false }: { hideLegalLinks?: boolean })
         <p className="text-center font-medium text-garnet/70">
           © {new Date().getFullYear()} Revital Energy Challenge. All rights reserved.
         </p>
-        <div className="flex items-center gap-3">
+        <div className={`flex items-center gap-3 ${hideLegalLinks ? "justify-center w-full md:w-auto" : ""}`}>
           <a
             href="https://www.instagram.com/revital.uae"
             target="_blank"
@@ -67,15 +67,15 @@ export function Footer({ hideLegalLinks = false }: { hideLegalLinks?: boolean })
           </a>
         </div>
         <nav className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 md:text-base">
-          <Link
-            to="/rules"
-            onClick={() => trackEvent("nav_click", { nav_label: "rules", source: "footer" })}
-            className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]"
-          >
-            Rules
-          </Link>
           {!hideLegalLinks && (
             <>
+              <Link
+                to="/rules"
+                onClick={() => trackEvent("nav_click", { nav_label: "rules", source: "footer" })}
+                className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]"
+              >
+                Rules
+              </Link>
               <span className="text-garnet/30">•</span>
               <Link
                 to="/privacy"
@@ -94,7 +94,7 @@ export function Footer({ hideLegalLinks = false }: { hideLegalLinks?: boolean })
               </Link>
             </>
           )}
-          <span className="text-garnet/30">•</span>
+          {!hideLegalLinks && <span className="text-garnet/30">•</span>}
           <a
             href="mailto:revitalenergyuae@gmail.com"
             onClick={() => trackEvent("nav_click", { nav_label: "support", source: "footer" })}
