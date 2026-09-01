@@ -43,7 +43,7 @@ export function ComingSoonPage({ endAt }: { endAt: string }) {
       <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-4 text-center">
         <img src={heroWordmarkUrl} alt="Revital Energy Challenge" className="w-36 md:w-48 mb-2" />
         <h1 className="text-2xl md:text-4xl font-black text-gradient-energy leading-[1.3] pb-1 mb-2">
-          Coming Soon
+          Revealing Soon
         </h1>
         <p className="text-xs md:text-sm text-muted-foreground mb-4 max-w-md">
           The Revital Energy Challenge is almost here. Get ready to play, score, and climb the

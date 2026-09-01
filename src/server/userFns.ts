@@ -64,6 +64,11 @@ const userRecordSchema = z.object({
 const contactSchema = z.object({ contact: z.string().min(1) });
 const userIdSchema = z.object({ userId: z.string().min(1) });
 
+// The signup form's placeholder/example shows "+971501234567" — reject it server-side
+// too (defense in depth beyond the client-side check) so no score can ever be saved
+// against this dummy number, even via a direct API call.
+const DUMMY_EXAMPLE_PHONE = "+971501234567";
+
 // ── save / upsert ──────────────────────────────────────────────────────────────
 // Scores/total are never trusted from the client: every score is clamped to the
 // range the game UI can actually produce, and `total` is always recomputed
@@ -73,6 +78,10 @@ export const saveUserFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => userRecordSchema.parse(data))
   .handler(async ({ data }) => {
     await checkRateLimit(`save-user:${getClientIp()}`, 60, 60);
+
+    if (data.contact.toLowerCase() === DUMMY_EXAMPLE_PHONE) {
+      throw new Error("This number is a placeholder example and cannot be used to save a score.");
+    }
 
     const db = await getDb();
     const clampedScores = clampScores(data.scores);

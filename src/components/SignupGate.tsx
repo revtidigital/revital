@@ -34,6 +34,11 @@ const isValidUaePhone = (value: string): boolean => {
   const normalized = normalizeUaePhone(value);
   return /^(?:\+971|00971|0)?5\d{8}$/.test(normalized);
 };
+// The form placeholder/example shows "+971501234567" — block real submissions
+// with that exact dummy number so no score ever gets saved to it.
+const DUMMY_EXAMPLE_PHONE = "+971501234567";
+const isDummyExamplePhone = (value: string): boolean =>
+  normalizeUaePhone(value) === DUMMY_EXAMPLE_PHONE;
 const NAME_REGEX = /^[A-Za-z][A-Za-z\s'.-]*$/;
 // referredBy state holds just the 10-char suffix — the "RVT-" prefix is fixed in the UI.
 const REFERRAL_SUFFIX_REGEX = /^[A-Z0-9]{10}$/;
@@ -192,6 +197,10 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
     if (!isValidUaePhone(contact)) {
       trackEvent("form_validation_error", { form: "signup_gate", reason: "invalid_phone" });
       return setErr("Enter a valid UAE mobile number");
+    }
+    if (isDummyExamplePhone(contact)) {
+      trackEvent("form_validation_error", { form: "signup_gate", reason: "dummy_example_phone" });
+      return setErr("This number is just an example — please enter your own mobile number.");
     }
     if (isNewUser && !participantType) {
       trackEvent("form_validation_error", { form: "signup_gate", reason: "missing_participant_type" });
