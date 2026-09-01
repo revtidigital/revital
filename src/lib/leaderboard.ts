@@ -120,9 +120,8 @@ export const getGlobalLeaderboard = async (): Promise<LeaderEntry[]> => {
   try {
     const { getGlobalLeaderboardFn } = await import("@/server/adminFns");
     const entries = await getGlobalLeaderboardFn();
-    if (entries.length > 0) return entries;
+    return [...entries, ...SAMPLE_GLOBAL].sort((a, b) => b.total - a.total).slice(0, 10);
   } catch {
-    // fall through to sample data
+    return SAMPLE_GLOBAL;
   }
-  return SAMPLE_GLOBAL;
 };
