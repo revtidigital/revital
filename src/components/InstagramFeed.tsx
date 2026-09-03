@@ -1,40 +1,32 @@
-import { useEffect } from "react";
-
-// Add permalink URLs of the Instagram posts you want to feature here.
-// Get them from the post's "Copy link" option on instagram.com/revital.uae
-const INSTAGRAM_POST_URLS: string[] = [
-  // "https://www.instagram.com/p/XXXXXXXXXXX/",
-];
-
-declare global {
-  interface Window {
-    instgrm?: {
-      Embeds: { process: () => void };
-    };
-  }
-}
+import { useEffect, useState } from "react";
+import type { InstagramPost } from "@/server/instagramFns";
 
 export function InstagramFeed() {
+  const [connected, setConnected] = useState(false);
+  const [posts, setPosts] = useState<InstagramPost[]>([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    if (INSTAGRAM_POST_URLS.length === 0) return;
-
-    const existing = document.getElementById("instagram-embed-script");
-    if (existing) {
-      window.instgrm?.Embeds.process();
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.id = "instagram-embed-script";
-    script.src = "https://www.instagram.com/embed.js";
-    script.async = true;
-    script.onload = () => window.instgrm?.Embeds.process();
-    document.body.appendChild(script);
+    import("@/server/instagramFns")
+      .then((mod) => mod.getInstagramFeedFn())
+      .then((result) => {
+        setConnected(result.connected);
+        setPosts(result.posts);
+      })
+      .catch(() => setConnected(false))
+      .finally(() => setLoading(false));
   }, []);
 
-  if (INSTAGRAM_POST_URLS.length === 0) {
+  if (loading) {
+    return <div className="text-center text-sm text-muted-foreground">Loading feed…</div>;
+  }
+
+  if (!connected || posts.length === 0) {
     return (
       <div className="text-center">
+        <p className="text-sm text-muted-foreground mb-4">
+          Real Instagram feed not connected yet — showing follow button for now.
+        </p>
         <a
           href="https://www.instagram.com/revital.uae"
           target="_blank"
@@ -49,14 +41,26 @@ export function InstagramFeed() {
 
   return (
     <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3">
-      {INSTAGRAM_POST_URLS.map((url) => (
-        <blockquote
-          key={url}
-          className="instagram-media"
-          data-instgrm-permalink={url}
-          data-instgrm-version="14"
-          style={{ margin: 0 }}
-        />
+      {posts.map((post) => (
+        <a
+          key={post.id}
+          href={post.permalink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group relative block overflow-hidden rounded-2xl border-2 border-[var(--garnet)]/10 shadow-card"
+        >
+          <img
+            src={post.mediaType === "VIDEO" ? post.thumbnailUrl : post.mediaUrl}
+            alt={post.caption?.slice(0, 80) ?? "Instagram post"}
+            loading="lazy"
+            className="w-full aspect-square object-cover group-hover:scale-105 transition-transform"
+          />
+          {post.caption && (
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+              <p className="text-white text-xs line-clamp-2">{post.caption}</p>
+            </div>
+          )}
+        </a>
       ))}
     </div>
   );
