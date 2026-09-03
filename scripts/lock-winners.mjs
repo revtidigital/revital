@@ -7,6 +7,7 @@ import { createCanvas, loadImage, registerFont } from "canvas";
 import { readFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isExcludedContact } from "../src/lib/excludedContacts.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -204,6 +205,7 @@ async function main() {
     const users = await db.collection("users").find({}).toArray();
     const ranked = users
       .filter((u) => !u.winnerLockDates || u.winnerLockDates.length === 0) // never re-select a past winner
+      .filter((u) => !isExcludedContact(u.contact)) // internal/team numbers excluded from winner selection
       .map((u) => {
         const todayAttempts = (u.playAttempts ?? []).filter((a) => a.date === lockDate);
         const best = todayAttempts.reduce((m, a) => Math.max(m, a.total), -1);

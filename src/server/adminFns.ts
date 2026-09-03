@@ -9,6 +9,7 @@ import { readFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkRateLimit, getClientIp, issueAdminToken, requireAdminToken } from "./security";
+import { isExcludedContact } from "@/lib/excludedContacts.mjs";
 
 // ── Admin Auth ─────────────────────────────────────────────────────────────────
 /**
@@ -523,6 +524,7 @@ export const getDailyLeaderboardFn = createServerFn({ method: "GET" }).handler(a
   };
 
   const scored = users
+    .filter((u) => !isExcludedContact(u.contact))
     .map((u) => {
       const todaysAttempts = (u.playAttempts ?? []).filter((a) => a.date === today);
       if (todaysAttempts.length === 0) return null;
@@ -578,6 +580,7 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
   };
 
   const scored = users
+    .filter((u) => !isExcludedContact(u.contact))
     .map((u) => {
       const attempts = u.playAttempts ?? [];
       const uniqueDates = [...new Set(attempts.map((a) => a.date))];
@@ -714,6 +717,7 @@ export const getUserRankFn = createServerFn({ method: "GET" })
         {
           projection: {
             userId: 1,
+            contact: 1,
             playAttempts: 1,
             referCount: 1,
           },
@@ -722,6 +726,7 @@ export const getUserRankFn = createServerFn({ method: "GET" })
       .toArray();
 
     const scored = users
+      .filter((u) => !isExcludedContact(u.contact))
       .map((u) => {
         const attempts = u.playAttempts ?? [];
         const uniqueDates = [...new Set(attempts.map((a) => a.date))];
