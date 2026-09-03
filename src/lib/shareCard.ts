@@ -177,7 +177,7 @@ export async function buildShareCardFromTemplate(data: ShareCardData): Promise<B
 
   // Center category within the left box
   ctx.textAlign = "center";
-  ctx.fillText(truncateText(ctx, data.category, 420 * sx), 429.5 * sx, 1034.5 * sy);
+  ctx.fillText(truncateText(ctx, data.category, 420 * sx), 370 * sx, 1034.5 * sy);
 
   // Tier stays center-aligned in its right box
   ctx.textAlign = "center";
