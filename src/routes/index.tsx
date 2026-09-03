@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { Header } from "@/components/Header";
 import { getUser } from "@/lib/storage";
+import { InstagramFeed } from "@/components/InstagramFeed";
 import { Leaderboard } from "@/components/Leaderboard";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
 import heroWordmark from "@/assets/revital-hero-wordmark.webp";
@@ -483,6 +484,11 @@ function Landing() {
               </motion.div>
             ))}
           </div>
+        </section>
+
+        {/* INSTAGRAM */}
+        <section id="instagram-feed" className="scroll-mt-24 mt-20 md:mt-28">
+          <InstagramFeed />
         </section>
       </main>
     </div>
