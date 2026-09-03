@@ -268,7 +268,7 @@ function Landing() {
                 <div className="text-5xl md:text-6xl leading-none">🎁</div>
                 <div>
                   <p className="text-2xl font-black uppercase leading-tight text-garnet">
-                    <span className="text-[var(--tiger)]">1 Grand</span> Global Winner
+                    <span className="text-[var(--tiger)]">3 Grand</span> Global Winners
                   </p>
                   <p className="mt-1 text-sm md:text-base text-garnet/80">
                     Compete across players and win the ultimate prize.
