@@ -3,14 +3,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { Header } from "@/components/Header";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { getUser } from "@/lib/storage";
 import { Leaderboard } from "@/components/Leaderboard";
+import { InstagramFeed } from "@/components/InstagramFeed";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
 import heroWordmark from "@/assets/revital-hero-wordmark.webp";
 import readyDesktop from "@/assets/ready-desktop-new.webp";
@@ -22,23 +17,28 @@ export const Route = createFileRoute("/")({
 
 const SCORE_BOOST_HACKS = [
   {
+    emoji: "📅",
     title: "PLAY REGULARLY",
     description: "Play on more days to unlock Consistency Bonus points.",
   },
   {
+    emoji: "🔥",
     title: "BUILD YOUR STREAK",
     description: "Maintain consecutive days of gameplay to earn Streak Bonus points.",
   },
   {
+    emoji: "🎮",
     title: "IMPROVE YOUR GAMEPLAY",
     description: "Your Gameplay Score can contribute up to 1,500 points to your Global Score.",
   },
   {
+    emoji: "🤝",
     title: "REFER & CLIMB",
     description:
       "Earn 100 bonus points for every successful verified referral, with no limit. Referral points boost your Global Leaderboard score only.",
   },
   {
+    emoji: "🏔️",
     title: "KEEP PLAYING, KEEP CLIMBING",
     description: "Every day and every point can take you closer to the top.",
   },
@@ -452,27 +452,56 @@ function Landing() {
             </Link>
           </div>
 
-          <div className="mt-6 max-w-xl mx-auto bg-background/40 rounded-2xl px-4">
-            <Accordion type="single" collapsible>
-              <AccordionItem value="score-hacks" className="border-none">
-                <AccordionTrigger className="text-xs font-black uppercase tracking-wider text-garnet py-3">
-                  🚀 Hacks to Boost Your Global Score
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-2.5">
-                    {SCORE_BOOST_HACKS.map((hack) => (
-                      <div key={hack.title}>
-                        <p className="text-[11px] font-bold uppercase tracking-wide text-garnet">
-                          {hack.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{hack.description}</p>
-                      </div>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-14 text-center"
+          >
+            <div className="inline-block px-4 py-1.5 rounded-full bg-[var(--tiger)] text-white text-xs uppercase tracking-[0.2em] font-black">
+              🚀 Hacks to Boost Your Global Score
+            </div>
+          </motion.div>
+
+          <div className="mt-8 grid gap-5 md:grid-cols-3">
+            {SCORE_BOOST_HACKS.map((hack, i) => (
+              <motion.div
+                key={hack.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="relative bg-white/90 border-2 border-[var(--garnet)]/10 rounded-2xl p-6 backdrop-blur shadow-card flex flex-col gap-3"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{hack.emoji}</span>
+                  <span className="text-xs font-black text-[var(--tiger)] uppercase tracking-widest">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                </div>
+                <h3 className="text-lg font-black text-garnet">{hack.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{hack.description}</p>
+              </motion.div>
+            ))}
           </div>
+        </section>
+
+        {/* INSTAGRAM */}
+        <section id="instagram-feed" className="scroll-mt-24 mt-20 md:mt-28">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-8"
+          >
+            <div className="inline-block px-4 py-1.5 rounded-full bg-[var(--marigold)] text-garnet text-xs uppercase tracking-[0.2em] font-black">
+              📸 Follow the Fun
+            </div>
+            <h2 className="mt-3 text-3xl md:text-5xl font-black text-garnet">
+              See What's <span className="text-gradient-energy">Happening on Instagram</span>
+            </h2>
+          </motion.div>
+          <InstagramFeed />
         </section>
       </main>
     </div>
