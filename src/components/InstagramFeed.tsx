@@ -47,10 +47,10 @@ export function InstagramFeed() {
   }
 
   return (
-    <Carousel opts={{ align: "start", loop: posts.length > 1 }} className="mx-auto max-w-4xl">
+    <Carousel opts={{ align: "start", loop: posts.length > 1 }} className="w-full">
       <CarouselContent className="-ml-5">
         {posts.map((post) => (
-          <CarouselItem key={post.id} className="pl-5 sm:basis-1/2 md:basis-1/3">
+          <CarouselItem key={post.id} className="pl-5 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
             <a
               href={post.permalink}
               target="_blank"
@@ -70,9 +70,6 @@ export function InstagramFeed() {
                   </span>
                 )}
               </div>
-              {post.caption && (
-                <p className="px-4 py-3 text-sm text-foreground/80 line-clamp-2">{post.caption}</p>
-              )}
             </a>
           </CarouselItem>
         ))}

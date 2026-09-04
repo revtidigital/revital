@@ -488,7 +488,7 @@ function Landing() {
             ))}
           </div>
 
-          <div id="instagram-feed" className="mt-8 scroll-mt-24 text-center">
+          <div id="instagram-feed" className="mt-20 md:mt-24 scroll-mt-24 text-center">
             <a
               href="https://www.instagram.com/revital.uae"
               target="_blank"
