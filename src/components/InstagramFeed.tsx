@@ -62,7 +62,7 @@ export function InstagramFeed() {
                   src={post.mediaType === "VIDEO" ? post.thumbnailUrl : post.mediaUrl}
                   alt={post.caption?.slice(0, 80) ?? "Instagram post"}
                   loading="lazy"
-                  className="w-full h-full object-contain group-hover:scale-[1.03] transition-transform"
+                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform"
                 />
                 {(post.mediaType === "VIDEO" || post.mediaType === "CAROUSEL_ALBUM") && (
                   <span className="absolute top-2 right-2 text-white drop-shadow text-base">
