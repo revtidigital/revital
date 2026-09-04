@@ -489,7 +489,7 @@ export const sendLastLockedWinnerEmailFn = createServerFn({ method: "POST" })
     }).format(new Date(`${lockDate}T12:00:00+04:00`));
     const enrichedSubject = `Winner Locked: ${lockDate} (${dayName}) UAE`;
     const winner = ranked[0];
-    const text = `Daily Winner\n\n${winner.name} — Score: ${winner.score}`;
+    const text = `Daily Winner\n\n${winner.name} — Score: ${winner.score}\nContact: ${winner.contact || "N/A"}`;
     const winnersPng = await generateWinnersPng(ranked);
     await Promise.all(
       adminEmails.map((email) =>
