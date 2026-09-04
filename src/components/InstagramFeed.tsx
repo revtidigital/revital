@@ -1,71 +1,19 @@
 import { useEffect, useState } from "react";
 import type { InstagramPost } from "@/server/instagramFns";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 
-function PostMedia({ post }: { post: InstagramPost }) {
-  const [childIndex, setChildIndex] = useState(0);
-  const slides =
-    post.children && post.children.length > 0
-      ? post.children
-      : [{ id: post.id, mediaUrl: post.mediaUrl, mediaType: post.mediaType as "IMAGE" | "VIDEO", thumbnailUrl: post.thumbnailUrl }];
-  const active = slides[childIndex] ?? slides[0];
-  const hasMultiple = slides.length > 1;
-
-  return (
-    <div className="relative w-full aspect-square bg-black/5 flex items-center justify-center">
-      {active.mediaType === "VIDEO" ? (
-        <video
-          key={active.id}
-          src={active.mediaUrl}
-          poster={active.thumbnailUrl}
-          controls
-          playsInline
-          className="w-full h-full object-contain"
-        />
-      ) : (
-        <img
-          src={active.mediaUrl}
-          alt={post.caption?.slice(0, 80) ?? "Instagram post"}
-          loading="lazy"
-          className="w-full h-full object-contain"
-        />
-      )}
-      {hasMultiple && (
-        <>
-          <button
-            type="button"
-            aria-label="Previous photo"
-            onClick={() => setChildIndex((i) => (i - 1 + slides.length) % slides.length)}
-            className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/45 text-white flex items-center justify-center text-sm hover:bg-black/60"
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            aria-label="Next photo"
-            onClick={() => setChildIndex((i) => (i + 1) % slides.length)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/45 text-white flex items-center justify-center text-sm hover:bg-black/60"
-          >
-            ›
-          </button>
-          <div className="absolute bottom-2 inset-x-0 flex justify-center gap-1.5">
-            {slides.map((s, i) => (
-              <span
-                key={s.id}
-                className={`h-1.5 w-1.5 rounded-full ${i === childIndex ? "bg-white" : "bg-white/40"}`}
-              />
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+const AUTO_SLIDE_MS = 2800;
 
 export function InstagramFeed() {
   const [connected, setConnected] = useState(false);
   const [posts, setPosts] = useState<InstagramPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [api, setApi] = useState<CarouselApi>();
 
   useEffect(() => {
     import("@/server/instagramFns")
@@ -77,6 +25,15 @@ export function InstagramFeed() {
       .catch(() => setConnected(false))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!api || posts.length <= 1) return;
+    const timer = window.setInterval(() => {
+      if (api.canScrollNext()) api.scrollNext();
+      else api.scrollTo(0);
+    }, AUTO_SLIDE_MS);
+    return () => window.clearInterval(timer);
+  }, [api, posts.length]);
 
   if (loading) {
     return <div className="text-center text-sm text-muted-foreground">Loading feed…</div>;
@@ -101,35 +58,35 @@ export function InstagramFeed() {
   }
 
   return (
-    <Carousel opts={{ align: "start", loop: posts.length > 1 }} className="mx-auto max-w-md">
-      <CarouselContent>
+    <Carousel
+      setApi={setApi}
+      opts={{ align: "start", loop: true }}
+      className="mx-auto max-w-3xl"
+    >
+      <CarouselContent className="-ml-3">
         {posts.map((post) => (
-          <CarouselItem key={post.id}>
-            <div className="rounded-2xl border-2 border-[var(--garnet)]/10 shadow-card overflow-hidden bg-black/5">
-              <PostMedia post={post} />
-              {post.caption && (
-                <p className="px-4 py-3 text-sm text-foreground/80 line-clamp-3 bg-white/90">
-                  {post.caption}
-                </p>
+          <CarouselItem key={post.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 pl-3">
+            <a
+              href={post.permalink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative block aspect-square overflow-hidden rounded-2xl border-2 border-[var(--garnet)]/10 shadow-card"
+            >
+              <img
+                src={post.mediaType === "VIDEO" ? post.thumbnailUrl : post.mediaUrl}
+                alt={post.caption?.slice(0, 80) ?? "Instagram post"}
+                loading="lazy"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+              />
+              {(post.mediaType === "VIDEO" || post.mediaType === "CAROUSEL_ALBUM") && (
+                <span className="absolute top-1.5 right-1.5 text-white drop-shadow text-sm">
+                  {post.mediaType === "VIDEO" ? "▶" : "⧉"}
+                </span>
               )}
-              <a
-                href={post.permalink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block px-4 py-2.5 text-center text-xs font-bold text-garnet bg-[var(--marigold)]/25 hover:bg-[var(--marigold)]/40 transition-colors"
-              >
-                View on Instagram →
-              </a>
-            </div>
+            </a>
           </CarouselItem>
         ))}
       </CarouselContent>
-      {posts.length > 1 && (
-        <>
-          <CarouselPrevious className="-left-3 sm:-left-10" />
-          <CarouselNext className="-right-3 sm:-right-10" />
-        </>
-      )}
     </Carousel>
   );
 }
