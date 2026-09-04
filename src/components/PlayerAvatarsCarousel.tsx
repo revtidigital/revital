@@ -53,7 +53,7 @@ export function PlayerAvatarsCarousel() {
           {players.map((p) => (
             <CarouselItem key={p.userId} className="basis-1/3 pl-3">
               <div className="group relative block bg-white/90 rounded-lg overflow-hidden shadow-[0_12px_36px_-12px_oklch(0.36_0.12_30_/_0.25)]">
-                <div className="relative w-full aspect-square bg-black/5 flex items-center justify-center">
+                <div className="relative w-full aspect-[4/3] bg-black/5 flex items-center justify-center">
                   {p.avatarUrl ? (
                     <img
                       src={p.avatarUrl}
@@ -70,9 +70,9 @@ export function PlayerAvatarsCarousel() {
                     <span className="absolute top-1 right-1 text-sm drop-shadow">🏆</span>
                   )}
                 </div>
-                <div className="px-1.5 pt-2 pb-1.5 text-center">
-                  <p className="text-[10px] font-bold text-garnet truncate">{p.name}</p>
-                  <p className="text-[9px] text-muted-foreground truncate">
+                <div className="px-2 pt-2.5 pb-2 text-center bg-white/95">
+                  <p className="text-sm font-bold text-garnet truncate">{p.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
                     {[formatDate(p.date), p.score != null ? `${p.score} pts` : null]
                       .filter(Boolean)
                       .join(" · ")}
