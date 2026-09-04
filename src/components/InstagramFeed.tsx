@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { InstagramPost } from "@/server/instagramFns";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 export function InstagramFeed() {
   const [connected, setConnected] = useState(false);
@@ -40,28 +41,52 @@ export function InstagramFeed() {
   }
 
   return (
-    <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3">
-      {posts.map((post) => (
-        <a
-          key={post.id}
-          href={post.permalink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group relative block overflow-hidden rounded-2xl border-2 border-[var(--garnet)]/10 shadow-card"
-        >
-          <img
-            src={post.mediaType === "VIDEO" ? post.thumbnailUrl : post.mediaUrl}
-            alt={post.caption?.slice(0, 80) ?? "Instagram post"}
-            loading="lazy"
-            className="w-full aspect-square object-cover group-hover:scale-105 transition-transform"
-          />
-          {post.caption && (
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-              <p className="text-white text-xs line-clamp-2">{post.caption}</p>
+    <Carousel opts={{ align: "start", loop: posts.length > 1 }} className="mx-auto max-w-md">
+      <CarouselContent>
+        {posts.map((post) => (
+          <CarouselItem key={post.id}>
+            <div className="rounded-2xl border-2 border-[var(--garnet)]/10 shadow-card overflow-hidden bg-black/5">
+              <div className="relative w-full aspect-square bg-black/5 flex items-center justify-center">
+                {post.mediaType === "VIDEO" ? (
+                  <video
+                    src={post.mediaUrl}
+                    poster={post.thumbnailUrl}
+                    controls
+                    playsInline
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <img
+                    src={post.mediaUrl}
+                    alt={post.caption?.slice(0, 80) ?? "Instagram post"}
+                    loading="lazy"
+                    className="w-full h-full object-contain"
+                  />
+                )}
+              </div>
+              {post.caption && (
+                <p className="px-4 py-3 text-sm text-foreground/80 line-clamp-3 bg-white/90">
+                  {post.caption}
+                </p>
+              )}
+              <a
+                href={post.permalink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block px-4 py-2.5 text-center text-xs font-bold text-garnet bg-[var(--marigold)]/25 hover:bg-[var(--marigold)]/40 transition-colors"
+              >
+                View on Instagram →
+              </a>
             </div>
-          )}
-        </a>
-      ))}
-    </div>
+          </CarouselItem>
+        ))}
+      </CarouselContent>
+      {posts.length > 1 && (
+        <>
+          <CarouselPrevious className="-left-3 sm:-left-10" />
+          <CarouselNext className="-right-3 sm:-right-10" />
+        </>
+      )}
+    </Carousel>
   );
 }

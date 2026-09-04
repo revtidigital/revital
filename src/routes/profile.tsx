@@ -2,17 +2,48 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/Header";
+import { GenericAvatar } from "@/components/GenericAvatar";
 import {
   dedupeAttempts,
   findUserByContactRemote,
   getReferralInfoRemote,
   getUser,
+  saveUser,
   saveUserRemote,
   resetScores,
   type UserRecord,
 } from "@/lib/storage";
 import { containsProfanity } from "@/lib/profanity";
 import { trackEvent } from "@/lib/analytics";
+
+/** Center-crop + downscale an uploaded image to a small square JPEG data URL before it's sent to the server. */
+function resizeImageToSquareJpeg(file: File, size: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const side = Math.min(img.width, img.height);
+      const sx = (img.width - side) / 2;
+      const sy = (img.height - side) / 2;
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Canvas not supported"));
+        return;
+      }
+      ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Could not read image"));
+    };
+    img.src = objectUrl;
+  });
+}
 
 export const Route = createFileRoute("/profile")({
   component: Profile,
@@ -55,6 +86,8 @@ function Profile() {
   const [globalScore, setGlobalScore] = useState<number | null>(null);
   const [nameFlagged, setNameFlagged] = useState(false);
   const [checkingName, setCheckingName] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
 
   useEffect(() => {
     const trimmed = name.trim();
@@ -185,6 +218,30 @@ function Profile() {
       setTimeout(() => setSaved(false), 2000);
     } catch {
       setError("Could not save profile right now. Please try again.");
+    }
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Please choose an image file.");
+      return;
+    }
+    setAvatarError("");
+    setAvatarUploading(true);
+    try {
+      const dataUrl = await resizeImageToSquareJpeg(file, 320);
+      const { saveAvatarFn } = await import("@/server/userFns");
+      await saveAvatarFn({ data: { userId: safeUser.userId, avatarUrl: dataUrl } });
+      const updated = { ...safeUser, avatarUrl: dataUrl };
+      saveUser(updated);
+      setUser(updated);
+    } catch {
+      setAvatarError("Could not upload photo right now. Please try again.");
+    } finally {
+      setAvatarUploading(false);
     }
   };
 
@@ -426,6 +483,34 @@ function Profile() {
             Complete your profile{" "}
             <span className="text-muted-foreground text-xs font-normal">(optional)</span>
           </h2>
+
+          <div className="flex items-center gap-4">
+            <div className="relative h-20 w-20 shrink-0 rounded-full overflow-hidden border-2 border-[var(--garnet)]/15 bg-background/40">
+              {safeUser.avatarUrl ? (
+                <img
+                  src={safeUser.avatarUrl}
+                  alt={`${safeUser.name || "Your"} profile picture`}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <GenericAvatar className="h-full w-full" />
+              )}
+            </div>
+            <div>
+              <label className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-background/60 text-sm font-bold cursor-pointer hover:bg-[var(--marigold)]/20 transition-colors">
+                {avatarUploading ? "Uploading…" : safeUser.avatarUrl ? "Change photo" : "Upload photo"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={avatarUploading}
+                  onChange={handleAvatarChange}
+                />
+              </label>
+              {avatarError && <p className="mt-1.5 text-[11px] text-destructive">{avatarError}</p>}
+            </div>
+          </div>
+
           <div>
             <label className="text-xs uppercase tracking-wider text-muted-foreground">
               Full name

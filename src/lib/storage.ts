@@ -54,6 +54,7 @@ export interface UserRecord {
   contact: string; // mobile number used for login
   email?: string; // optional profile email
   name?: string;
+  avatarUrl?: string; // data URL of the user's uploaded profile picture, client-resized before upload
   address?: string;
   participantType?: ParticipantType; // set at first-time signup only
   scores: GameScores;

@@ -328,3 +328,44 @@ export const getAllUsersAdminFn = createServerFn({ method: "POST" })
       .toArray();
     return docs.map(({ _id: _unused, ...rest }) => rest as UserRecord);
   });
+
+// ── profile picture upload ──────────────────────────────────────────────────────
+// Client resizes/compresses the image to a small square JPEG before sending, so
+// this cap is generous headroom against a forged/oversized data URL, not the
+// expected normal size.
+const MAX_AVATAR_DATA_URL_LENGTH = 400_000;
+
+const saveAvatarSchema = z.object({
+  userId: z.string().min(1),
+  avatarUrl: z.string().regex(/^data:image\/(jpeg|png|webp);base64,/, "Must be a JPEG/PNG/WebP data URL"),
+});
+
+export const saveAvatarFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => saveAvatarSchema.parse(data))
+  .handler(async ({ data }) => {
+    await checkRateLimit(`save-avatar:${getClientIp()}`, 10, 300);
+    if (data.avatarUrl.length > MAX_AVATAR_DATA_URL_LENGTH) {
+      throw new Error("Image is too large.");
+    }
+    const db = await getDb();
+    await db
+      .collection<UserRecord>("users")
+      .updateOne({ userId: data.userId }, { $set: { avatarUrl: data.avatarUrl } });
+    return { ok: true };
+  });
+
+// ── recent players' avatars (public, name + avatar only — used by homepage carousel) ──
+export const getRecentPlayerAvatarsFn = createServerFn({ method: "GET" }).handler(async () => {
+  const db = await getDb();
+  const docs = await db
+    .collection<UserRecord & { _id: unknown }>("users")
+    .find({ total: { $gt: 0 } }, { projection: { userId: 1, name: 1, avatarUrl: 1 } })
+    .sort({ createdAt: -1 })
+    .limit(24)
+    .toArray();
+  return docs.map((d) => ({
+    userId: d.userId,
+    name: d.name || "Player",
+    avatarUrl: d.avatarUrl,
+  }));
+});
