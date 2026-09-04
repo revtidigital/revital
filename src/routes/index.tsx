@@ -488,7 +488,7 @@ function Landing() {
             ))}
           </div>
 
-          <div className="mt-8 text-center">
+          <div id="instagram-feed" className="mt-8 scroll-mt-24 text-center">
             <a
               href="https://www.instagram.com/revital.uae"
               target="_blank"
@@ -498,12 +498,11 @@ function Landing() {
             >
               Follow us on Instagram →
             </a>
-          </div>
-        </section>
 
-        {/* INSTAGRAM */}
-        <section id="instagram-feed" className="scroll-mt-24 mt-20 md:mt-28">
-          <InstagramFeed />
+            <div className="mt-6">
+              <InstagramFeed />
+            </div>
+          </div>
         </section>
       </main>
     </div>

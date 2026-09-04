@@ -2,6 +2,66 @@ import { useEffect, useState } from "react";
 import type { InstagramPost } from "@/server/instagramFns";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
+function PostMedia({ post }: { post: InstagramPost }) {
+  const [childIndex, setChildIndex] = useState(0);
+  const slides =
+    post.children && post.children.length > 0
+      ? post.children
+      : [{ id: post.id, mediaUrl: post.mediaUrl, mediaType: post.mediaType as "IMAGE" | "VIDEO", thumbnailUrl: post.thumbnailUrl }];
+  const active = slides[childIndex] ?? slides[0];
+  const hasMultiple = slides.length > 1;
+
+  return (
+    <div className="relative w-full aspect-square bg-black/5 flex items-center justify-center">
+      {active.mediaType === "VIDEO" ? (
+        <video
+          key={active.id}
+          src={active.mediaUrl}
+          poster={active.thumbnailUrl}
+          controls
+          playsInline
+          className="w-full h-full object-contain"
+        />
+      ) : (
+        <img
+          src={active.mediaUrl}
+          alt={post.caption?.slice(0, 80) ?? "Instagram post"}
+          loading="lazy"
+          className="w-full h-full object-contain"
+        />
+      )}
+      {hasMultiple && (
+        <>
+          <button
+            type="button"
+            aria-label="Previous photo"
+            onClick={() => setChildIndex((i) => (i - 1 + slides.length) % slides.length)}
+            className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/45 text-white flex items-center justify-center text-sm hover:bg-black/60"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            aria-label="Next photo"
+            onClick={() => setChildIndex((i) => (i + 1) % slides.length)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/45 text-white flex items-center justify-center text-sm hover:bg-black/60"
+          >
+            ›
+          </button>
+          <div className="absolute bottom-2 inset-x-0 flex justify-center gap-1.5">
+            {slides.map((s, i) => (
+              <span
+                key={s.id}
+                className={`h-1.5 w-1.5 rounded-full ${i === childIndex ? "bg-white" : "bg-white/40"}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function InstagramFeed() {
   const [connected, setConnected] = useState(false);
   const [posts, setPosts] = useState<InstagramPost[]>([]);
@@ -46,24 +106,7 @@ export function InstagramFeed() {
         {posts.map((post) => (
           <CarouselItem key={post.id}>
             <div className="rounded-2xl border-2 border-[var(--garnet)]/10 shadow-card overflow-hidden bg-black/5">
-              <div className="relative w-full aspect-square bg-black/5 flex items-center justify-center">
-                {post.mediaType === "VIDEO" ? (
-                  <video
-                    src={post.mediaUrl}
-                    poster={post.thumbnailUrl}
-                    controls
-                    playsInline
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  <img
-                    src={post.mediaUrl}
-                    alt={post.caption?.slice(0, 80) ?? "Instagram post"}
-                    loading="lazy"
-                    className="w-full h-full object-contain"
-                  />
-                )}
-              </div>
+              <PostMedia post={post} />
               {post.caption && (
                 <p className="px-4 py-3 text-sm text-foreground/80 line-clamp-3 bg-white/90">
                   {post.caption}
