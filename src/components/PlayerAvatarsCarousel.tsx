@@ -23,32 +23,34 @@ export function PlayerAvatarsCarousel() {
   if (players.length === 0) return null;
 
   return (
-    <div className="mt-6">
-      <p className="text-center text-xs uppercase tracking-[0.2em] font-black text-muted-foreground mb-3">
-        Players Climbing the Leaderboard
-      </p>
+    <div className="mt-8">
+      <div className="text-center mb-4">
+        <div className="inline-block px-4 py-1.5 rounded-full bg-[var(--marigold)] text-garnet text-xs uppercase tracking-[0.2em] font-black">
+          🔥 Players Climbing the Leaderboard
+        </div>
+      </div>
       <Carousel
         opts={{ align: "start", loop: true }}
         plugins={[autoplay.current]}
         className="mx-auto max-w-2xl"
       >
-        <CarouselContent className="-ml-3">
+        <CarouselContent className="-ml-5">
           {players.map((p) => (
-            <CarouselItem key={p.userId} className="basis-1/3 pl-3">
-              <div className="flex flex-col items-center gap-1.5">
-                <div className="h-14 w-14 rounded-full overflow-hidden border-2 border-[var(--garnet)]/15 bg-background/40 shrink-0">
+            <CarouselItem key={p.userId} className="basis-1/3 pl-5">
+              <div className="group relative block bg-white/90 rounded-2xl overflow-hidden shadow-[0_12px_36px_-12px_oklch(0.36_0.12_30_/_0.25)]">
+                <div className="relative w-full aspect-square bg-black/5 flex items-center justify-center">
                   {p.avatarUrl ? (
                     <img
                       src={p.avatarUrl}
                       alt={p.name}
                       loading="lazy"
-                      className="h-full w-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform"
                     />
                   ) : (
-                    <GenericAvatar className="h-full w-full" />
+                    <GenericAvatar className="w-full h-full" />
                   )}
                 </div>
-                <p className="text-[10px] text-muted-foreground truncate w-full text-center">
+                <p className="px-3 py-2.5 text-sm font-bold text-garnet text-center truncate">
                   {p.name}
                 </p>
               </div>
