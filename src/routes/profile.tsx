@@ -238,8 +238,11 @@ function Profile() {
       const updated = { ...safeUser, avatarUrl: dataUrl };
       saveUser(updated);
       setUser(updated);
-    } catch {
-      setAvatarError("Could not upload photo right now. Please try again.");
+    } catch (err) {
+      console.error("Avatar upload failed:", err);
+      setAvatarError(
+        `Could not upload photo right now. (${err instanceof Error ? err.message : String(err)})`,
+      );
     } finally {
       setAvatarUploading(false);
     }
