@@ -359,7 +359,10 @@ export const getRecentPlayerAvatarsFn = createServerFn({ method: "GET" }).handle
   const db = await getDb();
   const docs = await db
     .collection<UserRecord & { _id: unknown }>("users")
-    .find({ total: { $gt: 0 } }, { projection: { userId: 1, name: 1, avatarUrl: 1 } })
+    .find(
+      { total: { $gt: 0 } },
+      { projection: { userId: 1, name: 1, avatarUrl: 1, total: 1, playDates: 1, winnerLockDates: 1 } },
+    )
     .sort({ createdAt: -1 })
     .limit(24)
     .toArray();
@@ -367,5 +370,8 @@ export const getRecentPlayerAvatarsFn = createServerFn({ method: "GET" }).handle
     userId: d.userId,
     name: d.name || "Player",
     avatarUrl: d.avatarUrl,
+    score: d.total,
+    date: d.winnerLockDates?.[0] || d.playDates?.[0],
+    isWinner: Boolean(d.winnerLockDates?.length),
   }));
 });
