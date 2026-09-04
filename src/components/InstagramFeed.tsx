@@ -55,7 +55,7 @@ export function InstagramFeed() {
               href={post.permalink}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative block bg-white/90 rounded-2xl overflow-hidden shadow-card"
+              className="group relative block bg-white/90 rounded-2xl overflow-hidden shadow-[0_12px_36px_-12px_oklch(0.36_0.12_30_/_0.25)]"
             >
               <div className="relative w-full aspect-square bg-black/5 flex items-center justify-center">
                 <img
