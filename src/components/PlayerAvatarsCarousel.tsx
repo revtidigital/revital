@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Autoplay from "embla-carousel-autoplay";
 import { GenericAvatar } from "@/components/GenericAvatar";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
@@ -10,6 +11,7 @@ interface PlayerAvatar {
 
 export function PlayerAvatarsCarousel() {
   const [players, setPlayers] = useState<PlayerAvatar[]>([]);
+  const autoplay = useRef(Autoplay({ delay: 2200, stopOnInteraction: false }));
 
   useEffect(() => {
     import("@/server/userFns")
@@ -25,10 +27,14 @@ export function PlayerAvatarsCarousel() {
       <p className="text-center text-xs uppercase tracking-[0.2em] font-black text-muted-foreground mb-3">
         Players Climbing the Leaderboard
       </p>
-      <Carousel opts={{ align: "start", loop: true }} className="mx-auto max-w-2xl">
+      <Carousel
+        opts={{ align: "start", loop: true }}
+        plugins={[autoplay.current]}
+        className="mx-auto max-w-2xl"
+      >
         <CarouselContent className="-ml-3">
           {players.map((p) => (
-            <CarouselItem key={p.userId} className="basis-1/4 sm:basis-1/6 pl-3">
+            <CarouselItem key={p.userId} className="basis-1/3 pl-3">
               <div className="flex flex-col items-center gap-1.5">
                 <div className="h-14 w-14 rounded-full overflow-hidden border-2 border-[var(--garnet)]/15 bg-background/40 shrink-0">
                   {p.avatarUrl ? (
