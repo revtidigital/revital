@@ -66,7 +66,7 @@ export const getInstagramFeedFn = createServerFn({ method: "GET" }).handler(
 
     try {
       const fields = "id,caption,media_url,permalink,media_type,thumbnail_url";
-      const url = `https://graph.instagram.com/${accountId}/media?fields=${fields}&limit=8&access_token=${token}`;
+      const url = `https://graph.instagram.com/${accountId}/media?fields=${fields}&limit=12&access_token=${token}`;
       const res = await fetch(url);
       if (!res.ok) return { connected: false, posts: [] };
       const json = (await res.json()) as { data?: RawMediaNode[] };
