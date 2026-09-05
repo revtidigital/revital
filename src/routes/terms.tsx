@@ -28,7 +28,7 @@ function TermsPage() {
             <p>
               The Revital Energy Challenge is a promotional gaming campaign where participants
               compete by playing three mini-games, earning Daily Energy Scores, climbing the
-              Global Leaderboard, and becoming eligible for daily and grand rewards.
+              Grand Prize Leaderboard, and becoming eligible for daily and grand rewards.
             </p>
             <p className="mt-1">
               Revital reserves the right to modify, extend, suspend, or terminate the campaign if
@@ -61,7 +61,7 @@ function TermsPage() {
               <li>Complete all games to generate a Daily Energy Score.</li>
               <li>Submit their mobile number to save their score.</li>
               <li>Return daily to improve their ranking.</li>
-              <li>Share their referral code to earn Global Leaderboard points.</li>
+              <li>Share their referral code to earn Grand Prize Leaderboard points.</li>
             </ul>
           </section>
 
@@ -80,9 +80,9 @@ function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-garnet">5. Global Leaderboard Score</h2>
+            <h2 className="text-xl font-bold text-garnet">5. Grand Prize Leaderboard Score</h2>
             <p>
-              The Global Leaderboard reflects a participant's overall campaign performance.
+              The Grand Prize Leaderboard reflects a participant's overall campaign performance.
             </p>
             <p className="font-semibold mt-3">Gameplay Score Components</p>
             <div className="mt-3 overflow-hidden rounded-2xl border border-border">
@@ -117,7 +117,7 @@ function TermsPage() {
             <ul>
               <li>Every successful verified referral earns 100 points.</li>
               <li>Referrals are unlimited.</li>
-              <li>Referral points are added only to the Global Leaderboard score.</li>
+              <li>Referral points are added only to the Grand Prize Leaderboard score.</li>
             </ul>
             <p className="font-semibold mt-4">Grand Score Formula</p>
             <p className="mt-1">Grand Score = Gameplay Score + (Successful Referrals × 100)</p>
@@ -145,7 +145,7 @@ function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-garnet">7. Grand Winners</h2>
             <p>
-              Grand Winners are selected based on the final Global Leaderboard rankings at the end
+              Grand Winners are selected based on the final Grand Prize Leaderboard rankings at the end
               of the campaign.
             </p>
             <p className="mt-1">

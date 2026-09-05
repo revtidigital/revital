@@ -827,7 +827,7 @@ function Admin() {
       new Date(),
     );
 
-    // Same formula as the canonical Global Leaderboard (getGlobalLeaderboardFn in adminFns.ts):
+    // Same formula as the canonical Grand Prize Leaderboard (getGlobalLeaderboardFn in adminFns.ts):
     // Gameplay Score (avg daily total + consistency bonus + streak bonus) + referral points.
     const computeGlobalScore = (u: UserRecord): number => {
       const attempts = u.playAttempts ?? [];
@@ -1523,7 +1523,7 @@ function Admin() {
                       accent="tiger"
                     />
                     <Leaderboard
-                      title="Global Leaderboard"
+                      title="Grand Prize Leaderboard"
                       subtitle="All-Time Top 10"
                       emoji="👑"
                       entries={globalLeaders}

@@ -32,7 +32,7 @@ function RulesPage() {
               <li>Submit your phone number after completing the games to save your score.</li>
               <li>Return every day to improve your score and climb the leaderboard.</li>
               <li>
-                Invite friends using your referral link to earn additional Global Leaderboard
+                Invite friends using your referral link to earn additional Grand Prize Leaderboard
                 points.
               </li>
               <li>No OTP verification is required to start playing.</li>
@@ -118,10 +118,10 @@ function RulesPage() {
 
           <section>
             <h2 className="text-xl font-bold text-garnet">
-              Global Leaderboard Score (Maximum Gameplay Score: 3,000)
+              Grand Prize Leaderboard Score (Maximum Gameplay Score: 3,000)
             </h2>
             <p className="mt-1">
-              The Global Leaderboard measures your overall campaign performance. Your Grand Score
+              The Grand Prize Leaderboard measures your overall campaign performance. Your Grand Score
               is calculated using four components:
             </p>
             <div className="mt-3 overflow-hidden rounded-2xl border border-border">
@@ -254,13 +254,13 @@ function RulesPage() {
           <section>
             <h2 className="text-xl font-bold text-garnet">Referral Rewards</h2>
             <p className="mt-1">
-              Invite your friends and earn bonus points on the Global Leaderboard.
+              Invite your friends and earn bonus points on the Grand Prize Leaderboard.
             </p>
             <p className="font-semibold mt-4">Referral Rules</p>
             <ul>
               <li>Every successful verified referral earns 100 points.</li>
               <li>There is no limit to the number of referrals you can make.</li>
-              <li>Referral points are added only to the Global Leaderboard.</li>
+              <li>Referral points are added only to the Grand Prize Leaderboard.</li>
               <li>Referrals do not affect your Daily Energy Score or Daily Winner eligibility.</li>
             </ul>
           </section>
@@ -282,9 +282,9 @@ function RulesPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-garnet">Global Leaderboard Rules</h2>
+            <h2 className="text-xl font-bold text-garnet">Grand Prize Leaderboard Rules</h2>
             <p className="mt-1">
-              The Global Leaderboard ranks players throughout the campaign using their overall
+              The Grand Prize Leaderboard ranks players throughout the campaign using their overall
               Grand Score.
             </p>
             <p className="font-semibold mt-4">Tie-Breaker Priority</p>
@@ -339,7 +339,7 @@ function RulesPage() {
             <p className="mt-1">Win the daily reward by topping the Daily Leaderboard.</p>
             <p className="font-semibold mt-4">Grand Winners</p>
             <p className="mt-1">
-              Top performers on the Global Leaderboard at the end of the campaign will be eligible
+              Top performers on the Grand Prize Leaderboard at the end of the campaign will be eligible
               for the Grand Winner Rewards. Final prize details will be announced by the Revital
               team.
             </p>

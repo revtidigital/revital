@@ -36,7 +36,7 @@ const SCORE_BOOST_HACKS = [
     emoji: "🤝",
     title: "REFER & CLIMB",
     description:
-      "Earn 100 bonus points for every successful verified referral, with no limit. Referral points boost your Global Leaderboard score only.",
+      "Earn 100 bonus points for every successful verified referral, with no limit. Referral points boost your Grand Prize Leaderboard score only.",
   },
   {
     emoji: "🏔️",
@@ -436,7 +436,7 @@ function Landing() {
               accent="tiger"
             />
             <Leaderboard
-              title="Global Leaderboard"
+              title="Grand Prize Leaderboard"
               subtitle="All-Time Top 10"
               emoji="👑"
               entries={global}

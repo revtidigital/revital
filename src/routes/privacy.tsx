@@ -96,7 +96,7 @@ function PrivacyPage() {
               Your Daily Energy Score is calculated using your best gameplay performance for that
               day.
             </p>
-            <p className="font-semibold mt-3">Global Leaderboard</p>
+            <p className="font-semibold mt-3">Grand Prize Leaderboard</p>
             <p className="mt-1">Your Grand Score is calculated using:</p>
             <ul>
               <li>Gameplay Performance.</li>
@@ -108,7 +108,7 @@ function PrivacyPage() {
             <ul>
               <li>Every successful verified referral earns 100 points.</li>
               <li>Referrals are unlimited.</li>
-              <li>Referral points affect only the Global Leaderboard.</li>
+              <li>Referral points affect only the Grand Prize Leaderboard.</li>
               <li>Referral points do not affect Daily Winners or Daily Energy Scores.</li>
             </ul>
           </section>
