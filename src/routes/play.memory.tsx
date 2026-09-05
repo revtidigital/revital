@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/Header";
 import { ProgressDots } from "@/components/ProgressDots";
 import { StartOverlay } from "@/components/StartOverlay";
-import { getCurrentScores, isGameUnlocked, saveGameScore } from "@/lib/storage";
+import { getCurrentScores, isGameUnlocked, isPageReload, resetScores, saveGameScore } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
 import revitalLogo from "@/assets/revital-logo.webp";
 
@@ -61,6 +61,13 @@ function MemoryGame() {
   const [isPreviewing, setIsPreviewing] = useState(false);
 
   useEffect(() => {
+    // A browser refresh mid-game forces a clean restart from reflex, so a
+    // mid-game reload can't be used to reroll just this one game.
+    if (isPageReload()) {
+      resetScores();
+      nav({ to: "/play/reflex" });
+      return;
+    }
     if (!isGameUnlocked("memory")) {
       nav({ to: "/challenges" });
       return;

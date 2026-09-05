@@ -226,6 +226,17 @@ export const resetScores = () => {
   localStorage.removeItem(RUN_COMPLETED_AT_KEY);
 };
 
+/** True only when the current page load is an actual browser refresh/reload —
+ * not a client-side SPA navigation between game steps (which never re-triggers
+ * a mount via a fresh document load). Uses the standard Navigation Timing API. */
+export const isPageReload = (): boolean => {
+  if (typeof window === "undefined" || !window.performance) return false;
+  const [nav] = window.performance.getEntriesByType(
+    "navigation",
+  ) as PerformanceNavigationTiming[];
+  return nav?.type === "reload";
+};
+
 export const computeTotal = (s: GameScores) =>
   Math.round(((s.reflex ?? 0) + (s.memory ?? 0) + (s.balance ?? 0)) / 3);
 

@@ -5,7 +5,7 @@ import { Header } from "@/components/Header";
 import { ProgressDots } from "@/components/ProgressDots";
 import { StartOverlay } from "@/components/StartOverlay";
 import { GamesOverviewOverlay } from "@/components/GamesOverviewOverlay";
-import { saveGameScore } from "@/lib/storage";
+import { isPageReload, resetScores, saveGameScore } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
 import logo from "@/assets/revital-logo.webp";
 
@@ -29,6 +29,12 @@ function ReflexGame() {
   const startRef = useRef(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    // A browser refresh anywhere in the 3-game run forces a clean restart
+    // from reflex, so a mid-game reload can't be used to reroll just one game.
+    if (isPageReload()) resetScores();
+  }, []);
 
   useEffect(
     () => () => {
