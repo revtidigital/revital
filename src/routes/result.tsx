@@ -302,7 +302,7 @@ function Result() {
               </div>
               <div className="bg-background/40 rounded-2xl p-3">
                 <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Global Score
+                  Grand Score
                 </div>
                 <div className="text-lg font-black text-gradient-energy">
                   {globalScore !== null ? globalScore : "—"}

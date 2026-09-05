@@ -121,7 +121,7 @@ function RulesPage() {
               Global Leaderboard Score (Maximum Gameplay Score: 3,000)
             </h2>
             <p className="mt-1">
-              The Global Leaderboard measures your overall campaign performance. Your Global Score
+              The Global Leaderboard measures your overall campaign performance. Your Grand Score
               is calculated using four components:
             </p>
             <div className="mt-3 overflow-hidden rounded-2xl border border-border">
@@ -153,8 +153,8 @@ function RulesPage() {
               </table>
             </div>
 
-            <p className="font-semibold mt-4">Global Score Formula</p>
-            <p className="mt-1">Global Score = Gameplay Score + (Successful Referrals × 100)</p>
+            <p className="font-semibold mt-4">Grand Score Formula</p>
+            <p className="mt-1">Grand Score = Gameplay Score + (Successful Referrals × 100)</p>
             <p className="mt-1">
               Gameplay Score includes Average Gameplay Performance, Consistency Bonus, and
               Performance Streak Bonus.
@@ -285,11 +285,11 @@ function RulesPage() {
             <h2 className="text-xl font-bold text-garnet">Global Leaderboard Rules</h2>
             <p className="mt-1">
               The Global Leaderboard ranks players throughout the campaign using their overall
-              Global Score.
+              Grand Score.
             </p>
             <p className="font-semibold mt-4">Tie-Breaker Priority</p>
             <p className="mt-1">
-              If two or more players have the same Global Score, ranking is decided in this order:
+              If two or more players have the same Grand Score, ranking is decided in this order:
             </p>
             <ol>
               <li>More active campaign days played.</li>

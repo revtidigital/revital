@@ -97,7 +97,7 @@ function PrivacyPage() {
               day.
             </p>
             <p className="font-semibold mt-3">Global Leaderboard</p>
-            <p className="mt-1">Your Global Score is calculated using:</p>
+            <p className="mt-1">Your Grand Score is calculated using:</p>
             <ul>
               <li>Gameplay Performance.</li>
               <li>Consistency Bonus.</li>

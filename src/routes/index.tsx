@@ -30,7 +30,7 @@ const SCORE_BOOST_HACKS = [
   {
     emoji: "🎮",
     title: "IMPROVE YOUR GAMEPLAY",
-    description: "Your Gameplay Score can contribute up to 1,500 points to your Global Score.",
+    description: "Your Gameplay Score can contribute up to 1,500 points to your Grand Score.",
   },
   {
     emoji: "🤝",
@@ -269,7 +269,7 @@ function Landing() {
                 <div className="text-5xl md:text-6xl leading-none">🎁</div>
                 <div>
                   <p className="text-2xl font-black uppercase leading-tight text-garnet">
-                    <span className="text-[var(--tiger)]">3 Grand</span> Global Winners
+                    <span className="text-[var(--tiger)]">3 Grand</span> Winners
                   </p>
                   <p className="mt-1 text-sm md:text-base text-garnet/80">
                     Compete across players and win the ultimate prize.
@@ -462,7 +462,7 @@ function Landing() {
             className="mt-14 text-center"
           >
             <div className="inline-block px-4 py-1.5 rounded-full bg-[var(--tiger)] text-white text-xs uppercase tracking-[0.2em] font-black">
-              🚀 Hacks to Boost Your Global Score
+              🚀 Hacks to Boost Your Grand Score
             </div>
           </motion.div>
 

@@ -119,8 +119,8 @@ function TermsPage() {
               <li>Referrals are unlimited.</li>
               <li>Referral points are added only to the Global Leaderboard score.</li>
             </ul>
-            <p className="font-semibold mt-4">Global Score Formula</p>
-            <p className="mt-1">Global Score = Gameplay Score + (Successful Referrals × 100)</p>
+            <p className="font-semibold mt-4">Grand Score Formula</p>
+            <p className="mt-1">Grand Score = Gameplay Score + (Successful Referrals × 100)</p>
             <p className="mt-1">
               Referral points do not affect Daily Scores or Daily Winner selection.
             </p>

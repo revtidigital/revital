@@ -360,7 +360,7 @@ function Profile() {
             {hasPlayedBefore && (
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <Stat label="Global Rank" value={globalRank !== null ? `#${globalRank}` : "—"} />
-                <Stat label="Global Score" value={globalScore !== null ? `${globalScore}` : "—"} />
+                <Stat label="Grand Score" value={globalScore !== null ? `${globalScore}` : "—"} />
               </div>
             )}
 
