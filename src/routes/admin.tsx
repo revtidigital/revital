@@ -827,7 +827,7 @@ function Admin() {
       new Date(),
     );
 
-    // Same formula as the canonical Global Leaderboard (getGlobalLeaderboardFn in adminFns.ts):
+    // Same formula as the canonical Grand Prize Leaderboard (getGlobalLeaderboardFn in adminFns.ts):
     // Gameplay Score (avg daily total + consistency bonus + streak bonus) + referral points.
     const computeGlobalScore = (u: UserRecord): number => {
       const attempts = u.playAttempts ?? [];
@@ -1523,7 +1523,7 @@ function Admin() {
                       accent="tiger"
                     />
                     <Leaderboard
-                      title="Global Leaderboard"
+                      title="Grand Prize Leaderboard"
                       subtitle="All-Time Top 10"
                       emoji="👑"
                       entries={globalLeaders}
@@ -2245,7 +2245,7 @@ function Admin() {
                           </Th>
                           <Th>
                             <span className="inline-flex items-center gap-1">
-                              Global Score
+                              Grand Score
                               <InfoHint text="Gameplay Score (avg daily total up to 1,500 + consistency bonus up to 1,000 + streak bonus up to 500, max 3,000) + referrals × 100. Same formula as the global leaderboard." />
                             </span>
                           </Th>
@@ -2488,7 +2488,7 @@ function Admin() {
                             setSettings((prev) => ({ ...prev, campaignStartDate: v }))
                           }
                           placeholder="YYYY-MM-DD"
-                          hint="Reference date for reporting only — the current Global Score formula (consistency/streak bonuses) is not based on this field."
+                          hint="Reference date for reporting only — the current Grand Score formula (consistency/streak bonuses) is not based on this field."
                         />
                       </div>
                       <p className="text-xs text-muted-foreground">
