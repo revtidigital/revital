@@ -50,7 +50,7 @@ function PrivacyPage() {
             <ul>
               <li>Daily gameplay scores.</li>
               <li>Best daily score across all games.</li>
-              <li>Global leaderboard score.</li>
+              <li>Grand Prize Leaderboard score.</li>
               <li>Gameplay history and participation days.</li>
               <li>Consecutive play streak information.</li>
             </ul>
@@ -76,7 +76,7 @@ function PrivacyPage() {
             <p className="mt-1">We use your data to:</p>
             <ul>
               <li>Register and maintain your gameplay profile.</li>
-              <li>Save your daily and global scores.</li>
+              <li>Save your daily and Grand scores.</li>
               <li>Display leaderboard rankings.</li>
               <li>Calculate consistency bonuses and streak bonuses.</li>
               <li>Track successful referrals.</li>
