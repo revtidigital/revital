@@ -203,17 +203,20 @@ export const getUserByIdFn = createServerFn({ method: "POST" })
   });
 
 // ── save profile picture ─────────────────────────────────────────────────────
-// Stored as a data URL. Only image/* MIME types are accepted, and the raw
-// (pre-base64) size is capped at 5 MB — enforced here again server-side since
-// the client-side check can be bypassed by a direct API call.
+// Stored as a data URL. Only a fixed allowlist of raster image formats is
+// accepted (never image/svg+xml — SVGs can carry embedded <script> and are a
+// known XSS vector), and the raw (pre-base64) size is capped at 5 MB —
+// enforced here again server-side since the client-side check (and the
+// client's own re-encode-to-JPEG step) can both be bypassed by a direct API
+// call that skips the browser entirely.
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 // Base64 encoding inflates size by ~4/3; add headroom for the "data:...;base64," prefix.
 const MAX_AVATAR_DATA_URL_LENGTH = Math.ceil((MAX_AVATAR_BYTES * 4) / 3) + 100;
 
 const saveAvatarSchema = z.object({
   userId: z.string().min(1),
-  avatarUrl: z.string().refine((v) => /^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(v), {
-    message: "Only image files are allowed.",
+  avatarUrl: z.string().refine((v) => /^data:image\/(jpeg|jpg|png|webp|gif);base64,/.test(v), {
+    message: "Only JPEG, PNG, WEBP, or GIF images are allowed.",
   }),
 });
 

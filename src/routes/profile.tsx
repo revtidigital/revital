@@ -226,8 +226,8 @@ function Profile() {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file || !safeUser) return;
-    if (!file.type.startsWith("image/")) {
-      setAvatarError("Please choose an image file.");
+    if (!file.type.startsWith("image/") || file.type === "image/svg+xml") {
+      setAvatarError("Please choose a JPEG, PNG, WEBP, or GIF image.");
       return;
     }
     if (file.size > MAX_AVATAR_BYTES) {
