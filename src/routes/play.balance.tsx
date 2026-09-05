@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Header } from "@/components/Header";
 import { ProgressDots } from "@/components/ProgressDots";
 import { StartOverlay } from "@/components/StartOverlay";
-import { getCurrentScores, isGameUnlocked, isPageReload, resetScores, saveGameScore } from "@/lib/storage";
+import { getCurrentScores, isGameUnlocked, consumeReloadFlag, resetScores, saveGameScore } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/play/balance")({
@@ -34,7 +34,7 @@ function BalanceGame() {
   useEffect(() => {
     // A browser refresh mid-game forces a clean restart from reflex, so a
     // mid-game reload can't be used to reroll just this one game.
-    if (isPageReload()) {
+    if (consumeReloadFlag()) {
       resetScores();
       nav({ to: "/play/reflex" });
       return;
