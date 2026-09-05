@@ -822,7 +822,7 @@ function Admin() {
 
   // ── Consistent players ──────────────────────────────────────────────────────
   const streaks = useMemo(() => {
-    // Use start of UAE day to match the server-side global leaderboard formula exactly
+    // Use start of UAE day to match the server-side Grand Prize Leaderboard formula exactly
     const uaeToday = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dubai" }).format(
       new Date(),
     );
@@ -2246,7 +2246,7 @@ function Admin() {
                           <Th>
                             <span className="inline-flex items-center gap-1">
                               Grand Score
-                              <InfoHint text="Gameplay Score (avg daily total up to 1,500 + consistency bonus up to 1,000 + streak bonus up to 500, max 3,000) + referrals × 100. Same formula as the global leaderboard." />
+                              <InfoHint text="Gameplay Score (avg daily total up to 1,500 + consistency bonus up to 1,000 + streak bonus up to 500, max 3,000) + referrals × 100. Same formula as the Grand Prize Leaderboard." />
                             </span>
                           </Th>
                         </tr>
