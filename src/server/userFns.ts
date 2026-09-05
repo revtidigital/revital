@@ -202,6 +202,35 @@ export const getUserByIdFn = createServerFn({ method: "POST" })
     return rest as UserRecord;
   });
 
+// ── save profile picture ─────────────────────────────────────────────────────
+// Stored as a data URL. Only image/* MIME types are accepted, and the raw
+// (pre-base64) size is capped at 5 MB — enforced here again server-side since
+// the client-side check can be bypassed by a direct API call.
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+// Base64 encoding inflates size by ~4/3; add headroom for the "data:...;base64," prefix.
+const MAX_AVATAR_DATA_URL_LENGTH = Math.ceil((MAX_AVATAR_BYTES * 4) / 3) + 100;
+
+const saveAvatarSchema = z.object({
+  userId: z.string().min(1),
+  avatarUrl: z.string().refine((v) => /^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(v), {
+    message: "Only image files are allowed.",
+  }),
+});
+
+export const saveAvatarFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => saveAvatarSchema.parse(data))
+  .handler(async ({ data }) => {
+    await checkRateLimit(`save-avatar:${getClientIp()}`, 10, 300);
+    if (data.avatarUrl.length > MAX_AVATAR_DATA_URL_LENGTH) {
+      throw new Error("Image is too large. Please choose a file under 5 MB.");
+    }
+    const db = await getDb();
+    await db
+      .collection<UserRecord>("users")
+      .updateOne({ userId: data.userId }, { $set: { avatarUrl: data.avatarUrl } });
+    return { ok: true };
+  });
+
 // ── referral info (referrer name + referral count) ─────────────────────────────
 // Used by the profile page, which only needs one name and a count — not the
 // entire user collection.
