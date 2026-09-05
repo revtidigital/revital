@@ -399,7 +399,7 @@ function exportPdf(rows: (string | number)[][], filename: string) {
       </head>
       <body>
         <h1>Revital Users Export</h1>
-        <p>Generated at: ${escaped(new Date().toLocaleString())}</p>
+        <p>Generated at: ${escaped(new Date().toLocaleString("en-US", { timeZone: "Asia/Dubai" }))}</p>
         <table>
           <thead>
             <tr>${header.map((cell) => `<th>${escaped(cell)}</th>`).join("")}</tr>
@@ -955,7 +955,9 @@ function Admin() {
       ],
       ...exportSourceRows.map((u) => [
         u.userId,
-        u.joinedAtIso ? new Date(u.joinedAtIso).toLocaleDateString() : "",
+        u.joinedAtIso
+          ? new Date(u.joinedAtIso).toLocaleDateString("en-US", { timeZone: "Asia/Dubai" })
+          : "",
         u.contact,
         u.name || "",
         u.participantType || "",
@@ -996,7 +998,9 @@ function Admin() {
       ],
       ...exportSourceRows.map((u) => [
         u.userId,
-        u.joinedAtIso ? new Date(u.joinedAtIso).toLocaleDateString() : "",
+        u.joinedAtIso
+          ? new Date(u.joinedAtIso).toLocaleDateString("en-US", { timeZone: "Asia/Dubai" })
+          : "",
         u.contact,
         u.name || "",
         u.participantType || "",
@@ -1037,7 +1041,9 @@ function Admin() {
       ],
       ...exportSourceRows.map((u) => [
         u.userId,
-        u.joinedAtIso ? new Date(u.joinedAtIso).toLocaleDateString() : "",
+        u.joinedAtIso
+          ? new Date(u.joinedAtIso).toLocaleDateString("en-US", { timeZone: "Asia/Dubai" })
+          : "",
         u.contact,
         u.name || "",
         u.participantType || "",
@@ -1845,7 +1851,11 @@ function Admin() {
                             </td>
                             <Td className="font-mono text-[11px] truncate">{u.userId}</Td>
                             <Td className="text-muted-foreground text-[11px] truncate">
-                              {u.joinedAtIso ? new Date(u.joinedAtIso).toLocaleDateString() : "—"}
+                              {u.joinedAtIso
+                                ? new Date(u.joinedAtIso).toLocaleDateString("en-US", {
+                                    timeZone: "Asia/Dubai",
+                                  })
+                                : "—"}
                             </Td>
                             <Td className="font-mono text-[11px] truncate">{u.contact}</Td>
                             <Td className="truncate">{u.name || "—"}</Td>
@@ -2325,7 +2335,9 @@ function Admin() {
                             className="border-b border-border/40 hover:bg-muted/10 transition-colors"
                           >
                             <Td className="text-[11px] text-muted-foreground whitespace-nowrap">
-                              {new Date(l.timestamp).toLocaleString()}
+                              {new Date(l.timestamp).toLocaleString("en-US", {
+                                timeZone: "Asia/Dubai",
+                              })}
                             </Td>
                             <Td className="font-mono text-[11px] text-muted-foreground whitespace-nowrap">
                               {l.ip ?? "—"}

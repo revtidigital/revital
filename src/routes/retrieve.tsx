@@ -95,7 +95,8 @@ function Retrieve() {
                   <Mini label="Balance" value={user.scores.balance ?? 0} />
                 </div>
                 <p className="mt-4 text-xs text-muted-foreground">
-                  Saved {new Date(user.createdAt).toLocaleString()}
+                  Saved{" "}
+                  {new Date(user.createdAt).toLocaleString("en-US", { timeZone: "Asia/Dubai" })}
                 </p>
               </motion.div>
             )}

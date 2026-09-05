@@ -216,7 +216,10 @@ function AdminUserDetail() {
             {user.email && <InfoRow label="Email" value={user.email} mono />}
             {user.name && <InfoRow label="Name" value={user.name} />}
             <InfoRow label="Address" value={user.address || "—"} />
-            <InfoRow label="Joined" value={new Date(user.createdAt).toLocaleString()} />
+            <InfoRow
+              label="Joined"
+              value={new Date(user.createdAt).toLocaleString("en-US", { timeZone: "Asia/Dubai" })}
+            />
             <InfoRow label="Category" value={user.category} />
             <div>
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">
@@ -229,7 +232,7 @@ function AdminUserDetail() {
               label="Accepted"
               value={
                 user.consentAcceptedAt
-                  ? `Yes (${new Date(user.consentAcceptedAt).toLocaleString()})`
+                  ? `Yes (${new Date(user.consentAcceptedAt).toLocaleString("en-US", { timeZone: "Asia/Dubai" })})`
                   : "No"
               }
             />
@@ -262,7 +265,8 @@ function AdminUserDetail() {
                     <div className="text-sm font-semibold">{u.name || "—"}</div>
                     <div className="text-[11px] text-muted-foreground font-mono">{u.contact}</div>
                     <div className="text-[11px] text-muted-foreground">
-                      Joined: {new Date(u.createdAt).toLocaleString()}
+                      Joined:{" "}
+                      {new Date(u.createdAt).toLocaleString("en-US", { timeZone: "Asia/Dubai" })}
                     </div>
                     <div className="text-[11px] font-semibold text-gradient-energy">
                       Best: {u.total}
@@ -297,7 +301,9 @@ function AdminUserDetail() {
                           className="px-3 py-2 text-[11px] flex items-center justify-between gap-2"
                         >
                           <div className="text-muted-foreground">
-                            {new Date(a.playedAt).toLocaleTimeString()}
+                            {new Date(a.playedAt).toLocaleTimeString("en-US", {
+                              timeZone: "Asia/Dubai",
+                            })}
                           </div>
                           <div className="font-medium">
                             R:{a.scores.reflex ?? 0} · M:{a.scores.memory ?? 0} · B:
