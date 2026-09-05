@@ -3,6 +3,7 @@ import { getRequestHeaders } from "@tanstack/start-server-core";
 import { z } from "zod";
 import { getDb } from "./db";
 import type { UserRecord } from "@/lib/storage";
+import { formatUaeDate } from "@/lib/uaeDate";
 import tls from "node:tls";
 import { createCanvas, loadImage, registerFont } from "canvas";
 import { readFile } from "node:fs/promises";
@@ -428,9 +429,6 @@ const parseAdminEmails = (input: string): string[] =>
     .split(/[;,\n]/)
     .map((email) => email.trim())
     .filter(Boolean);
-
-const formatUaeDate = (d: Date): string =>
-  new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dubai" }).format(d);
 
 /**
  * Manual "Send" button: emails the winner that was already locked on the most

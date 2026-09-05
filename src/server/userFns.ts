@@ -9,6 +9,7 @@ import {
   type UserRecord,
 } from "@/lib/storage";
 import { checkRateLimit, getClientIp, requireAdminToken } from "./security";
+import { formatUaeDate } from "@/lib/uaeDate";
 
 const MAX_GAME_SCORE = 1500;
 const MAX_PLAY_ATTEMPTS_STORED = 500;
@@ -98,10 +99,13 @@ export const saveUserFn = createServerFn({ method: "POST" })
       scores: clampedScores,
       total: recomputedTotal,
       category: categorize(recomputedTotal).label,
+      // `date` is never trusted from the client: it's recomputed from `playedAt`
+      // (a real UTC instant) in Asia/Dubai time, so an attempt played at e.g.
+      // 00:16 UAE time is bucketed into today, not into UTC's still-yesterday.
       playAttempts: (data.playAttempts ?? []).map((a) => {
         const scores = clampScores(a.scores);
         const total = computeTotal(scores);
-        return { ...a, scores, total, category: categorize(total).label };
+        return { ...a, date: formatUaeDate(new Date(a.playedAt)), scores, total, category: categorize(total).label };
       }),
       // Server-set from the request, never client-trusted — overwritten on every save
       // so it always reflects the most recent IP this user saved from.
