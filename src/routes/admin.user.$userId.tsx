@@ -186,6 +186,13 @@ function AdminUserDetail() {
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
+          {user.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt="Profile"
+              className="w-12 h-12 rounded-full object-cover border border-border shrink-0"
+            />
+          ) : null}
           <div>
             <h1 className="text-2xl font-black">User Details</h1>
             <p className="text-xs text-muted-foreground mt-0.5">
