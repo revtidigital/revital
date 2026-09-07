@@ -5,6 +5,7 @@ import { trackEvent } from "@/lib/analytics";
 import { Header } from "@/components/Header";
 import { getUser } from "@/lib/storage";
 import { Leaderboard } from "@/components/Leaderboard";
+import { InstagramFeed } from "@/components/InstagramFeed";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
 import heroWordmark from "@/assets/revital-hero-wordmark.webp";
 import readyDesktop from "@/assets/ready-desktop-new.webp";
@@ -482,6 +483,22 @@ function Landing() {
                 <p className="text-sm text-muted-foreground leading-relaxed">{hack.description}</p>
               </motion.div>
             ))}
+          </div>
+
+          <div id="instagram-feed" className="mt-20 md:mt-24 scroll-mt-24 text-center">
+            <a
+              href="https://www.instagram.com/revital.uae"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent("social_click", { platform: "instagram", source: "hacks_section" })}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--garnet)] text-white font-bold hover:scale-105 active:scale-95 transition-transform shadow-button"
+            >
+              Follow us on Instagram →
+            </a>
+
+            <div className="mt-6">
+              <InstagramFeed />
+            </div>
           </div>
         </section>
       </main>

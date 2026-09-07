@@ -226,6 +226,32 @@ export const resetScores = () => {
   localStorage.removeItem(RUN_COMPLETED_AT_KEY);
 };
 
+// The Navigation Timing entry reflects how the *document* was loaded and never
+// changes for the lifetime of that document — it does NOT reset on client-side
+// SPA route transitions (nav({ to: ... })). So it's computed once, here, at
+// module-eval time (which only happens once per real page load/reload, never
+// again for in-app navigation), not inside a function that gets called on
+// every route mount.
+const wasPageReloaded = (): boolean => {
+  if (typeof window === "undefined" || !window.performance) return false;
+  const [nav] = window.performance.getEntriesByType(
+    "navigation",
+  ) as PerformanceNavigationTiming[];
+  return nav?.type === "reload";
+};
+let reloadFlagConsumed = false;
+
+/** True at most once per real browser refresh — the first game route to check
+ * this after a reload gets `true` and resets/redirects; every other route
+ * mounted afterwards in the same tab session (via normal in-app navigation)
+ * gets `false`, so a single old refresh can't keep bouncing every later step
+ * in the run back to reflex. */
+export const consumeReloadFlag = (): boolean => {
+  if (reloadFlagConsumed) return false;
+  reloadFlagConsumed = true;
+  return wasPageReloaded();
+};
+
 export const computeTotal = (s: GameScores) =>
   Math.round(((s.reflex ?? 0) + (s.memory ?? 0) + (s.balance ?? 0)) / 3);
 
