@@ -41,7 +41,7 @@ export function InstagramFeed() {
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
-      {posts.slice(0, 12).map((post) => (
+      {posts.slice(0, 8).map((post) => (
         <a
           key={post.id}
           href={post.permalink}
