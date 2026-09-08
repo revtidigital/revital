@@ -28,8 +28,9 @@ function TermsPage() {
             <p>
               The Revital Energy Challenge is a promotional gaming campaign where participants
               compete by playing three mini-games, earning Daily Energy Scores, climbing the
-              Grand Prize Leaderboard, and becoming eligible for daily and grand rewards.
+              Grand Leaderboard, and becoming eligible for daily and grand rewards.
             </p>
+            <p className="mt-1">Campaign Period: 15 August 2026 – 15 September 2026.</p>
             <p className="mt-1">
               Revital reserves the right to modify, extend, suspend, or terminate the campaign if
               required for operational, legal, or technical reasons.
@@ -46,6 +47,11 @@ function TermsPage() {
               <li>Comply with these Terms &amp; Conditions.</li>
             </ul>
             <p className="mt-1">
+              Participants may also choose to upload a profile image in the profile section.
+              Uploading a profile image is optional and is not required to participate in the
+              campaign or qualify for any reward.
+            </p>
+            <p className="mt-1">
               Revital may request additional verification before confirming winners.
             </p>
           </section>
@@ -60,8 +66,9 @@ function TermsPage() {
               </li>
               <li>Complete all games to generate a Daily Energy Score.</li>
               <li>Submit their mobile number to save their score.</li>
+              <li>Optionally upload a profile image in the profile section.</li>
               <li>Return daily to improve their ranking.</li>
-              <li>Share their referral code to earn Grand Prize Leaderboard points.</li>
+              <li>Share their referral code to earn Grand Leaderboard points.</li>
             </ul>
           </section>
 
@@ -80,9 +87,9 @@ function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-garnet">5. Grand Prize Leaderboard Score</h2>
+            <h2 className="text-xl font-bold text-garnet">5. Grand Leaderboard Score</h2>
             <p>
-              The Grand Prize Leaderboard reflects a participant's overall campaign performance.
+              The Grand Leaderboard reflects a participant's overall campaign performance.
             </p>
             <p className="font-semibold mt-3">Gameplay Score Components</p>
             <div className="mt-3 overflow-hidden rounded-2xl border border-border">
@@ -117,7 +124,7 @@ function TermsPage() {
             <ul>
               <li>Every successful verified referral earns 100 points.</li>
               <li>Referrals are unlimited.</li>
-              <li>Referral points are added only to the Grand Prize Leaderboard score.</li>
+              <li>Referral points are added only to the Grand Leaderboard score.</li>
             </ul>
             <p className="font-semibold mt-4">Grand Score Formula</p>
             <p className="mt-1">Grand Score = Gameplay Score + (Successful Referrals × 100)</p>
@@ -145,11 +152,13 @@ function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-garnet">7. Grand Winners</h2>
             <p>
-              Grand Winners are selected based on the final Grand Prize Leaderboard rankings at the end
-              of the campaign.
+              Three Grand Winners will be selected based on the final Grand Leaderboard rankings
+              at the end of the campaign.
             </p>
             <p className="mt-1">
-              The final number of Grand Winners and reward structure will be announced by Revital.
+              The three participants with the highest eligible Grand Scores at the end of the
+              campaign will be selected as the Grand Winners, subject to successful verification
+              and compliance with these Terms &amp; Conditions.
             </p>
             <p className="mt-1">
               Revital reserves the right to verify eligibility before prize distribution.
@@ -161,9 +170,13 @@ function TermsPage() {
             <p>Before announcing any winner, Revital may verify:</p>
             <ul>
               <li>Registered mobile number.</li>
-              <li>Participant identity (where required for prize fulfilment).</li>
+              <li>Participant identity, where required for prize fulfilment.</li>
               <li>Campaign eligibility.</li>
               <li>Gameplay and referral validity.</li>
+              <li>
+                Any profile image or other content submitted by the participant, where relevant
+                to campaign administration or publication.
+              </li>
             </ul>
             <p className="mt-1">
               Revital may disqualify participants if verification fails or fraudulent activity is
@@ -208,11 +221,58 @@ function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-garnet">11. User Content &amp; Acceptable Use</h2>
+            <h2 className="text-xl font-bold text-garnet">11. User Content, Profile Images &amp; Acceptable Use</h2>
             <p>
-              Participants are responsible for all information submitted during the campaign,
-              including names, profile information, referrals, and any other content entered on
-              the website.
+              Participants are responsible for all information and content submitted during the
+              campaign, including names, profile information, profile images, referrals, and any
+              other content entered or uploaded on the website.
+            </p>
+            <p className="mt-1">
+              Uploading a profile image is optional. Participants may choose not to upload an
+              image and may still participate fully in the campaign and remain eligible for
+              rewards.
+            </p>
+            <p className="mt-1">By uploading a profile image, the participant confirms that:</p>
+            <ul>
+              <li>
+                The image is their own image or that they have all necessary rights and
+                permissions to submit it.
+              </li>
+              <li>
+                The image does not infringe the privacy, publicity, copyright, trademark, or
+                other rights of any person or entity.
+              </li>
+              <li>The image does not contain any prohibited or unlawful content.</li>
+              <li>
+                The image is suitable for display on the campaign website and associated digital
+                channels.
+              </li>
+            </ul>
+            <p className="font-semibold mt-3">Use of Profile Images</p>
+            <p className="mt-1">
+              By voluntarily uploading a profile image, the participant grants Revital and its
+              authorised agencies, partners, and service providers a non-exclusive, royalty-free,
+              worldwide licence to use, reproduce, display, publish, adapt, and distribute the
+              submitted profile image for campaign-related purposes.
+            </p>
+            <p className="mt-1">This may include displaying the image:</p>
+            <ul>
+              <li>On the campaign website.</li>
+              <li>On campaign leaderboards or participant profiles.</li>
+              <li>On Revital's official social media channels.</li>
+              <li>In campaign-related digital content, communications, or promotional materials.</li>
+            </ul>
+            <p className="mt-1">
+              The participant understands that content published online or on social media may be
+              viewed, shared, reposted, or downloaded by third parties. Revital cannot guarantee
+              that content published online will be removed from all third-party platforms or
+              copies.
+            </p>
+            <p className="mt-1">
+              Participants may contact Revital through the official campaign support details to
+              request removal of their profile image from Revital-controlled campaign channels.
+              Revital will consider such requests subject to applicable law, campaign
+              requirements, existing publications, and legitimate business or legal needs.
             </p>
             <p className="mt-1">The following content is strictly prohibited:</p>
             <ul>
@@ -223,22 +283,27 @@ function TermsPage() {
               <li>Impersonation of another individual or organization.</li>
               <li>False, misleading, or fraudulent information.</li>
               <li>Spam, promotional messages, or unauthorized advertisements.</li>
+              <li>Images containing another person without their consent.</li>
+              <li>Images that infringe any third-party rights.</li>
+              <li>Images containing personal, confidential, or sensitive information.</li>
+              <li>Content that misuses or imitates Revital branding without authorization.</li>
             </ul>
             <p className="font-semibold mt-3">Revital's Moderation Rights</p>
             <p className="mt-1">Revital has the full right and authority to:</p>
             <ul>
               <li>
-                Remove, edit, or reject any name, username, referral information, or other content
-                that violates these Terms.
+                Review, remove, edit, crop, resize, reject, or replace any name, username,
+                profile image, referral information, or other content that violates these Terms.
               </li>
               <li>Remove inappropriate or unauthorized content without prior notice.</li>
+              <li>Decline to publish or display any profile image for any reason.</li>
               <li>Disqualify participants who repeatedly submit prohibited content.</li>
               <li>Suspend or permanently block accounts involved in misuse of the platform.</li>
             </ul>
             <p className="mt-1">
-              Any unauthorized, offensive, or misleading content submitted anywhere on the
-              platform will not be accepted and may be removed immediately at Revital's sole
-              discretion.
+              Any unauthorized, offensive, misleading, unlawful, or inappropriate content
+              submitted or uploaded anywhere on the platform will not be accepted and may be
+              removed immediately at Revital's sole discretion.
             </p>
           </section>
 
@@ -260,6 +325,10 @@ function TermsPage() {
               Participants may not reproduce, distribute, modify, or commercially use any campaign
               content without prior written permission.
             </p>
+            <p className="mt-1">
+              Participants retain ownership of any profile image they upload, subject to the
+              licence granted to Revital under Section 11 of these Terms &amp; Conditions.
+            </p>
           </section>
 
           <section>
@@ -276,9 +345,20 @@ function TermsPage() {
               <li>Prize fulfilment.</li>
               <li>Fraud prevention.</li>
               <li>Campaign analytics.</li>
+              <li>Profile management.</li>
+              <li>
+                Displaying participant profile images on the campaign website, leaderboards, and
+                Revital's official social media channels where voluntarily submitted and permitted
+                under these Terms.
+              </li>
             </ul>
             <p className="mt-1">
-              Personal data will be processed in accordance with applicable UAE privacy laws.
+              Profile images are optional. Participants who do not upload a profile image will not
+              be disadvantaged or prevented from participating.
+            </p>
+            <p className="mt-1">
+              Personal data and submitted content will be processed in accordance with applicable
+              UAE privacy laws and the Revital Privacy Policy.
             </p>
           </section>
 
@@ -291,6 +371,10 @@ function TermsPage() {
               <li>Technical interruptions or server downtime.</li>
               <li>Delayed or incomplete submissions caused by technical failures.</li>
               <li>Loss of participation due to circumstances beyond reasonable control.</li>
+              <li>
+                Any unauthorised use, copying, sharing, or redistribution of profile images or
+                other content by third parties after publication online.
+              </li>
             </ul>
             <p className="mt-1">
               Revital may temporarily suspend gameplay for maintenance or security reasons.
@@ -304,6 +388,7 @@ function TermsPage() {
               <li>Campaign rules are violated.</li>
               <li>Fraudulent gameplay or referrals are detected.</li>
               <li>Unauthorized or inappropriate content is submitted.</li>
+              <li>A profile image or other submitted content infringes third-party rights.</li>
               <li>Multiple accounts are created for unfair advantage.</li>
               <li>Technical manipulation or abuse of the platform is identified.</li>
             </ul>
@@ -320,6 +405,10 @@ function TermsPage() {
               <li>Modify gameplay rules.</li>
               <li>Change scoring mechanisms if required for fairness or security.</li>
               <li>Update prize structures or campaign timelines where necessary.</li>
+              <li>
+                Modify how participant content, including profile images, is displayed or used,
+                subject to applicable law and the Revital Privacy Policy.
+              </li>
             </ul>
             <p className="mt-1">Any updates will be published on the campaign website.</p>
           </section>
@@ -339,9 +428,10 @@ function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-garnet">18. Contact Us</h2>
             <p>
-              For questions regarding the Revital Energy Challenge, Terms &amp; Conditions, or
-              winner verification, participants may contact the official Revital campaign support
-              team through the contact details provided on the campaign website.
+              For questions regarding the Revital Energy Challenge, Terms &amp; Conditions,
+              profile image use, privacy, or winner verification, participants may contact the
+              official Revital campaign support team through the contact details provided on the
+              campaign website.
             </p>
           </section>
         </div>
