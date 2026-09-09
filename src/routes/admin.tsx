@@ -738,7 +738,11 @@ function Admin() {
       { name: "All 3", value: completed },
     ];
     const totalReferrals = users.reduce((s, u) => s + (u.referCount ?? 0), 0);
-    const referredUsers = users.filter((u) => !!u.referredBy).length;
+    // Only count referredBy values that point to a real user — some are stale/
+    // invalid codes (typo'd or referencing a deleted account) and were never
+    // valid referrals, so they shouldn't count as "Users Referred" either.
+    const knownUserIds = new Set(users.map((u) => u.userId));
+    const referredUsers = users.filter((u) => !!u.referredBy && knownUserIds.has(u.referredBy)).length;
     const attemptsPerUser = total
       ? Number(
           (
