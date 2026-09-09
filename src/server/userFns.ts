@@ -325,6 +325,23 @@ const maskContact = (c: string) => {
   return c;
 };
 
+// The stored `referCount` counter is written via a separate `$inc` after the
+// referred user's own document is saved (see saveUserFn below) — two
+// non-atomic writes on two different documents. If a request is interrupted
+// between them (deploy/restart/crash/timeout), the referral relationship
+// (`referredBy`) persists but the counter increment is lost, so the stored
+// field can silently drift below the truth. Always recompute it live from
+// `referredBy` here instead of trusting the stored value.
+function withLiveReferCounts<T extends { userId: string; referredBy?: string | null }>(
+  docs: T[],
+): T[] {
+  const counts = new Map<string, number>();
+  for (const d of docs) {
+    if (d.referredBy) counts.set(d.referredBy, (counts.get(d.referredBy) ?? 0) + 1);
+  }
+  return docs.map((d) => ({ ...d, referCount: counts.get(d.userId) ?? 0 }));
+}
+
 export const getAllUsersFn = createServerFn({ method: "GET" }).handler(async () => {
   const db = await getDb();
   const docs = await db
@@ -333,7 +350,7 @@ export const getAllUsersFn = createServerFn({ method: "GET" }).handler(async () 
     .sort({ total: -1 })
     .limit(5000)
     .toArray();
-  return docs.map(
+  return withLiveReferCounts(docs).map(
     ({
       _id: _unused,
       email: _email,
@@ -362,5 +379,5 @@ export const getAllUsersAdminFn = createServerFn({ method: "POST" })
       .sort({ total: -1 })
       .limit(5000)
       .toArray();
-    return docs.map(({ _id: _unused, ...rest }) => rest as UserRecord);
+    return withLiveReferCounts(docs).map(({ _id: _unused, ...rest }) => rest as UserRecord);
   });

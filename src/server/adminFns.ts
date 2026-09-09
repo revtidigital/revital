@@ -558,11 +558,12 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
       {},
       {
         projection: {
+          userId: 1,
           name: 1,
           contact: 1,
           category: 1,
           playAttempts: 1,
-          referCount: 1,
+          referredBy: 1,
           createdAt: 1,
         },
       },
@@ -577,6 +578,14 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
     if (c.length > 4) return c.slice(0, 3) + "•••" + c.slice(-2);
     return c;
   };
+
+  // referCount is a manually incremented counter that can drift from the
+  // ground truth (referredBy) if a request is interrupted mid-referral — see
+  // withLiveReferCounts in userFns.ts. Always derive it live here instead.
+  const liveReferCounts = new Map<string, number>();
+  for (const u of users) {
+    if (u.referredBy) liveReferCounts.set(u.referredBy, (liveReferCounts.get(u.referredBy) ?? 0) + 1);
+  }
 
   const scored = users
     .filter((u) => !isExcludedContact(u.contact))
@@ -648,7 +657,7 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
 
       const gameplayScore = avgGameplayPerformance + consistencyBonus + streakBonus;
 
-      const referralScore = (u.referCount ?? 0) * 100;
+      const referralScore = (liveReferCounts.get(u.userId) ?? 0) * 100;
 
       const finalScore = gameplayScore + referralScore;
 
@@ -671,7 +680,7 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
         _avgReflex: avgReflex,
         _avgMemory: avgMemory,
         _avgBalance: avgBalance,
-        _referCount: u.referCount ?? 0,
+        _referCount: liveReferCounts.get(u.userId) ?? 0,
         _earliestPlayedAt: earliestPlayedAt,
       };
     })
@@ -718,11 +727,19 @@ export const getUserRankFn = createServerFn({ method: "GET" })
             userId: 1,
             contact: 1,
             playAttempts: 1,
-            referCount: 1,
+            referredBy: 1,
           },
         },
       )
       .toArray();
+
+    // See getGlobalLeaderboardFn above: referCount is a manually incremented
+    // counter that can drift, so derive it live from referredBy instead.
+    const liveReferCounts = new Map<string, number>();
+    for (const u of users) {
+      if (u.referredBy)
+        liveReferCounts.set(u.referredBy, (liveReferCounts.get(u.referredBy) ?? 0) + 1);
+    }
 
     const scored = users
       .filter((u) => !isExcludedContact(u.contact))
@@ -789,7 +806,7 @@ export const getUserRankFn = createServerFn({ method: "GET" })
                   : 0;
 
         const gameplayScore = avgGameplayPerformance + consistencyBonus + streakBonus;
-        const referralScore = (u.referCount ?? 0) * 100;
+        const referralScore = (liveReferCounts.get(u.userId) ?? 0) * 100;
         const finalScore = gameplayScore + referralScore;
 
         const avgReflex = dailyBests.reduce((s, a) => s + (a.scores.reflex ?? 0), 0) / activeDays;
@@ -807,7 +824,7 @@ export const getUserRankFn = createServerFn({ method: "GET" })
           _avgReflex: avgReflex,
           _avgMemory: avgMemory,
           _avgBalance: avgBalance,
-          _referCount: u.referCount ?? 0,
+          _referCount: liveReferCounts.get(u.userId) ?? 0,
           _earliestPlayedAt: earliestPlayedAt,
         };
       })
