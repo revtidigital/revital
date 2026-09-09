@@ -508,7 +508,7 @@ export const getDailyLeaderboardFn = createServerFn({ method: "GET" }).handler(a
     .collection<UserRecord>("users")
     .find(
       { "playAttempts.date": today },
-      { projection: { name: 1, contact: 1, category: 1, playAttempts: 1 } },
+      { projection: { name: 1, contact: 1, category: 1, playAttempts: 1, winnerLockDates: 1 } },
     )
     .toArray();
 
@@ -523,6 +523,7 @@ export const getDailyLeaderboardFn = createServerFn({ method: "GET" }).handler(a
 
   const scored = users
     .filter((u) => !isExcludedContact(u.contact))
+    .filter((u) => !u.winnerLockDates || u.winnerLockDates.length === 0) // past daily winners don't reappear on Today's Leaders
     .map((u) => {
       const todaysAttempts = (u.playAttempts ?? []).filter((a) => a.date === today);
       if (todaysAttempts.length === 0) return null;

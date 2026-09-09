@@ -228,9 +228,15 @@ async function main() {
     console.log(`[lock-winners] Locking ${ranked.length} winner(s).`);
     await Promise.all(
       ranked.map((winner) =>
-        db
-          .collection("users")
-          .updateOne({ userId: winner.userId }, { $addToSet: { winnerLockDates: lockDate } }),
+        db.collection("users").updateOne(
+          { userId: winner.userId },
+          {
+            $addToSet: { winnerLockDates: lockDate },
+            // Snapshot the name as of the win, so a later profile-name edit
+            // never rewrites the "Daily Winner (Date-wise)" history.
+            $set: { [`winnerNameSnapshots.${lockDate}`]: winner.name },
+          },
+        ),
       ),
     );
 
@@ -266,7 +272,12 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error("[lock-winners] Fatal error:", err);
-  process.exit(1);
-});
+// Only run when executed directly (`node lock-winners.mjs`), not when imported
+// or dynamically `import()`-ed for inspection — see incident where a bare
+// import() sanity-check triggered a real winner lock + admin email mid-day.
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((err) => {
+    console.error("[lock-winners] Fatal error:", err);
+    process.exit(1);
+  });
+}

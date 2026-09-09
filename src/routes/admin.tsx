@@ -191,6 +191,8 @@ function groupByDate(users: UserRecord[]): DateWiseEntry[] {
       completedAll3Today: isComplete(u.scores) ? 1 : 0,
     });
   }
+  // Full-record lookup so winner entries can pull the name-at-time-of-win snapshot.
+  const userById = new Map(users.map((u) => [u.userId, u]));
   // Build a map of userId → locked winner dates from the DB (source of truth).
   const lockedWinnersByDate = new Map<string, Set<string>>();
   // Track all users who have ever won so the live fallback also excludes them.
@@ -221,7 +223,9 @@ function groupByDate(users: UserRecord[]): DateWiseEntry[] {
     ).map((u) => ({
       userId: u.userId,
       contact: u.contact,
-      name: u.name,
+      // Name as it was when the win was locked — falls back to the live name
+      // for un-snapshotted historical data or not-yet-locked "today" entries.
+      name: userById.get(u.userId)?.winnerNameSnapshots?.[date] ?? u.name,
       total: u.total,
       scores: u.scores,
     }));
