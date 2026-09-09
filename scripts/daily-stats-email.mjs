@@ -4,6 +4,9 @@
 // send pattern as lock-winners.mjs (no nodemailer dependency needed).
 import { MongoClient } from "mongodb";
 import tls from "node:tls";
+import { isExcludedContact } from "../src/lib/excludedContacts.mjs";
+
+const WITH_TOP5 = process.argv.includes("--with-top5");
 
 // ── Config ───────────────────────────────────────────────────────────────────
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://mongo:27017/rev-challenge-hub";
@@ -160,9 +163,33 @@ Old users who played again today: ${returningCount}
 Total users in system: ${users.length}
 `;
 
+    let finalText = text;
+    if (WITH_TOP5) {
+      const everWon = new Set(
+        users.filter((u) => (u.winnerLockDates ?? []).length > 0).map((u) => u.userId),
+      );
+      const top5 = users
+        .filter((u) => !isExcludedContact(u.contact) && !everWon.has(u.userId))
+        .map((u) => {
+          const attempts = (u.playAttempts ?? []).filter((a) => a.date === today);
+          if (!attempts.length) return null;
+          const best = attempts.reduce((m, a) => Math.max(m, a.total), -1);
+          return { name: u.name || u.contact || "Player", best };
+        })
+        .filter((u) => u !== null)
+        .sort((a, b) => b.best - a.best)
+        .slice(0, 5);
+
+      const top5Text = top5.length
+        ? top5.map((u, i) => `${i + 1}. ${u.name} — ${u.best} pts`).join("\n")
+        : "No players today.";
+
+      finalText = `${text}\nToday's Top 5 Players:\n${top5Text}\n`;
+    }
+
     console.log(`[daily-stats-email] New: ${newCount}, Returning: ${returningCount}`);
 
-    await Promise.all(RECIPIENTS.map((email) => sendViaGmailSmtp(email, subject, text)));
+    await Promise.all(RECIPIENTS.map((email) => sendViaGmailSmtp(email, subject, finalText)));
 
     console.log(`[daily-stats-email] Email sent to: ${RECIPIENTS.join(", ")}`);
   } finally {
