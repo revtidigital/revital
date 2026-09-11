@@ -108,6 +108,33 @@ function Profile() {
   }, [name]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const checkScroll = () => {
+      const hash = window.location.hash;
+      const search = new URLSearchParams(window.location.search);
+      const shouldScroll = hash === "#referral-url-section" || hash === "#referral-section" || search.get("scroll") === "referral";
+      if (shouldScroll) {
+        let count = 0;
+        const interval = setInterval(() => {
+          count++;
+          const el = document.getElementById("referral-url-section");
+          if (el) {
+            clearInterval(interval);
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.classList.add("ring-2", "ring-primary", "bg-primary/10");
+            setTimeout(() => {
+              el.classList.remove("ring-2", "ring-primary", "bg-primary/10");
+            }, 3000);
+          } else if (count > 10) {
+            clearInterval(interval);
+          }
+        }, 150);
+      }
+    };
+    checkScroll();
+  }, []);
+
+  useEffect(() => {
     const u = getUser();
     if (!u) {
       nav({ to: "/auth" });
@@ -456,7 +483,7 @@ function Profile() {
               {safeUser.referredBy && <Row label="Referrer Name" value={referrerName || "—"} />}
             </div>
 
-            <div className="mt-4 bg-background/40 rounded-2xl p-4 text-left">
+            <div id="referral-url-section" className="mt-4 bg-background/40 rounded-2xl p-4 text-left scroll-mt-32 transition-all duration-700">
               <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
                 Your Referral URL
               </p>
