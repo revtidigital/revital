@@ -13,6 +13,7 @@ import heroWordmarkUrl from "@/assets/revital-hero-wordmark.webp?url";
 
 const socialShareOgImage = `https://revital.revtilabs.com${heroWordmarkUrl}`;
 import { CookieConsent } from "@/components/CookieConsent";
+import { ReferralPopup } from "@/components/ReferralPopup";
 import { Footer } from "@/components/Footer";
 import { ComingSoonPage } from "@/components/ComingSoonPage";
 
@@ -246,6 +247,7 @@ function RootComponent() {
       </div>
       {!isAdminRoute && <Footer />}
       {!isAdminRoute && <CookieConsent />}
+      {!isAdminRoute && <ReferralPopup />}
     </div>
   );
 }
