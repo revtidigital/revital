@@ -53,6 +53,7 @@ export interface UserRecord {
   userId: string; // generated unique id
   contact: string; // mobile number used for login
   email?: string; // optional profile email
+  instagramUsername?: string; // optional instagram username
   name?: string;
   address?: string;
   participantType?: ParticipantType; // set at first-time signup only

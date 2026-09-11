@@ -75,6 +75,7 @@ function Profile() {
   const [user, setUser] = useState<UserRecord | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [instagram, setInstagram] = useState("");
   const [address, setAddress] = useState("");
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -115,6 +116,7 @@ function Profile() {
     setUser(u);
     setName(u.name || "");
     setEmail(u.email || "");
+    setInstagram(u.instagramUsername || "");
     setAddress(u.address || "");
 
     const loadReferralData = async () => {
@@ -124,6 +126,7 @@ function Profile() {
         setUser(currentUser);
         setName(currentUser.name || "");
         setEmail(currentUser.email || "");
+        setInstagram(currentUser.instagramUsername || "");
         setAddress(currentUser.address || "");
 
         const { referrerName: fetchedReferrerName, referralCount: fetchedReferralCount } =
@@ -205,10 +208,12 @@ function Profile() {
       return;
     }
     const emailToPersist = hasSavedEmail ? safeUser.email : normalizedEmail || undefined;
+    const cleanedInstagram = instagram.trim().replace(/^@/, "");
     const updated = {
       ...safeUser,
       name: name.trim(),
       email: emailToPersist,
+      instagramUsername: cleanedInstagram || undefined,
       address: address.trim(),
     };
     try {
@@ -441,6 +446,9 @@ function Profile() {
               </div>
               <Row label="Mobile" value={safeUser.contact} />
               {safeUser.email && <Row label="Email" value={safeUser.email} />}
+              {safeUser.instagramUsername && (
+                <Row label="Instagram" value={`@${safeUser.instagramUsername.replace(/^@/, "")}`} />
+              )}
               {safeUser.name && <Row label="Name" value={safeUser.name} />}
               {safeUser.referredBy && (
                 <Row label="Referred By ID" value={safeUser.referredBy} mono />
@@ -550,6 +558,62 @@ function Profile() {
               />
             </div>
           )}
+          {/* Instagram Username card */}
+          <div
+            className="rounded-2xl p-[1.5px] overflow-hidden"
+            style={{ background: "linear-gradient(135deg,#FEDA75,#FA7E1E,#D62976,#962FBF,#4F5BD5)" }}
+          >
+            <div className="rounded-2xl bg-card px-4 py-3 space-y-2.5">
+              {/* Header row */}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-5 h-5 shrink-0"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <defs>
+                    <linearGradient id="ig-f-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+                      <stop offset="0%"   stopColor="#FEDA75" />
+                      <stop offset="25%"  stopColor="#FA7E1E" />
+                      <stop offset="50%"  stopColor="#D62976" />
+                      <stop offset="75%"  stopColor="#962FBF" />
+                      <stop offset="100%" stopColor="#4F5BD5" />
+                    </linearGradient>
+                  </defs>
+                  <rect x="2" y="2" width="20" height="20" rx="6" fill="url(#ig-f-grad)" />
+                  <rect x="6.5" y="6.5" width="11" height="11" rx="3.5" stroke="white" strokeWidth="1.6" fill="none" />
+                  <circle cx="12" cy="12" r="3.2" stroke="white" strokeWidth="1.6" fill="none" />
+                  <circle cx="16.2" cy="7.8" r="1" fill="white" />
+                </svg>
+                <span className="text-sm font-bold text-foreground">Instagram Username</span>
+                <span
+                  className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                  style={{ background: "#fce4ec", color: "#c2185b" }}
+                >
+                  Optional
+                </span>
+                <span className="ml-auto text-[11px] text-muted-foreground hidden sm:inline">
+                  Let&apos;s connect on Instagram! 🤍
+                </span>
+              </div>
+              {/* @ input */}
+              <div className="flex items-center rounded-xl border border-border/60 bg-background/60 px-3 py-2 focus-within:border-pink-300 transition-colors">
+                <span className="text-sm font-semibold text-muted-foreground mr-1.5">@</span>
+                <input
+                  value={instagram}
+                  onChange={(e) =>
+                    setInstagram(e.target.value.replace(/\s/g, "").slice(0, 30))
+                  }
+                  placeholder="your_username"
+                  className="flex-1 min-w-0 bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground/50"
+                />
+              </div>
+              {/* Helper */}
+              <p className="text-[11px] text-muted-foreground">
+                ✦ Winners get featured on our Instagram — add your handle so we can tag you! 🏆
+              </p>
+            </div>
+          </div>
           <div>
             <label className="text-xs uppercase tracking-wider text-muted-foreground">
               Address (for prize delivery)

@@ -221,6 +221,9 @@ function AdminUserDetail() {
             <InfoRow label="User ID" value={user.userId} mono />
             <InfoRow label="Phone" value={user.contact} mono />
             {user.email && <InfoRow label="Email" value={user.email} mono />}
+            {user.instagramUsername && (
+              <InfoRow label="Instagram" value={`@${user.instagramUsername.replace(/^@/, "")}`} mono />
+            )}
             {user.name && <InfoRow label="Name" value={user.name} />}
             <InfoRow label="Address" value={user.address || "—"} />
             <InfoRow

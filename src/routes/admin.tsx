@@ -49,6 +49,7 @@ type UserSortKey =
   | "userId"
   | "contact"
   | "email"
+  | "instagram"
   | "name"
   | "referCount"
   | "referredBy"
@@ -592,6 +593,7 @@ function Admin() {
             search &&
             !u.contact.toLowerCase().includes(search.toLowerCase()) &&
             !(u.email || "").toLowerCase().includes(search.toLowerCase()) &&
+            !(u.instagramUsername || "").toLowerCase().includes(search.toLowerCase()) &&
             !(u.name || "").toLowerCase().includes(search.toLowerCase()) &&
             !u.userId.toLowerCase().includes(search.toLowerCase())
           )
@@ -610,6 +612,8 @@ function Admin() {
           return u.contact;
         case "email":
           return u.email || "";
+        case "instagram":
+          return u.instagramUsername || "";
         case "name":
           return u.name || "";
         case "referCount":
@@ -1774,6 +1778,12 @@ function Admin() {
                             onSort={toggleUserSort}
                           />
                           <SortableTh
+                            label="Instagram"
+                            sortKey="instagram"
+                            sort={userSort}
+                            onSort={toggleUserSort}
+                          />
+                          <SortableTh
                             label="Refer Count"
                             sortKey="referCount"
                             sort={userSort}
@@ -1871,6 +1881,9 @@ function Admin() {
                               <ParticipantTypeBadge type={u.participantType} />
                             </Td>
                             <Td className="font-mono text-[11px] truncate">{u.email || "—"}</Td>
+                            <Td className="font-mono text-[11px] truncate text-primary">
+                              {u.instagramUsername ? `@${u.instagramUsername.replace(/^@/, "")}` : "—"}
+                            </Td>
                             <Td className="font-bold text-center">{u.referCount ?? 0}</Td>
                             <Td className="font-mono text-[11px] truncate">{u.referredBy || "—"}</Td>
                             <Td className="font-medium text-center">{u.completedAll3Days}</Td>
