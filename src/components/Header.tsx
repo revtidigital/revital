@@ -59,15 +59,26 @@ export function Header() {
           )}
         </nav>
 
-        <div className="flex items-center justify-end gap-1 text-xs sm:text-sm">
+        <div className="flex items-center justify-end gap-2 text-xs sm:text-sm">
           {!user && (
-            <Link
-              to="/auth"
-              onClick={() => trackEvent("nav_click", { nav_label: "my_score" })}
-              className="px-4 py-2 rounded-full bg-gradient-energy text-white font-semibold shadow-button hover:scale-105 active:scale-95 transition-transform whitespace-nowrap"
-            >
-              My Score
-            </Link>
+            <>
+              <Link
+                to="/auth"
+                search={{ mode: "login" }}
+                onClick={() => trackEvent("nav_click", { nav_label: "login_header" })}
+                className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full border-2 border-[var(--garnet)]/20 bg-white/80 text-garnet font-semibold hover:border-[var(--tiger)] hover:bg-white active:scale-95 transition-all whitespace-nowrap"
+              >
+                Login
+              </Link>
+              <Link
+                to="/auth"
+                search={{ mode: "signup" }}
+                onClick={() => trackEvent("nav_click", { nav_label: "signup_header" })}
+                className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-gradient-energy text-white font-semibold shadow-button hover:scale-105 active:scale-95 transition-transform whitespace-nowrap"
+              >
+                Sign Up
+              </Link>
+            </>
           )}
           {user ? (
             <div className="relative group/account">
@@ -92,7 +103,7 @@ export function Header() {
                   onClick={() => {
                     trackEvent("logout_click");
                     logout();
-                    nav({ to: "/auth" });
+                    nav({ to: "/auth", search: { mode: "login" } });
                   }}
                   className="mt-3 w-full rounded-full border border-border px-3 py-1.5 text-xs font-bold text-foreground hover:bg-muted/20 transition-colors"
                 >
