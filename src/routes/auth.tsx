@@ -140,8 +140,10 @@ function Auth() {
       return;
     }
     const timer = window.setTimeout(async () => {
+      // Existence check only — must NOT log the user in as a side effect.
       const user =
-        (await findUserByContactRemote(normalizedContact)) ?? findUserByContact(normalizedContact);
+        (await findUserByContactRemote(normalizedContact, { sync: false })) ??
+        findUserByContact(normalizedContact);
       setAlreadyRegisteredInSignup(!!user);
     }, 250);
     return () => window.clearTimeout(timer);
@@ -274,8 +276,10 @@ function Auth() {
     const normalizedContact = normalizeUaePhone(contact.trim());
 
     // Double-check right before creating in case the number registered moments ago.
+    // Existence check only — must NOT log the user in as a side effect.
     const doubleCheckUser =
-      (await findUserByContactRemote(normalizedContact)) ?? findUserByContact(normalizedContact);
+      (await findUserByContactRemote(normalizedContact, { sync: false })) ??
+      findUserByContact(normalizedContact);
     if (doubleCheckUser) {
       setAlreadyRegisteredInSignup(true);
       setErr("This number is already registered. Please login to view your score.");

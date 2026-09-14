@@ -374,14 +374,26 @@ export const saveUserRemote = async (u: UserRecord): Promise<void> => {
   }
 };
 
-/** Look up a user by contact in MongoDB (server), with localStorage as fallback. */
-export const findUserByContactRemote = async (contact: string): Promise<UserRecord | null> => {
+/**
+ * Look up a user by contact in MongoDB (server), with localStorage as fallback.
+ * By default this also syncs the found user into the local "current session" cache
+ * (used by real login flows). Pass `sync: false` for pure existence checks (e.g.
+ * "is this number already registered?" on the signup form) so the lookup does not
+ * have the side effect of logging the user in.
+ */
+export const findUserByContactRemote = async (
+  contact: string,
+  options?: { sync?: boolean },
+): Promise<UserRecord | null> => {
+  const sync = options?.sync ?? true;
   try {
     const { getUserByContactFn } = await import("@/server/userFns");
     const remote = await getUserByContactFn({ data: { contact } });
     if (remote) {
-      // sync to local cache
-      saveUser(remote);
+      if (sync) {
+        // sync to local cache (marks the browser as logged in as this user)
+        saveUser(remote);
+      }
       return remote;
     }
   } catch (e) {
