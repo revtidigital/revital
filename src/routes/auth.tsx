@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Header } from "@/components/Header";
 import {
@@ -20,11 +20,19 @@ import { executeRecaptcha, loadRecaptcha } from "@/lib/recaptcha";
 import { containsProfanity } from "@/lib/profanity";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { mode?: "login" | "signup"; redirect?: string } => ({
+    mode: search.mode === "signup" ? "signup" : undefined,
+    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+  }),
   component: Auth,
 });
 
 function Auth() {
   const nav = useNavigate();
+  const search = Route.useSearch();
+  const [mode, setMode] = useState<"login" | "signup">(search.mode === "signup" ? "signup" : "login");
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [referredBy, setReferredBy] = useState("");
@@ -34,35 +42,53 @@ function Auth() {
   const [loading, setLoading] = useState(false);
   const [nameFlagged, setNameFlagged] = useState(false);
   const [checkingName, setCheckingName] = useState(false);
-  const [existingUser, setExistingUser] =
-    useState<Awaited<ReturnType<typeof findUserByContactRemote>>>(null);
-  const isNewUser = !existingUser;
-  const canSubmit =
+  const [notRegistered, setNotRegistered] = useState(false);
+  const [alreadyRegisteredInSignup, setAlreadyRegisteredInSignup] = useState(false);
+
+  const switchMode = (targetMode: "login" | "signup") => {
+    setMode(targetMode);
+    setErr("");
+    setNotRegistered(false);
+    setAlreadyRegisteredInSignup(false);
+    nav({
+      to: "/auth",
+      search: (prev: any) => ({
+        ...(typeof prev === "object" ? prev : {}),
+        mode: targetMode,
+      }),
+      replace: true,
+    });
+  };
+
+  // Keep mode in sync with router search changes (back/forward, external links).
+  useEffect(() => {
+    const urlMode = search.mode === "signup" ? "signup" : "login";
+    setMode((current) => {
+      if (current !== urlMode) {
+        setErr("");
+        setNotRegistered(false);
+        setAlreadyRegisteredInSignup(false);
+        return urlMode;
+      }
+      return current;
+    });
+  }, [search.mode]);
+
+  const canSubmitSignup =
     !!name.trim() &&
     NAME_REGEX.test(name.trim()) &&
     !nameFlagged &&
     !checkingName &&
     isValidUaePhone(contact) &&
-    (!isNewUser || !!participantType) &&
+    !!participantType &&
     (!referredBy.trim() || REFERRAL_SUFFIX_REGEX.test(referredBy.trim())) &&
-    (!isNewUser || consent);
-
-  // Returning users already accepted the T&C on a prior signup — don't ask again.
-  useEffect(() => {
-    if (existingUser) setConsent(true);
-  }, [existingUser]);
+    consent;
+  const canSubmitLogin = isValidUaePhone(contact);
+  const canSubmit = mode === "login" ? canSubmitLogin : canSubmitSignup;
 
   useEffect(() => {
-    trackEvent("form_view", { form: "auth", page_url: window.location.href });
-  }, []);
-
-  const prevExistingUser = useRef(false);
-  useEffect(() => {
-    if (existingUser && !prevExistingUser.current) {
-      trackEvent("existing_user_detected", { form: "auth" });
-    }
-    prevExistingUser.current = !!existingUser;
-  }, [existingUser]);
+    trackEvent("form_view", { form: "auth", page_url: window.location.href, mode });
+  }, [mode]);
 
   useEffect(() => {
     const trimmed = name.trim();
@@ -96,28 +122,36 @@ function Auth() {
       normalizedRef.startsWith("RVT-") ? normalizedRef : `RVT-${normalizedRef}`,
     );
     setReferredBy(stripReferralPrefix(normalizedRef));
+    // A referral link implies signup intent.
+    switchMode("signup");
     trackEvent("referral_prefilled", { form: "auth", referral_code: normalizedRef });
   }, [nav]);
 
+  // While in signup mode, warn early if the number is already registered.
   useEffect(() => {
+    if (mode !== "signup") {
+      setAlreadyRegisteredInSignup(false);
+      return;
+    }
     const normalizedContact = normalizeUaePhone(contact);
     const isCandidate = /^\+9715\d{8}$/.test(normalizedContact);
     if (!isCandidate) {
-      setExistingUser(null);
+      setAlreadyRegisteredInSignup(false);
       return;
     }
     const timer = window.setTimeout(async () => {
-      const user = await findUserByContactRemote(normalizedContact);
-      setExistingUser(user);
+      const user =
+        (await findUserByContactRemote(normalizedContact)) ?? findUserByContact(normalizedContact);
+      setAlreadyRegisteredInSignup(!!user);
     }, 250);
     return () => window.clearTimeout(timer);
-  }, [contact]);
+  }, [mode, contact]);
 
   const formStarted = useRef(false);
   const handleFormStart = () => {
     if (formStarted.current) return;
     formStarted.current = true;
-    trackEvent("form_start", { form: "auth" });
+    trackEvent("form_start", { form: "auth", mode });
   };
 
   const goToProfile = async () => {
@@ -129,10 +163,57 @@ function Auth() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr("");
-    trackEvent("form_submit_attempt", { form: "auth" });
+    setNotRegistered(false);
+    trackEvent("form_submit_attempt", { form: "auth_login" });
+
+    if (!isValidUaePhone(contact)) {
+      setErr("Please enter a valid UAE mobile number (e.g. +971501234567)");
+      trackEvent("form_validation_error", { form: "auth", reason: "invalid_phone" });
+      return;
+    }
+    if (isDummyExamplePhone(contact)) {
+      setErr("This number is just an example — please enter your own mobile number.");
+      trackEvent("form_validation_error", { form: "auth", reason: "dummy_example_phone" });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const normalizedContact = normalizeUaePhone(contact.trim());
+      const user =
+        (await findUserByContactRemote(normalizedContact)) ?? findUserByContact(normalizedContact);
+
+      if (!user) {
+        setNotRegistered(true);
+        setErr("You are not registered with this number. Please sign up first.");
+        trackEvent("login_failed_not_registered", { form: "auth" });
+        setLoading(false);
+        return;
+      }
+
+      saveUser(user);
+      trackEvent("login_success", { form: "auth" });
+      await goToProfile();
+    } catch (e) {
+      console.warn("Login failed", e);
+      setErr("Could not log in right now. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErr("");
+    trackEvent("form_submit_attempt", { form: "auth_signup" });
+
+    if (alreadyRegisteredInSignup) {
+      setErr("This number is already registered. Please login to view your score.");
+      return;
+    }
     if (!name.trim() || !NAME_REGEX.test(name.trim())) {
       setErr("Please enter your full name (letters only)");
       trackEvent("form_validation_error", { form: "auth", reason: "invalid_name" });
@@ -154,7 +235,7 @@ function Auth() {
       trackEvent("form_validation_error", { form: "auth", reason: "dummy_example_phone" });
       return;
     }
-    if (isNewUser && !participantType) {
+    if (!participantType) {
       setErr("Please select who you are");
       trackEvent("form_validation_error", { form: "auth", reason: "missing_participant_type" });
       return;
@@ -164,11 +245,12 @@ function Auth() {
       trackEvent("form_validation_error", { form: "auth", reason: "invalid_referral_code" });
       return;
     }
-    if (isNewUser && !consent) {
+    if (!consent) {
       setErr("Please accept the consent to continue");
       trackEvent("form_validation_error", { form: "auth", reason: "consent_not_accepted" });
       return;
     }
+
     setLoading(true);
     try {
       const token = await executeRecaptcha("save_score");
@@ -185,34 +267,41 @@ function Auth() {
     } catch {
       // Best-effort — never block the user if reCAPTCHA errors.
     }
+
     const scores = getCurrentScores();
     const total = computeTotal(scores);
     const cat = categorize(total);
     const normalizedContact = normalizeUaePhone(contact.trim());
-    const existing =
-      existingUser ??
-      (await findUserByContactRemote(normalizedContact)) ??
-      findUserByContact(normalizedContact);
+
+    // Double-check right before creating in case the number registered moments ago.
+    const doubleCheckUser =
+      (await findUserByContactRemote(normalizedContact)) ?? findUserByContact(normalizedContact);
+    if (doubleCheckUser) {
+      setAlreadyRegisteredInSignup(true);
+      setErr("This number is already registered. Please login to view your score.");
+      setLoading(false);
+      return;
+    }
+
     const payload = {
-      ...existing,
       ...getPersistedUtmParams(),
-      userId: existing?.userId ?? generateUserId(),
+      userId: generateUserId(),
       contact: normalizedContact,
-      name: name.trim() || existing?.name,
-      email: existing?.email,
-      address: existing?.address,
-      participantType: existing?.participantType ?? (participantType || undefined),
+      name: name.trim(),
+      email: undefined,
+      address: undefined,
+      participantType: participantType || undefined,
       scores,
       total,
       category: cat.label,
       consent: true,
-      createdAt: existing?.createdAt ?? new Date().toISOString(),
-      referredBy: (referredBy.trim() ? `RVT-${referredBy.trim().toUpperCase()}` : "") || existing?.referredBy,
-      referCount: existing?.referCount ?? 0,
+      createdAt: new Date().toISOString(),
+      referredBy: referredBy.trim() ? `RVT-${referredBy.trim().toUpperCase()}` : undefined,
+      referCount: 0,
     };
     try {
       await saveUserRemote(payload);
-      trackEvent("score_saved", { source: "auth_page", is_new_user: !existing });
+      trackEvent("score_saved", { source: "auth_page", is_new_user: true });
       await goToProfile();
     } catch (e) {
       console.warn("Save encountered an issue", e);
@@ -230,157 +319,252 @@ function Auth() {
       <Header />
       <main className="max-w-md mx-auto px-4 py-8">
         <motion.div
+          key={mode}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center"
         >
           <h1 className="text-3xl md:text-4xl font-black">
-            View Your <span className="text-gradient-energy">Score</span>
+            {mode === "login" ? (
+              <>Welcome <span className="text-gradient-energy">Back</span></>
+            ) : (
+              <>Sign Up &amp; <span className="text-gradient-energy">Join</span></>
+            )}
           </h1>
-          <p className="text-sm text-muted-foreground mt-2">Enter your number to view your score</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            {mode === "login"
+              ? "Enter your registered mobile number to log in"
+              : "Register to save your scores and win prizes"}
+          </p>
         </motion.div>
 
-        <div className="mt-8 bg-gradient-card border border-border rounded-3xl p-6 shadow-card">
-          <motion.form
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            onSubmit={handleSubmit}
-            className="space-y-4"
+        <div className="mt-6 flex bg-muted/40 p-1 rounded-2xl border border-border">
+          <button
+            type="button"
+            onClick={() => switchMode("login")}
+            className={`flex-1 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              mode === "login"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
-            <div>
-              <label className="text-xs uppercase tracking-wider text-muted-foreground">
-                Full Name
-              </label>
-              <input
-                autoFocus
-                value={name}
-                onChange={(e) => setName(e.target.value.replace(/[^A-Za-z\s'.-]/g, ""))}
-                onFocus={handleFormStart}
-                onBlur={() => name.trim() && trackEvent("form_field_completed", { form: "auth", field: "name" })}
-                placeholder="Your name"
-                className={`mt-2 w-full bg-background/60 border rounded-2xl px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all ${
-                  nameFlagged ? "border-destructive focus:ring-destructive" : "border-border focus:ring-ring"
-                }`}
-              />
-              {nameFlagged && (
-                <p className="mt-1.5 text-[11px] text-destructive">
-                  Please enter an appropriate name.
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="text-xs uppercase tracking-wider text-muted-foreground">
-                UAE Mobile Number
-              </label>
-              <div className="mt-2 flex items-center rounded-2xl border border-border bg-background/60 px-3 focus-within:ring-2 focus-within:ring-ring">
-                <span className="text-sm font-semibold text-muted-foreground">+971</span>
-                <input
-                  value={contact}
-                  onChange={(e) => setContact(e.target.value.replace(/[^\d]/g, "").slice(0, 9))}
-                  onFocus={handleFormStart}
-                  onBlur={() =>
-                    isValidUaePhone(contact) &&
-                    trackEvent("form_field_completed", { form: "auth", field: "phone" })
-                  }
-                  inputMode="numeric"
-                  placeholder="50 123 4567"
-                  className="w-full border-0 bg-transparent px-2 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
-                />
-              </div>
-              <p className="mt-1.5 text-[11px] text-muted-foreground">
-                Enter a UAE mobile number (e.g. +971501234567).
-              </p>
-            </div>
-            {isNewUser && (
-              <div>
-                <label className="text-xs uppercase tracking-wider text-muted-foreground">
-                  You are a
-                </label>
-                <select
-                  value={participantType}
-                  onChange={(e) => {
-                    setParticipantType(e.target.value as ParticipantType);
-                    trackEvent("form_field_completed", {
-                      form: "auth",
-                      field: "participant_type",
-                      value: e.target.value,
-                    });
-                  }}
-                  className="mt-2 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+            Login
+          </button>
+          <button
+            type="button"
+            onClick={() => switchMode("signup")}
+            className={`flex-1 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              mode === "signup"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Sign Up
+          </button>
+        </div>
+
+        <div className="mt-6 bg-gradient-card border border-border rounded-3xl p-6 shadow-card">
+          <AnimatePresence mode="wait">
+            {mode === "login" ? (
+              <motion.form
+                key="login"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                onSubmit={handleLoginSubmit}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="text-xs uppercase tracking-wider text-muted-foreground">
+                    UAE Mobile Number
+                  </label>
+                  <div className="mt-2 flex items-center rounded-2xl border border-border bg-background/60 px-3 focus-within:ring-2 focus-within:ring-ring">
+                    <span className="text-sm font-semibold text-muted-foreground">+971</span>
+                    <input
+                      autoFocus
+                      value={contact}
+                      onChange={(e) => setContact(e.target.value.replace(/[^\d]/g, "").slice(0, 9))}
+                      onFocus={handleFormStart}
+                      inputMode="numeric"
+                      placeholder="50 123 4567"
+                      className="w-full border-0 bg-transparent px-2 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
+                    />
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-muted-foreground">
+                    Enter a UAE mobile number (e.g. +971501234567).
+                  </p>
+                </div>
+                {notRegistered && (
+                  <p className="text-sm text-muted-foreground">
+                    Not registered yet?{" "}
+                    <button
+                      type="button"
+                      onClick={() => switchMode("signup")}
+                      className="underline text-foreground font-semibold"
+                    >
+                      Sign up
+                    </button>
+                  </p>
+                )}
+                {err && <p className="text-sm text-destructive">{err}</p>}
+                <button
+                  disabled={loading || !canSubmit}
+                  className="w-full py-3 rounded-full bg-gradient-energy text-energy-foreground font-bold shadow-button hover:scale-[1.02] active:scale-[0.98] transition-transform disabled:opacity-60"
                 >
-                  <option value="" disabled>
-                    Select one
-                  </option>
-                  {PARTICIPANT_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
+                  {loading ? "Loading..." : "Login"}
+                </button>
+              </motion.form>
+            ) : (
+              <motion.form
+                key="signup"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                onSubmit={handleSignupSubmit}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="text-xs uppercase tracking-wider text-muted-foreground">
+                    Full Name
+                  </label>
+                  <input
+                    autoFocus
+                    value={name}
+                    onChange={(e) => setName(e.target.value.replace(/[^A-Za-z\s'.-]/g, ""))}
+                    onFocus={handleFormStart}
+                    onBlur={() => name.trim() && trackEvent("form_field_completed", { form: "auth", field: "name" })}
+                    placeholder="Your name"
+                    className={`mt-2 w-full bg-background/60 border rounded-2xl px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all ${
+                      nameFlagged ? "border-destructive focus:ring-destructive" : "border-border focus:ring-ring"
+                    }`}
+                  />
+                  {nameFlagged && (
+                    <p className="mt-1.5 text-[11px] text-destructive">
+                      Please enter an appropriate name.
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="text-xs uppercase tracking-wider text-muted-foreground">
+                    UAE Mobile Number
+                  </label>
+                  <div className="mt-2 flex items-center rounded-2xl border border-border bg-background/60 px-3 focus-within:ring-2 focus-within:ring-ring">
+                    <span className="text-sm font-semibold text-muted-foreground">+971</span>
+                    <input
+                      value={contact}
+                      onChange={(e) => setContact(e.target.value.replace(/[^\d]/g, "").slice(0, 9))}
+                      onFocus={handleFormStart}
+                      onBlur={() =>
+                        isValidUaePhone(contact) &&
+                        trackEvent("form_field_completed", { form: "auth", field: "phone" })
+                      }
+                      inputMode="numeric"
+                      placeholder="50 123 4567"
+                      className="w-full border-0 bg-transparent px-2 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
+                    />
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-muted-foreground">
+                    Enter a UAE mobile number (e.g. +971501234567).
+                  </p>
+                  {alreadyRegisteredInSignup && (
+                    <p className="mt-1.5 text-[11px] text-amber-600 dark:text-amber-400">
+                      This number is already registered.{" "}
+                      <button
+                        type="button"
+                        onClick={() => switchMode("login")}
+                        className="underline font-semibold"
+                      >
+                        Go to Login
+                      </button>
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="text-xs uppercase tracking-wider text-muted-foreground">
+                    You are a
+                  </label>
+                  <select
+                    value={participantType}
+                    onChange={(e) => {
+                      setParticipantType(e.target.value as ParticipantType);
+                      trackEvent("form_field_completed", {
+                        form: "auth",
+                        field: "participant_type",
+                        value: e.target.value,
+                      });
+                    }}
+                    className="mt-2 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+                  >
+                    <option value="" disabled>
+                      Select one
                     </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            {isNewUser && (
-              <div>
-                <label className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Referred by{" "}
-                  <span className="text-muted-foreground/60 normal-case font-normal">
-                    (optional)
+                    {PARTICIPANT_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs uppercase tracking-wider text-muted-foreground">
+                    Referred by{" "}
+                    <span className="text-muted-foreground/60 normal-case font-normal">
+                      (optional)
+                    </span>
+                  </label>
+                  <div className="mt-2 flex items-center rounded-2xl border border-border bg-background/60 px-3 focus-within:ring-2 focus-within:ring-ring">
+                    <span className="text-sm font-semibold text-muted-foreground">RVT-</span>
+                    <input
+                      value={referredBy}
+                      onChange={(e) =>
+                        setReferredBy(
+                          e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10),
+                        )
+                      }
+                      placeholder="A1B2C3D4E5"
+                      className="w-full border-0 bg-transparent px-2 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
+                    />
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-muted-foreground">
+                    Enter your friend's User ID who referred you — they'll get more chances to win! 🏆
+                  </p>
+                </div>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={consent}
+                    onChange={(e) => {
+                      setConsent(e.target.checked);
+                      if (e.target.checked) trackEvent("consent_checked", { form: "auth" });
+                    }}
+                    className="mt-1 accent-[oklch(0.72_0.19_50)]"
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    I agree to be contacted via phone about Revital campaigns, and accept the{" "}
+                    <Link to="/rules" target="_blank" className="underline hover:text-foreground">
+                      Rules
+                    </Link>
+                    ,{" "}
+                    <Link to="/terms" target="_blank" className="underline hover:text-foreground">
+                      Terms and Conditions
+                    </Link>{" "}
+                    and{" "}
+                    <Link to="/privacy" target="_blank" className="underline hover:text-foreground">
+                      Privacy Policy
+                    </Link>{" "}
+                    (UAE compliant).
                   </span>
                 </label>
-                <div className="mt-2 flex items-center rounded-2xl border border-border bg-background/60 px-3 focus-within:ring-2 focus-within:ring-ring">
-                  <span className="text-sm font-semibold text-muted-foreground">RVT-</span>
-                  <input
-                    value={referredBy}
-                    onChange={(e) =>
-                      setReferredBy(
-                        e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10),
-                      )
-                    }
-                    placeholder="A1B2C3D4E5"
-                    className="w-full border-0 bg-transparent px-2 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
-                  />
-                </div>
-                <p className="mt-1.5 text-[11px] text-muted-foreground">
-                  Enter your friend's User ID who referred you — they'll get more chances to win! 🏆
-                </p>
-              </div>
+                {err && <p className="text-sm text-destructive">{err}</p>}
+                <button
+                  disabled={loading || !canSubmit}
+                  className="w-full py-3 rounded-full bg-gradient-energy text-energy-foreground font-bold shadow-button hover:scale-[1.02] active:scale-[0.98] transition-transform disabled:opacity-60"
+                >
+                  {loading ? "Loading..." : "Sign Up"}
+                </button>
+              </motion.form>
             )}
-            {isNewUser && (
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={consent}
-                onChange={(e) => {
-                  setConsent(e.target.checked);
-                  if (e.target.checked) trackEvent("consent_checked", { form: "auth" });
-                }}
-                className="mt-1 accent-[oklch(0.72_0.19_50)]"
-              />
-              <span className="text-xs text-muted-foreground">
-                I agree to be contacted via phone about Revital campaigns, and accept the{" "}
-                <Link to="/rules" target="_blank" className="underline hover:text-foreground">
-                  Rules
-                </Link>
-                ,{" "}
-                <Link to="/terms" target="_blank" className="underline hover:text-foreground">
-                  Terms and Conditions
-                </Link>{" "}
-                and{" "}
-                <Link to="/privacy" target="_blank" className="underline hover:text-foreground">
-                  Privacy Policy
-                </Link>{" "}
-                (UAE compliant).
-              </span>
-            </label>
-            )}
-            {err && <p className="text-sm text-destructive">{err}</p>}
-            <button
-              disabled={loading || !canSubmit}
-              className="w-full py-3 rounded-full bg-gradient-energy text-energy-foreground font-bold shadow-button hover:scale-[1.02] active:scale-[0.98] transition-transform disabled:opacity-60"
-            >
-              {loading ? "Loading..." : "View Score"}
-            </button>
-          </motion.form>
+          </AnimatePresence>
         </div>
 
         <button
