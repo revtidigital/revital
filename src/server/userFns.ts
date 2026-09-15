@@ -12,7 +12,6 @@ import { checkRateLimit, getClientIp, requireAdminToken } from "./security";
 import { formatUaeDate } from "@/lib/uaeDate";
 
 const MAX_GAME_SCORE = 1500;
-const MAX_PLAY_ATTEMPTS_STORED = 500;
 
 const gameScoresSchema = z.object({
   reflex: z.number().nullable(),
@@ -135,11 +134,9 @@ export const saveUserFn = createServerFn({ method: "POST" })
       ...((existing?.playAttempts ?? []) as PlayAttempt[]),
       ...((normalized.playAttempts ?? []) as PlayAttempt[]),
     ]);
-    // Cap stored history so a scripted play-loop can't grow a document without bound.
     const mergedAttempts = dedupedAttempts
       .slice()
-      .sort((a, b) => a.playedAt.localeCompare(b.playedAt))
-      .slice(-MAX_PLAY_ATTEMPTS_STORED);
+      .sort((a, b) => a.playedAt.localeCompare(b.playedAt));
     const bestAttempt = mergedAttempts.reduce<PlayAttempt | null>(
       (best, curr) => (!best || curr.total > best.total ? curr : best),
       null,

@@ -74,6 +74,7 @@ interface DateWiseEntry {
     total: number;
     category: string;
     completedAll3Today: number;
+    createdAt?: string;
   }[];
   winners: {
     userId: string;
@@ -174,6 +175,7 @@ function groupByDate(users: UserRecord[]): DateWiseEntry[] {
           total: attempt.total,
           category: attempt.category,
           completedAll3Today: completedCountByDate.get(date) ?? 0,
+          createdAt: u.createdAt,
         });
       }
       continue;
@@ -190,6 +192,7 @@ function groupByDate(users: UserRecord[]): DateWiseEntry[] {
       total: u.total,
       category: u.category,
       completedAll3Today: isComplete(u.scores) ? 1 : 0,
+      createdAt: u.createdAt,
     });
   }
   // Full-record lookup so winner entries can pull the name-at-time-of-win snapshot.
@@ -477,11 +480,27 @@ function Admin() {
   const [filterType, setFilterType] = useState("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [joinedFrom, setJoinedFrom] = useState("");
+  const [joinedTo, setJoinedTo] = useState("");
+  const [showTodayJoinedOnly, setShowTodayJoinedOnly] = useState(false);
   const [search, setSearch] = useState("");
+  const [streakSort, setStreakSort] = useState<{
+    key: "playDays" | "globalScore";
+    dir: SortDir;
+  }>({ key: "globalScore", dir: "desc" });
+  const toggleStreakSort = (key: "playDays" | "globalScore") => {
+    setStreakSort((prev) =>
+      prev.key === key
+        ? { key, dir: prev.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: "desc" },
+    );
+  };
   const [logSearch, setLogSearch] = useState("");
   const [dateWiseSearch, setDateWiseSearch] = useState("");
   const [dateWiseFrom, setDateWiseFrom] = useState("");
   const [dateWiseTo, setDateWiseTo] = useState("");
+  const [dateWiseJoinedFrom, setDateWiseJoinedFrom] = useState("");
+  const [dateWiseJoinedTo, setDateWiseJoinedTo] = useState("");
   const [dateWisePage, setDateWisePage] = useState(1);
   const [dateWisePerPage, setDateWisePerPage] = useState(10);
   const [dateWiseExportFormat, setDateWiseExportFormat] = useState<"csv" | "pdf">("csv");
@@ -589,6 +608,20 @@ function Admin() {
           const selectedDate = getSafeDate(u.selectedPlayedAt);
           if (from && selectedDate && selectedDate < new Date(from)) return false;
           if (to && selectedDate && selectedDate > new Date(to + "T23:59:59")) return false;
+          const joinedDate = getSafeDate(u.createdAt);
+          if (joinedFrom && joinedDate && joinedDate < new Date(joinedFrom)) return false;
+          if (joinedTo && joinedDate && joinedDate > new Date(joinedTo + "T23:59:59")) return false;
+          if (showTodayJoinedOnly) {
+            const uaeTodayStr = new Intl.DateTimeFormat("en-CA", {
+              timeZone: "Asia/Dubai",
+            }).format(new Date());
+            const joinedUaeStr = u.createdAt
+              ? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dubai" }).format(
+                  new Date(u.createdAt),
+                )
+              : null;
+            if (joinedUaeStr !== uaeTodayStr) return false;
+          }
           if (
             search &&
             !u.contact.toLowerCase().includes(search.toLowerCase()) &&
@@ -600,7 +633,7 @@ function Admin() {
             return false;
           return true;
         }),
-    [users, filterCat, filterType, from, to, search],
+    [users, filterCat, filterType, from, to, joinedFrom, joinedTo, showTodayJoinedOnly, search],
   );
 
   const sortedFiltered = useMemo(() => {
@@ -795,11 +828,26 @@ function Admin() {
   // ── Date-wise ───────────────────────────────────────────────────────────────
   const dateWise = useMemo(() => {
     const all = groupByDate(users);
-    const ranged = all.filter((d) => {
+    let ranged = all.filter((d) => {
       if (dateWiseFrom && d.date < dateWiseFrom) return false;
       if (dateWiseTo && d.date > dateWiseTo) return false;
       return true;
     });
+    if (dateWiseJoinedFrom || dateWiseJoinedTo) {
+      ranged = ranged
+        .map((d) => ({
+          ...d,
+          users: d.users.filter((u) => {
+            const joinedDate = getSafeDate(u.createdAt);
+            if (!joinedDate) return false;
+            if (dateWiseJoinedFrom && joinedDate < new Date(dateWiseJoinedFrom)) return false;
+            if (dateWiseJoinedTo && joinedDate > new Date(dateWiseJoinedTo + "T23:59:59"))
+              return false;
+            return true;
+          }),
+        }))
+        .filter((d) => d.users.length > 0);
+    }
     if (!dateWiseSearch) return ranged;
     const q = dateWiseSearch.toLowerCase();
     return ranged
@@ -814,7 +862,7 @@ function Admin() {
         ),
       }))
       .filter((d) => d.date.includes(q) || d.users.length > 0);
-  }, [users, dateWiseSearch, dateWiseFrom, dateWiseTo]);
+  }, [users, dateWiseSearch, dateWiseFrom, dateWiseTo, dateWiseJoinedFrom, dateWiseJoinedTo]);
 
   const dateWiseTotalPages = Math.max(1, Math.ceil(dateWise.length / dateWisePerPage));
   const paginatedDateWise = useMemo(() => {
@@ -915,12 +963,20 @@ function Admin() {
       }))
       .filter((u) => u.globalScore > 0)
       .sort((a, b) => {
+        const dirMul = streakSort.dir === "asc" ? 1 : -1;
+        if (streakSort.key === "playDays") {
+          const diff = (a.playDates?.length ?? 0) - (b.playDates?.length ?? 0);
+          if (diff !== 0) return diff * dirMul;
+        } else {
+          const diff = a.globalScore - b.globalScore;
+          if (diff !== 0) return diff * dirMul;
+        }
         if (b.globalScore !== a.globalScore) return b.globalScore - a.globalScore;
         if ((b.playDates?.length ?? 0) !== (a.playDates?.length ?? 0))
           return (b.playDates?.length ?? 0) - (a.playDates?.length ?? 0);
         return b.streak - a.streak;
       });
-  }, [users]);
+  }, [users, streakSort]);
 
   // ── Logs filtered ───────────────────────────────────────────────────────────
   const filteredLogs = useMemo(() => {
@@ -1672,7 +1728,53 @@ function Admin() {
                       onChange={(e) => setTo(e.target.value)}
                       className="bg-background/60 border border-border rounded-full px-3 py-1.5 text-xs"
                     />
-                    {(search || filterCat !== "all" || filterType !== "all" || from || to) && (
+                    <span className="self-center text-muted-foreground text-xs pl-2 pr-1 border-l border-border">
+                      Joined
+                    </span>
+                    <input
+                      type="date"
+                      value={joinedFrom}
+                      onChange={(e) => {
+                        setJoinedFrom(e.target.value);
+                        setShowTodayJoinedOnly(false);
+                      }}
+                      className="bg-background/60 border border-border rounded-full px-3 py-1.5 text-xs"
+                    />
+                    <span className="self-center text-muted-foreground text-xs">to</span>
+                    <input
+                      type="date"
+                      value={joinedTo}
+                      onChange={(e) => {
+                        setJoinedTo(e.target.value);
+                        setShowTodayJoinedOnly(false);
+                      }}
+                      className="bg-background/60 border border-border rounded-full px-3 py-1.5 text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowTodayJoinedOnly((v) => !v);
+                        if (!showTodayJoinedOnly) {
+                          setJoinedFrom("");
+                          setJoinedTo("");
+                        }
+                      }}
+                      className={`px-3 py-1.5 text-xs font-bold rounded-full border transition-colors ${
+                        showTodayJoinedOnly
+                          ? "bg-gradient-energy text-energy-foreground border-transparent"
+                          : "bg-background/60 border-border text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Joined Today
+                    </button>
+                    {(search ||
+                      filterCat !== "all" ||
+                      filterType !== "all" ||
+                      from ||
+                      to ||
+                      joinedFrom ||
+                      joinedTo ||
+                      showTodayJoinedOnly) && (
                       <button
                         onClick={() => {
                           setSearch("");
@@ -1680,6 +1782,9 @@ function Admin() {
                           setFilterType("all");
                           setFrom("");
                           setTo("");
+                          setJoinedFrom("");
+                          setJoinedTo("");
+                          setShowTodayJoinedOnly(false);
                         }}
                         className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground border border-border rounded-full"
                       >
@@ -1984,6 +2089,22 @@ function Admin() {
                       onChange={(e) => setDateWiseTo(e.target.value)}
                       className="bg-background/60 border border-border rounded-full px-3 py-1.5 text-xs"
                     />
+                    <span className="text-xs text-muted-foreground pl-2 pr-1 border-l border-border">
+                      Joined
+                    </span>
+                    <input
+                      type="date"
+                      value={dateWiseJoinedFrom}
+                      onChange={(e) => setDateWiseJoinedFrom(e.target.value)}
+                      className="bg-background/60 border border-border rounded-full px-3 py-1.5 text-xs"
+                    />
+                    <span className="text-xs text-muted-foreground">to</span>
+                    <input
+                      type="date"
+                      value={dateWiseJoinedTo}
+                      onChange={(e) => setDateWiseJoinedTo(e.target.value)}
+                      className="bg-background/60 border border-border rounded-full px-3 py-1.5 text-xs"
+                    />
                     <select
                       value={dateWisePerPage}
                       onChange={(e) => setDateWisePerPage(Number(e.target.value))}
@@ -2013,12 +2134,18 @@ function Admin() {
                         {dateWiseExportFormat.toUpperCase()}
                       </button>
                     </div>
-                    {(dateWiseSearch || dateWiseFrom || dateWiseTo) && (
+                    {(dateWiseSearch ||
+                      dateWiseFrom ||
+                      dateWiseTo ||
+                      dateWiseJoinedFrom ||
+                      dateWiseJoinedTo) && (
                       <button
                         onClick={() => {
                           setDateWiseSearch("");
                           setDateWiseFrom("");
                           setDateWiseTo("");
+                          setDateWiseJoinedFrom("");
+                          setDateWiseJoinedTo("");
                         }}
                         className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground border border-border rounded-full"
                       >
@@ -2258,18 +2385,20 @@ function Admin() {
                           <Th>User ID</Th>
                           <Th>Contact</Th>
                           <Th>Name</Th>
-                          <Th>
-                            <span className="inline-flex items-center gap-1">
-                              Total Play Days
-                              <InfoHint text="Number of unique days this user has played (from playDates)." />
-                            </span>
-                          </Th>
-                          <Th>
-                            <span className="inline-flex items-center gap-1">
-                              Grand Score
-                              <InfoHint text="Gameplay Score (avg daily total up to 1,500 + consistency bonus up to 1,000 + streak bonus up to 500, max 3,000) + referrals × 100. Same formula as the Grand Prize Leaderboard." />
-                            </span>
-                          </Th>
+                          <GenericSortableTh
+                            label="Total Play Days"
+                            sortKey="playDays"
+                            sort={streakSort}
+                            onSort={toggleStreakSort}
+                            hint="Number of unique days this user has played (from playDates)."
+                          />
+                          <GenericSortableTh
+                            label="Grand Score"
+                            sortKey="globalScore"
+                            sort={streakSort}
+                            onSort={toggleStreakSort}
+                            hint="Gameplay Score (avg daily total up to 1,500 + consistency bonus up to 1,000 + streak bonus up to 500, max 3,000) + referrals × 100. Same formula as the Grand Prize Leaderboard."
+                          />
                         </tr>
                       </thead>
                       <tbody>
@@ -2718,6 +2847,43 @@ function InfoHint({ text }: { text: string }) {
 
 function Td({ children, className = "" }: { children?: React.ReactNode; className?: string }) {
   return <td className={`py-2 px-3 ${className}`}>{children}</td>;
+}
+
+function GenericSortableTh<K extends string>({
+  label,
+  sortKey,
+  sort,
+  onSort,
+  hint,
+}: {
+  label: string;
+  sortKey: K;
+  sort: { key: K; dir: SortDir };
+  onSort: (key: K) => void;
+  hint?: string;
+}) {
+  const active = sort.key === sortKey;
+  return (
+    <Th>
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+      >
+        <span>{label}</span>
+        {active ? (
+          sort.dir === "asc" ? (
+            <ArrowUp className="w-3 h-3" />
+          ) : (
+            <ArrowDown className="w-3 h-3" />
+          )
+        ) : (
+          <ArrowUpDown className="w-3 h-3 opacity-60" />
+        )}
+      </button>
+      {hint ? <InfoHint text={hint} /> : null}
+    </Th>
+  );
 }
 
 function SortableTh({
