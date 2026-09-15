@@ -1,0 +1,18 @@
+# Revital Energy Challenge
+
+> Take the Revital Energy Challenge. Play 3 fast games, score your energy, and climb the daily leaderboard. A UAE-based gamified marketing campaign by Revital Energy Drink.
+
+Revital Energy Challenge is a browser-based mini-game campaign at revitaluae.com. Users sign up with their phone number or Instagram, play three short games (Reflex, Memory, Balance) once per day, and are scored and ranked on daily and grand-prize leaderboards. A daily winner is locked and announced every night at 11:59 PM UAE time.
+
+## Pages
+
+- [Home](https://revitaluae.com/): Landing page and campaign overview.
+- [Challenges](https://revitaluae.com/challenges): Play the three daily games (Reflex, Memory, Balance).
+- [Rules](https://revitaluae.com/rules): Official contest rules and scoring formula.
+- [Privacy Policy](https://revitaluae.com/privacy): Data collection and privacy terms.
+- [Terms of Service](https://revitaluae.com/terms): Terms of participation.
+
+## Notes
+
+- This is a marketing/promotional site, not a documentation or reference resource — there is no API or content here intended for reuse by other tools.
+- Winner selection, leaderboards, and daily play limits are enforced server-side; the site should not be scraped for gameplay automation.
