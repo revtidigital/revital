@@ -114,7 +114,20 @@ function getSafeIsoTimestamp(value?: string) {
   return date ? date.toISOString() : "";
 }
 
+// UAE (Asia/Dubai) is a fixed UTC+4 offset with no DST — every "which day did
+// this happen on" comparison in this app (winner locks, daily stats email,
+// play-date bucketing) is defined in UAE calendar time, not UTC. Date-only
+// filter inputs (createdAt range pickers etc.) must match that convention or
+// users near the UTC/UAE day boundary get miscounted. See UAE Date/Timezone Fix.
+function formatUaeDate(value: string | Date) {
+  const date = typeof value === "string" ? getSafeDate(value) : value;
+  if (!date) return null;
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dubai" }).format(date);
+}
+
 function getSafeIsoDay(value?: string) {
+  const uaeDay = value ? formatUaeDate(value) : null;
+  if (uaeDay) return uaeDay;
   const iso = getSafeIsoTimestamp(value);
   return iso ? iso.slice(0, 10) : FALLBACK_DATE;
 }
@@ -608,19 +621,12 @@ function Admin() {
           const selectedDate = getSafeDate(u.selectedPlayedAt);
           if (from && selectedDate && selectedDate < new Date(from)) return false;
           if (to && selectedDate && selectedDate > new Date(to + "T23:59:59")) return false;
-          const joinedDate = getSafeDate(u.createdAt);
-          if (joinedFrom && joinedDate && joinedDate < new Date(joinedFrom)) return false;
-          if (joinedTo && joinedDate && joinedDate > new Date(joinedTo + "T23:59:59")) return false;
+          const joinedUaeDay = formatUaeDate(u.createdAt ?? "");
+          if (joinedFrom && (!joinedUaeDay || joinedUaeDay < joinedFrom)) return false;
+          if (joinedTo && (!joinedUaeDay || joinedUaeDay > joinedTo)) return false;
           if (showTodayJoinedOnly) {
-            const uaeTodayStr = new Intl.DateTimeFormat("en-CA", {
-              timeZone: "Asia/Dubai",
-            }).format(new Date());
-            const joinedUaeStr = u.createdAt
-              ? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dubai" }).format(
-                  new Date(u.createdAt),
-                )
-              : null;
-            if (joinedUaeStr !== uaeTodayStr) return false;
+            const uaeTodayStr = formatUaeDate(new Date());
+            if (joinedUaeDay !== uaeTodayStr) return false;
           }
           if (
             search &&
@@ -838,11 +844,10 @@ function Admin() {
         .map((d) => ({
           ...d,
           users: d.users.filter((u) => {
-            const joinedDate = getSafeDate(u.createdAt);
-            if (!joinedDate) return false;
-            if (dateWiseJoinedFrom && joinedDate < new Date(dateWiseJoinedFrom)) return false;
-            if (dateWiseJoinedTo && joinedDate > new Date(dateWiseJoinedTo + "T23:59:59"))
-              return false;
+            const joinedUaeDay = formatUaeDate(u.createdAt ?? "");
+            if (!joinedUaeDay) return false;
+            if (dateWiseJoinedFrom && joinedUaeDay < dateWiseJoinedFrom) return false;
+            if (dateWiseJoinedTo && joinedUaeDay > dateWiseJoinedTo) return false;
             return true;
           }),
         }))
