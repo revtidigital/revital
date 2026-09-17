@@ -15,6 +15,7 @@ export const EXCLUDED_CONTACTS = new Set([
   "+971561234567",
   "+971581234567",
   "+971591234567",
+  "+971568988033",
 ]);
 
 export const isExcludedContact = (contact) => EXCLUDED_CONTACTS.has(contact);
