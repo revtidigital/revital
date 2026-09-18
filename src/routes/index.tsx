@@ -431,6 +431,7 @@ function Landing() {
               emoji="🔥"
               entries={daily}
               accent="tiger"
+              highlightWinner
             />
             <Leaderboard
               title="Grand Prize Leaderboard"
