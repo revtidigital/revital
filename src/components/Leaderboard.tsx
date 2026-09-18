@@ -10,6 +10,7 @@ export function Leaderboard({
   entries,
   accent = "tiger",
   highlightWinner = true,
+  showMedals,
 }: {
   title: string;
   subtitle: string;
@@ -17,7 +18,9 @@ export function Leaderboard({
   entries: LeaderEntry[];
   accent?: "tiger" | "marigold";
   highlightWinner?: boolean;
+  showMedals?: boolean;
 }) {
+  const useMedals = showMedals ?? highlightWinner;
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -55,7 +58,7 @@ export function Leaderboard({
               }`}
             >
               <div className="w-8 text-center text-lg font-black">
-                {highlightWinner && i < 3 ? (
+                {useMedals && i < 3 ? (
                   medals[i]
                 ) : (
                   <span className="text-muted-foreground">{i + 1}</span>

@@ -432,6 +432,7 @@ function Landing() {
               entries={daily}
               accent="tiger"
               highlightWinner
+              showMedals={false}
             />
             <Leaderboard
               title="Grand Prize Leaderboard"
@@ -440,6 +441,7 @@ function Landing() {
               entries={global}
               accent="marigold"
               highlightWinner={false}
+              showMedals
             />
           </div>
 
