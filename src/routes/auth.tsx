@@ -22,9 +22,10 @@ import { containsProfanity } from "@/lib/profanity";
 export const Route = createFileRoute("/auth")({
   validateSearch: (
     search: Record<string, unknown>,
-  ): { mode?: "login" | "signup"; redirect?: string } => ({
+  ): { mode?: "login" | "signup"; redirect?: string; phone?: string } => ({
     mode: search.mode === "signup" ? "signup" : undefined,
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+    phone: typeof search.phone === "string" ? search.phone : undefined,
   }),
   component: Auth,
 });
@@ -34,7 +35,7 @@ function Auth() {
   const search = Route.useSearch();
   const [mode, setMode] = useState<"login" | "signup">(search.mode === "signup" ? "signup" : "login");
   const [name, setName] = useState("");
-  const [contact, setContact] = useState("");
+  const [contact, setContact] = useState(() => (search.phone ?? "").replace(/[^\d]/g, "").slice(0, 9));
   const [referredBy, setReferredBy] = useState("");
   const [participantType, setParticipantType] = useState<ParticipantType | "">("");
   const [consent, setConsent] = useState(false);
@@ -198,6 +199,15 @@ function Auth() {
 
       saveUser(user);
       trackEvent("login_success", { form: "auth" });
+      if (search.redirect && search.redirect.startsWith("/")) {
+        try {
+          await nav({ to: search.redirect });
+        } catch (e) {
+          console.warn("Router navigation failed, falling back to hard redirect", e);
+          if (typeof window !== "undefined") window.location.assign(search.redirect);
+        }
+        return;
+      }
       await goToProfile();
     } catch (e) {
       console.warn("Login failed", e);

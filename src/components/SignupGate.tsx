@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "@tanstack/react-router";
 import {
   categorize,
   computeTotal,
@@ -325,6 +326,17 @@ export function SignupGate({ onSuccess }: SignupGateProps) {
                 Existing account detected. Referral code is locked for returning users.
               </p>
             )}
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
+              Already a member?{" "}
+              <Link
+                to="/auth"
+                search={{ mode: "login", redirect: "/result", phone: contact.trim() || undefined }}
+                className="underline text-foreground font-semibold"
+                onClick={() => trackEvent("cta_click", { cta_label: "login_from_signup_gate" })}
+              >
+                Login
+              </Link>
+            </p>
           </div>
           {isNewUser && (
             <div>
