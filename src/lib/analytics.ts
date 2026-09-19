@@ -8,6 +8,36 @@ declare global {
     dataLayer?: unknown[];
     fbq?: FbqFn;
     clarity?: ClarityFn;
+    __metaPixelId?: string;
+  }
+}
+
+async function sha256Hex(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await window.crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+// Re-inits the Meta Pixel with hashed Advanced Matching data so Lead events
+// downstream can be matched to a real person in Ads Manager. Must only ever
+// send SHA-256 hashes to fbq, never raw PII.
+export async function setMetaAdvancedMatching(phone?: string, email?: string): Promise<void> {
+  if (typeof window === "undefined" || typeof window.fbq !== "function" || !window.__metaPixelId) {
+    return;
+  }
+  try {
+    const userData: Record<string, string> = {};
+    const digits = phone?.replace(/\D/g, "");
+    if (digits) userData.ph = await sha256Hex(digits);
+    const normalizedEmail = email?.trim().toLowerCase();
+    if (normalizedEmail) userData.em = await sha256Hex(normalizedEmail);
+    if (Object.keys(userData).length > 0) {
+      window.fbq("init", window.__metaPixelId, userData);
+    }
+  } catch {
+    // Advanced Matching is best-effort — never block the calling flow.
   }
 }
 
