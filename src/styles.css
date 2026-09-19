@@ -221,4 +221,11 @@
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
   }
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }

@@ -6,12 +6,28 @@ import { getCurrentScores, isLoggedIn } from "@/lib/storage";
 import { loadRecaptcha } from "@/lib/recaptcha";
 
 export const Route = createFileRoute("/save-score")({
+  validateSearch: (search: Record<string, unknown>): { mode?: "login" | "signup" } => ({
+    mode: search.mode === "login" ? "login" : undefined,
+  }),
   component: SaveScore,
 });
 
 function SaveScore() {
   const nav = useNavigate();
+  const search = Route.useSearch();
   const [showForm, setShowForm] = useState(false);
+  const mode = search.mode === "login" ? "login" : "signup";
+
+  const setMode = (targetMode: "login" | "signup") => {
+    nav({
+      to: "/save-score",
+      search: (prev: any) => ({
+        ...(typeof prev === "object" ? prev : {}),
+        mode: targetMode === "login" ? "login" : undefined,
+      }),
+      replace: true,
+    });
+  };
 
   useEffect(() => {
     loadRecaptcha();
@@ -33,7 +49,9 @@ function SaveScore() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      {showForm && <SignupGate onSuccess={() => nav({ to: "/result" })} />}
+      {showForm && (
+        <SignupGate mode={mode} onModeChange={setMode} onSuccess={() => nav({ to: "/result" })} />
+      )}
     </div>
   );
 }
