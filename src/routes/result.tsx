@@ -38,7 +38,7 @@ function Result() {
       return;
     }
     if (!isLoggedIn()) {
-      nav({ to: "/save-score/signup" });
+      nav({ to: "/save-score/$mode", params: { mode: "signup" } });
       return;
     }
     setScores(s);

@@ -8,7 +8,8 @@ export const Route = createFileRoute("/save-score")({
   }),
   beforeLoad: ({ search }) => {
     throw redirect({
-      to: search.mode === "login" ? "/save-score/login" : "/save-score/signup",
+      to: "/save-score/$mode",
+      params: { mode: search.mode === "login" ? "login" : "signup" },
       replace: true,
     });
   },

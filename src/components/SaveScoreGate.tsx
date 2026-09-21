@@ -20,7 +20,8 @@ export function SaveScoreGate({ mode: initialMode }: { mode: "login" | "signup" 
   const setMode = (targetMode: "login" | "signup") => {
     setModeState(targetMode);
     nav({
-      to: targetMode === "login" ? "/save-score/login" : "/save-score/signup",
+      to: "/save-score/$mode",
+      params: { mode: targetMode },
       replace: true,
     });
   };

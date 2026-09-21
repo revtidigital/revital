@@ -108,7 +108,10 @@ function BalanceGame() {
       const score = Math.round(Math.max(0, Math.min(1500, rawScore)));
       saveGameScore("balance", score);
       trackEvent("game_complete", { game_type: "balance", score });
-      const t = setTimeout(() => nav({ to: "/save-score/signup" }), 1500);
+      const t = setTimeout(
+        () => nav({ to: "/save-score/$mode", params: { mode: "signup" } }),
+        1500,
+      );
       return () => clearTimeout(t);
     }
   }, [done, hold, nav]);
