@@ -7,8 +7,15 @@ import { loadRecaptcha } from "@/lib/recaptcha";
 
 export function SaveScoreGate({ mode: initialMode }: { mode: "login" | "signup" }) {
   const nav = useNavigate();
-  const [showForm, setShowForm] = useState(false);
   const [mode, setModeState] = useState<"login" | "signup">(initialMode);
+  // Computed synchronously (not via useEffect) so a route change between
+  // /save-score/login and /save-score/signup doesn't remount this component
+  // into a blank frame before the check resolves — avoids a flash/glitch
+  // when switching tabs.
+  const [scores] = useState(() => getCurrentScores());
+  const [loggedIn] = useState(() => isLoggedIn());
+  const missingScores = scores.reflex === null || scores.memory === null || scores.balance === null;
+  const showForm = !missingScores && !loggedIn;
 
   const setMode = (targetMode: "login" | "signup") => {
     setModeState(targetMode);
@@ -23,17 +30,15 @@ export function SaveScoreGate({ mode: initialMode }: { mode: "login" | "signup" 
   }, []);
 
   useEffect(() => {
-    const s = getCurrentScores();
-    if (s.reflex === null || s.memory === null || s.balance === null) {
+    if (missingScores) {
       nav({ to: "/challenges" });
       return;
     }
-    if (isLoggedIn()) {
+    if (loggedIn) {
       nav({ to: "/result" });
       return;
     }
-    setShowForm(true);
-  }, [nav]);
+  }, [nav, missingScores, loggedIn]);
 
   return (
     <div className="min-h-screen flex flex-col">
