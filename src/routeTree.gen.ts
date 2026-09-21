@@ -20,6 +20,8 @@ import { Route as RetrieveRouteImport } from './routes/retrieve'
 import { Route as RulesRouteImport } from './routes/rules'
 import { Route as SaveScoreRouteImport } from './routes/save-score'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AuthLoginRouteImport } from './routes/auth_.login'
+import { Route as AuthSignupRouteImport } from './routes/auth_.signup'
 import { Route as PlayBalanceRouteImport } from './routes/play.balance'
 import { Route as PlayMemoryRouteImport } from './routes/play.memory'
 import { Route as PlayReflexRouteImport } from './routes/play.reflex'
@@ -80,6 +82,16 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/auth_/login',
+  path: '/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthSignupRoute = AuthSignupRouteImport.update({
+  id: '/auth_/signup',
+  path: '/auth/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlayBalanceRoute = PlayBalanceRouteImport.update({
   id: '/play/balance',
   path: '/play/balance',
@@ -113,6 +125,8 @@ export interface FileRoutesByFullPath {
   '/rules': typeof RulesRoute
   '/save-score': typeof SaveScoreRoute
   '/terms': typeof TermsRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/play/balance': typeof PlayBalanceRoute
   '/play/memory': typeof PlayMemoryRoute
   '/play/reflex': typeof PlayReflexRoute
@@ -130,6 +144,8 @@ export interface FileRoutesByTo {
   '/rules': typeof RulesRoute
   '/save-score': typeof SaveScoreRoute
   '/terms': typeof TermsRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/play/balance': typeof PlayBalanceRoute
   '/play/memory': typeof PlayMemoryRoute
   '/play/reflex': typeof PlayReflexRoute
@@ -148,6 +164,8 @@ export interface FileRoutesById {
   '/rules': typeof RulesRoute
   '/save-score': typeof SaveScoreRoute
   '/terms': typeof TermsRoute
+  '/auth_/login': typeof AuthLoginRoute
+  '/auth_/signup': typeof AuthSignupRoute
   '/play/balance': typeof PlayBalanceRoute
   '/play/memory': typeof PlayMemoryRoute
   '/play/reflex': typeof PlayReflexRoute
@@ -167,6 +185,8 @@ export interface FileRouteTypes {
     | '/rules'
     | '/save-score'
     | '/terms'
+    | '/auth/login'
+    | '/auth/signup'
     | '/play/balance'
     | '/play/memory'
     | '/play/reflex'
@@ -184,6 +204,8 @@ export interface FileRouteTypes {
     | '/rules'
     | '/save-score'
     | '/terms'
+    | '/auth/login'
+    | '/auth/signup'
     | '/play/balance'
     | '/play/memory'
     | '/play/reflex'
@@ -201,6 +223,8 @@ export interface FileRouteTypes {
     | '/rules'
     | '/save-score'
     | '/terms'
+    | '/auth_/login'
+    | '/auth_/signup'
     | '/play/balance'
     | '/play/memory'
     | '/play/reflex'
@@ -219,6 +243,8 @@ export interface RootRouteChildren {
   RulesRoute: typeof RulesRoute
   SaveScoreRoute: typeof SaveScoreRoute
   TermsRoute: typeof TermsRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthSignupRoute: typeof AuthSignupRoute
   PlayBalanceRoute: typeof PlayBalanceRoute
   PlayMemoryRoute: typeof PlayMemoryRoute
   PlayReflexRoute: typeof PlayReflexRoute
@@ -303,6 +329,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth_/login': {
+      id: '/auth_/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth_/signup': {
+      id: '/auth_/signup'
+      path: '/auth/signup'
+      fullPath: '/auth/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/play/balance': {
       id: '/play/balance'
       path: '/play/balance'
@@ -356,6 +396,8 @@ const rootRouteChildren: RootRouteChildren = {
   RulesRoute: RulesRoute,
   SaveScoreRoute: SaveScoreRoute,
   TermsRoute: TermsRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthSignupRoute: AuthSignupRoute,
   PlayBalanceRoute: PlayBalanceRoute,
   PlayMemoryRoute: PlayMemoryRoute,
   PlayReflexRoute: PlayReflexRoute,

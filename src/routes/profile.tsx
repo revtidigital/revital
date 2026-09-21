@@ -137,7 +137,7 @@ function Profile() {
   useEffect(() => {
     const u = getUser();
     if (!u) {
-      nav({ to: "/auth" });
+      nav({ to: "/auth/login" });
       return;
     }
     setUser(u);

@@ -102,7 +102,7 @@ export function ReferralPopup() {
     if (user) {
       nav({ to: "/profile", hash: "referral-url-section", search: { scroll: "referral" } });
     } else {
-      nav({ to: "/auth", search: { mode: "signup", redirect: "referral" } });
+      nav({ to: "/auth/signup", search: { redirect: "referral" } });
     }
   };
 

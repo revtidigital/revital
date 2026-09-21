@@ -63,16 +63,14 @@ export function Header() {
           {!user && (
             <>
               <Link
-                to="/auth"
-                search={{ mode: "login" }}
+                to="/auth/login"
                 onClick={() => trackEvent("nav_click", { nav_label: "login_header" })}
                 className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full border-2 border-[var(--garnet)]/20 bg-white/80 text-garnet font-semibold hover:border-[var(--tiger)] hover:bg-white active:scale-95 transition-all whitespace-nowrap"
               >
                 Login
               </Link>
               <Link
-                to="/auth"
-                search={{ mode: "signup" }}
+                to="/auth/signup"
                 onClick={() => trackEvent("nav_click", { nav_label: "signup_header" })}
                 className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-gradient-energy text-white font-semibold shadow-button hover:scale-105 active:scale-95 transition-transform whitespace-nowrap"
               >
@@ -103,7 +101,7 @@ export function Header() {
                   onClick={() => {
                     trackEvent("logout_click");
                     logout();
-                    nav({ to: "/auth", search: { mode: "login" } });
+                    nav({ to: "/auth/login" });
                   }}
                   className="mt-3 w-full rounded-full border border-border px-3 py-1.5 text-xs font-bold text-foreground hover:bg-muted/20 transition-colors"
                 >
