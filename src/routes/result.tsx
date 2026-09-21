@@ -38,7 +38,7 @@ function Result() {
       return;
     }
     if (!isLoggedIn()) {
-      nav({ to: "/save-score" });
+      nav({ to: "/save-score/signup" });
       return;
     }
     setScores(s);

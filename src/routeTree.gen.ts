@@ -25,6 +25,8 @@ import { Route as AuthSignupRouteImport } from './routes/auth_.signup'
 import { Route as PlayBalanceRouteImport } from './routes/play.balance'
 import { Route as PlayMemoryRouteImport } from './routes/play.memory'
 import { Route as PlayReflexRouteImport } from './routes/play.reflex'
+import { Route as SaveScoreLoginRouteImport } from './routes/save-score_.login'
+import { Route as SaveScoreSignupRouteImport } from './routes/save-score_.signup'
 import { Route as AdminUserUserIdRouteImport } from './routes/admin.user.$userId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -107,6 +109,16 @@ const PlayReflexRoute = PlayReflexRouteImport.update({
   path: '/play/reflex',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SaveScoreLoginRoute = SaveScoreLoginRouteImport.update({
+  id: '/save-score_/login',
+  path: '/save-score/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SaveScoreSignupRoute = SaveScoreSignupRouteImport.update({
+  id: '/save-score_/signup',
+  path: '/save-score/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminUserUserIdRoute = AdminUserUserIdRouteImport.update({
   id: '/user/$userId',
   path: '/user/$userId',
@@ -130,6 +142,8 @@ export interface FileRoutesByFullPath {
   '/play/balance': typeof PlayBalanceRoute
   '/play/memory': typeof PlayMemoryRoute
   '/play/reflex': typeof PlayReflexRoute
+  '/save-score/login': typeof SaveScoreLoginRoute
+  '/save-score/signup': typeof SaveScoreSignupRoute
   '/admin/user/$userId': typeof AdminUserUserIdRoute
 }
 export interface FileRoutesByTo {
@@ -149,6 +163,8 @@ export interface FileRoutesByTo {
   '/play/balance': typeof PlayBalanceRoute
   '/play/memory': typeof PlayMemoryRoute
   '/play/reflex': typeof PlayReflexRoute
+  '/save-score/login': typeof SaveScoreLoginRoute
+  '/save-score/signup': typeof SaveScoreSignupRoute
   '/admin/user/$userId': typeof AdminUserUserIdRoute
 }
 export interface FileRoutesById {
@@ -169,6 +185,8 @@ export interface FileRoutesById {
   '/play/balance': typeof PlayBalanceRoute
   '/play/memory': typeof PlayMemoryRoute
   '/play/reflex': typeof PlayReflexRoute
+  '/save-score_/login': typeof SaveScoreLoginRoute
+  '/save-score_/signup': typeof SaveScoreSignupRoute
   '/admin/user/$userId': typeof AdminUserUserIdRoute
 }
 export interface FileRouteTypes {
@@ -190,6 +208,8 @@ export interface FileRouteTypes {
     | '/play/balance'
     | '/play/memory'
     | '/play/reflex'
+    | '/save-score/login'
+    | '/save-score/signup'
     | '/admin/user/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -209,6 +229,8 @@ export interface FileRouteTypes {
     | '/play/balance'
     | '/play/memory'
     | '/play/reflex'
+    | '/save-score/login'
+    | '/save-score/signup'
     | '/admin/user/$userId'
   id:
     | '__root__'
@@ -228,6 +250,8 @@ export interface FileRouteTypes {
     | '/play/balance'
     | '/play/memory'
     | '/play/reflex'
+    | '/save-score_/login'
+    | '/save-score_/signup'
     | '/admin/user/$userId'
   fileRoutesById: FileRoutesById
 }
@@ -248,6 +272,8 @@ export interface RootRouteChildren {
   PlayBalanceRoute: typeof PlayBalanceRoute
   PlayMemoryRoute: typeof PlayMemoryRoute
   PlayReflexRoute: typeof PlayReflexRoute
+  SaveScoreLoginRoute: typeof SaveScoreLoginRoute
+  SaveScoreSignupRoute: typeof SaveScoreSignupRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -364,6 +390,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayReflexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/save-score_/login': {
+      id: '/save-score_/login'
+      path: '/save-score/login'
+      fullPath: '/save-score/login'
+      preLoaderRoute: typeof SaveScoreLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/save-score_/signup': {
+      id: '/save-score_/signup'
+      path: '/save-score/signup'
+      fullPath: '/save-score/signup'
+      preLoaderRoute: typeof SaveScoreSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/user/$userId': {
       id: '/admin/user/$userId'
       path: '/user/$userId'
@@ -401,6 +441,8 @@ const rootRouteChildren: RootRouteChildren = {
   PlayBalanceRoute: PlayBalanceRoute,
   PlayMemoryRoute: PlayMemoryRoute,
   PlayReflexRoute: PlayReflexRoute,
+  SaveScoreLoginRoute: SaveScoreLoginRoute,
+  SaveScoreSignupRoute: SaveScoreSignupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
