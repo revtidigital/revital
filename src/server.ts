@@ -3,6 +3,7 @@ import { serve } from "srvx/node";
 import { readFile } from "node:fs/promises";
 import { join, extname, dirname, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { startWelcomeEmailScheduler } from "@/server/welcomeEmailJob";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // server.js lives at dist/server/server.js; client assets are at dist/client/
 const clientDir = resolve(join(__dirname, "../client"));
@@ -62,6 +63,10 @@ function getCacheControl(pathname: string): string {
 // independent cron mechanisms racing to lock the same day's winner and send
 // mail is worse than either one alone (the OS-cron script has no shared
 // dedup with `winner_mail_log`, so both firing would double-send).
+
+// In-app scheduler for the "keep playing" welcome-email batch (Brevo), fires
+// at 11:00 / 14:00 / 17:00 Asia/Dubai — no external/hPanel cron needed.
+startWelcomeEmailScheduler();
 
 serve({
   fetch: async (req: Request) => {
