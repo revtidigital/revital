@@ -17,7 +17,10 @@ function getRemaining(endAt: string) {
  * reloads once the target time passes, so the real site appears automatically
  * with no manual toggle needed.
  */
-export function ComingSoonPage({ endAt }: { endAt: string }) {
+const DEFAULT_MESSAGE =
+  "The Revital Energy Challenge is almost here. Get ready to play, score, and climb the leaderboard.";
+
+export function ComingSoonPage({ endAt, message }: { endAt: string; message?: string }) {
   const [remaining, setRemaining] = useState(() => getRemaining(endAt));
 
   useEffect(() => {
@@ -59,9 +62,8 @@ export function ComingSoonPage({ endAt }: { endAt: string }) {
         <h1 className="text-xl md:text-4xl font-black text-gradient-energy leading-[1.3] pb-1 mb-1.5">
           Revealing Soon
         </h1>
-        <p className="text-[11px] md:text-sm text-muted-foreground mb-2 max-w-md">
-          The Revital Energy Challenge is almost here. Get ready to play, score, and climb the
-          leaderboard.
+        <p className="text-[11px] md:text-sm text-muted-foreground mb-2 max-w-md whitespace-pre-line">
+          {message?.trim() ? message : DEFAULT_MESSAGE}
         </p>
         <div className="flex items-center gap-2 md:gap-4">
           {units.map((u) => (

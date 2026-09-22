@@ -479,7 +479,9 @@ function Admin() {
     leaderboardAdminEmail: "",
     campaignStartDate: "",
     comingSoonEnabled: false,
+    comingSoonStartAt: "",
     comingSoonEndAt: "",
+    comingSoonMessage: "",
   });
   const [savedFlash, setSavedFlash] = useState(false);
   const [sendingLastWinnerEmail, setSendingLastWinnerEmail] = useState(false);
@@ -2693,6 +2695,28 @@ function Admin() {
                       </p>
                       <label className="block max-w-xs">
                         <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                          Start date & time (IST time)
+                        </span>
+                        <input
+                          type="datetime-local"
+                          value={isoToIstLocalInput(settings.comingSoonStartAt)}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              comingSoonStartAt: istLocalInputToIso(e.target.value),
+                            }))
+                          }
+                          className="mt-1 w-full bg-background/60 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Enter this in IST time. Leave blank to show Coming Soon immediately once
+                          the checkbox above is checked. If set, the site stays normal until this
+                          exact time, then switches to Coming Soon automatically — no manual
+                          toggle needed.
+                        </p>
+                      </label>
+                      <label className="block max-w-xs mt-4">
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
                           Reveal date & time (UAE time)
                         </span>
                         <input
@@ -2708,6 +2732,27 @@ function Admin() {
                         />
                         <p className="text-[11px] text-muted-foreground mt-1">
                           Enter this in UAE (GST, UTC+4) time — e.g. 9:30 AM UAE = 11:00 AM IST.
+                        </p>
+                      </label>
+                      <label className="block mt-4">
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                          Message
+                        </span>
+                        <textarea
+                          value={settings.comingSoonMessage}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              comingSoonMessage: e.target.value,
+                            }))
+                          }
+                          rows={3}
+                          placeholder="The Revital Energy Challenge is almost here. Get ready to play, score, and climb the leaderboard."
+                          className="mt-1 w-full bg-background/60 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-y"
+                        />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Shown exactly as typed on the Coming Soon page. Leave blank to use the
+                          default message.
                         </p>
                       </label>
                     </SettingsSection>
@@ -2945,6 +2990,29 @@ function uaeLocalInputToIso(localValue: string): string {
   const [y, m, d] = datePart.split("-").map(Number);
   const [hh, mm] = (timePart || "00:00").split(":").map(Number);
   const utcMs = Date.UTC(y, m - 1, d, hh, mm) - UAE_OFFSET_MS;
+  return new Date(utcMs).toISOString();
+}
+
+// IST (Asia/Kolkata) is a fixed UTC+5:30 offset with no DST.
+const IST_OFFSET_MS = (5 * 60 + 30) * 60 * 1000;
+
+/** Converts a stored UTC ISO timestamp into a `datetime-local` input value showing IST wall-clock time. */
+function isoToIstLocalInput(iso: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const ist = new Date(d.getTime() + IST_OFFSET_MS);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${ist.getUTCFullYear()}-${pad(ist.getUTCMonth() + 1)}-${pad(ist.getUTCDate())}T${pad(ist.getUTCHours())}:${pad(ist.getUTCMinutes())}`;
+}
+
+/** Converts a `datetime-local` value (interpreted as IST wall-clock time) into a UTC ISO string. */
+function istLocalInputToIso(localValue: string): string {
+  if (!localValue) return "";
+  const [datePart, timePart] = localValue.split("T");
+  const [y, m, d] = datePart.split("-").map(Number);
+  const [hh, mm] = (timePart || "00:00").split(":").map(Number);
+  const utcMs = Date.UTC(y, m - 1, d, hh, mm) - IST_OFFSET_MS;
   return new Date(utcMs).toISOString();
 }
 

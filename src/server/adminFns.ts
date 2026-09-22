@@ -118,7 +118,9 @@ export interface PlatformSettings {
   leaderboardAdminEmail: string;
   campaignStartDate: string; // YYYY-MM-DD
   comingSoonEnabled: boolean;
+  comingSoonStartAt: string; // ISO UTC timestamp — site auto-locks once now >= this (blank = immediately, if enabled)
   comingSoonEndAt: string; // ISO UTC timestamp — site auto-unlocks once now >= this
+  comingSoonMessage: string; // shown as-is on the Coming Soon page; blank = default message
 }
 
 // Tracking IDs are interpolated directly into an inline <script> tag on every
@@ -140,7 +142,9 @@ const settingsSchema = z.object({
   leaderboardAdminEmail: z.string().default(""),
   campaignStartDate: z.string().default(""),
   comingSoonEnabled: z.boolean().default(false),
+  comingSoonStartAt: z.string().default(""),
   comingSoonEndAt: z.string().default(""),
+  comingSoonMessage: z.string().default(""),
 });
 
 /** Requires a valid admin session token — settings include the reCAPTCHA secret key. */
@@ -181,7 +185,9 @@ async function loadPlatformSettings(): Promise<PlatformSettings> {
       leaderboardAdminEmail: "",
       campaignStartDate: "",
       comingSoonEnabled: false,
+      comingSoonStartAt: "",
       comingSoonEndAt: "",
+      comingSoonMessage: "",
     } as PlatformSettings;
   const { _id: _a, _key: _b, updatedAt: _c, ...rest } = doc as Record<string, unknown>;
 
@@ -201,7 +207,9 @@ async function loadPlatformSettings(): Promise<PlatformSettings> {
       typeof rest.leaderboardAdminEmail === "string" ? rest.leaderboardAdminEmail : "",
     campaignStartDate: typeof rest.campaignStartDate === "string" ? rest.campaignStartDate : "",
     comingSoonEnabled: rest.comingSoonEnabled === true,
+    comingSoonStartAt: typeof rest.comingSoonStartAt === "string" ? rest.comingSoonStartAt : "",
     comingSoonEndAt: typeof rest.comingSoonEndAt === "string" ? rest.comingSoonEndAt : "",
+    comingSoonMessage: typeof rest.comingSoonMessage === "string" ? rest.comingSoonMessage : "",
   } as PlatformSettings;
 }
 
