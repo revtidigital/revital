@@ -44,12 +44,13 @@ export const Route = createRootRoute({
       const settings = await getPlatformSettingsFn();
       return {
         comingSoonEnabled: settings.comingSoonEnabled,
+        comingSoonStartAt: settings.comingSoonStartAt,
         comingSoonEndAt: settings.comingSoonEndAt,
         comingSoonMessage: settings.comingSoonMessage,
       };
     } catch {
       // Never let a settings-fetch failure take the whole site down.
-      return { comingSoonEnabled: false, comingSoonEndAt: "", comingSoonMessage: "" };
+      return { comingSoonEnabled: false, comingSoonStartAt: "", comingSoonEndAt: "", comingSoonMessage: "" };
     }
   },
   head: () => ({
@@ -117,12 +118,29 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdminRoute = pathname.toLowerCase().startsWith("/admin");
-  const { comingSoonEnabled, comingSoonEndAt, comingSoonMessage } = Route.useLoaderData();
+  const { comingSoonEnabled, comingSoonStartAt, comingSoonEndAt, comingSoonMessage } =
+    Route.useLoaderData();
   const comingSoonActive =
     !isAdminRoute &&
     comingSoonEnabled &&
     !!comingSoonEndAt &&
-    Date.now() < new Date(comingSoonEndAt).getTime();
+    Date.now() < new Date(comingSoonEndAt).getTime() &&
+    (!comingSoonStartAt || Date.now() >= new Date(comingSoonStartAt).getTime());
+
+  // If Coming Soon is enabled but scheduled to start later, poll and reload
+  // once the start time passes, so it flips on automatically with no manual
+  // toggle or page refresh needed (mirrors ComingSoonPage's own end-time poll).
+  useEffect(() => {
+    if (comingSoonActive || !comingSoonEnabled || !comingSoonStartAt) return;
+    const startTime = new Date(comingSoonStartAt).getTime();
+    if (Number.isNaN(startTime) || Date.now() >= startTime) return;
+    const interval = setInterval(() => {
+      if (Date.now() >= startTime) {
+        window.location.reload();
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [comingSoonActive, comingSoonEnabled, comingSoonStartAt]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

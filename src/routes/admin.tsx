@@ -479,6 +479,7 @@ function Admin() {
     leaderboardAdminEmail: "",
     campaignStartDate: "",
     comingSoonEnabled: false,
+    comingSoonStartAt: "",
     comingSoonEndAt: "",
     comingSoonMessage: "",
   });
@@ -2693,6 +2694,28 @@ function Admin() {
                         manually turn this off.
                       </p>
                       <label className="block max-w-xs">
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                          Start date & time (UAE time)
+                        </span>
+                        <input
+                          type="datetime-local"
+                          value={isoToUaeLocalInput(settings.comingSoonStartAt)}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              comingSoonStartAt: uaeLocalInputToIso(e.target.value),
+                            }))
+                          }
+                          className="mt-1 w-full bg-background/60 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Enter this in UAE (GST, UTC+4) time. Leave blank to show Coming Soon
+                          immediately once the checkbox above is checked. If set, the site stays
+                          normal until this exact time, then switches to Coming Soon automatically
+                          — no manual toggle needed.
+                        </p>
+                      </label>
+                      <label className="block max-w-xs mt-4">
                         <span className="text-xs uppercase tracking-wider text-muted-foreground">
                           Reveal date & time (UAE time)
                         </span>
