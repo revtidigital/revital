@@ -45,10 +45,11 @@ export const Route = createRootRoute({
       return {
         comingSoonEnabled: settings.comingSoonEnabled,
         comingSoonEndAt: settings.comingSoonEndAt,
+        comingSoonMessage: settings.comingSoonMessage,
       };
     } catch {
       // Never let a settings-fetch failure take the whole site down.
-      return { comingSoonEnabled: false, comingSoonEndAt: "" };
+      return { comingSoonEnabled: false, comingSoonEndAt: "", comingSoonMessage: "" };
     }
   },
   head: () => ({
@@ -116,7 +117,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdminRoute = pathname.toLowerCase().startsWith("/admin");
-  const { comingSoonEnabled, comingSoonEndAt } = Route.useLoaderData();
+  const { comingSoonEnabled, comingSoonEndAt, comingSoonMessage } = Route.useLoaderData();
   const comingSoonActive =
     !isAdminRoute &&
     comingSoonEnabled &&
@@ -234,7 +235,7 @@ function RootComponent() {
   if (comingSoonActive) {
     return (
       <>
-        <ComingSoonPage endAt={comingSoonEndAt} />
+        <ComingSoonPage endAt={comingSoonEndAt} message={comingSoonMessage} />
         <CookieConsent />
       </>
     );

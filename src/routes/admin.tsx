@@ -480,6 +480,7 @@ function Admin() {
     campaignStartDate: "",
     comingSoonEnabled: false,
     comingSoonEndAt: "",
+    comingSoonMessage: "",
   });
   const [savedFlash, setSavedFlash] = useState(false);
   const [sendingLastWinnerEmail, setSendingLastWinnerEmail] = useState(false);
@@ -2708,6 +2709,26 @@ function Admin() {
                         />
                         <p className="text-[11px] text-muted-foreground mt-1">
                           Enter this in UAE (GST, UTC+4) time — e.g. 9:30 AM UAE = 11:00 AM IST.
+                        </p>
+                      </label>
+                      <label className="block mt-4">
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                          Message
+                        </span>
+                        <textarea
+                          value={settings.comingSoonMessage}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              comingSoonMessage: e.target.value,
+                            }))
+                          }
+                          rows={3}
+                          placeholder="The Revital Energy Challenge is almost here. Get ready to play, score, and climb the leaderboard."
+                          className="mt-1 w-full bg-background/60 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-y"
+                        />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Shown on the Coming Soon page. Leave blank to use the default message.
                         </p>
                       </label>
                     </SettingsSection>
