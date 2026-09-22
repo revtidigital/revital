@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import heroWordmarkUrl from "@/assets/revital-hero-wordmark.webp?url";
 import { Footer } from "@/components/Footer";
+import { saveComingSoonEmailFn } from "@/server/adminFns";
 
 function getRemaining(endAt: string) {
   const diff = new Date(endAt).getTime() - Date.now();
@@ -22,6 +23,20 @@ const DEFAULT_MESSAGE =
 
 export function ComingSoonPage({ endAt, message }: { endAt: string; message?: string }) {
   const [remaining, setRemaining] = useState(() => getRemaining(endAt));
+  const [email, setEmail] = useState("");
+  const [notifyStatus, setNotifyStatus] = useState<"idle" | "submitting" | "done" | "error">("idle");
+
+  const handleNotify = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || notifyStatus === "submitting") return;
+    setNotifyStatus("submitting");
+    try {
+      await saveComingSoonEmailFn({ data: { email: email.trim() } });
+      setNotifyStatus("done");
+    } catch {
+      setNotifyStatus("error");
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -89,6 +104,35 @@ export function ComingSoonPage({ endAt, message }: { endAt: string; message?: st
             </div>
           ))}
         </div>
+        {notifyStatus === "done" ? (
+          <p className="mt-4 text-xs md:text-sm text-muted-foreground">
+            Thanks! We'll notify you when we're live.
+          </p>
+        ) : (
+          <form
+            onSubmit={handleNotify}
+            className="mt-4 flex flex-col sm:flex-row items-center gap-2 w-full max-w-xs sm:max-w-sm"
+          >
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              className="w-full sm:flex-1 bg-background/60 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <button
+              type="submit"
+              disabled={notifyStatus === "submitting"}
+              className="w-full sm:w-auto shrink-0 rounded-xl bg-gradient-energy px-4 py-2 text-sm font-semibold text-energy-foreground shadow-button hover:scale-105 transition-transform disabled:opacity-60 disabled:hover:scale-100"
+            >
+              {notifyStatus === "submitting" ? "Sending..." : "Get Notified"}
+            </button>
+          </form>
+        )}
+        {notifyStatus === "error" && (
+          <p className="mt-1 text-[11px] text-destructive">Something went wrong. Please try again.</p>
+        )}
       </div>
       <Footer hideLegalLinks />
     </div>

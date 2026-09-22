@@ -509,6 +509,26 @@ export const sendLastLockedWinnerEmailFn = createServerFn({ method: "POST" })
     return { ok: true as const, lockDate, mailed: true, adminEmails };
   });
 
+/**
+ * Coming Soon page "Get Notified" email capture — public, no admin token.
+ * Just stores the email + timestamp; rate-limited per IP to prevent spam.
+ */
+export const saveComingSoonEmailFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z.object({ email: z.string().trim().email() }).parse(data),
+  )
+  .handler(async ({ data }) => {
+    await checkRateLimit(`coming-soon-notify:${getClientIp()}`, 5, 600);
+    const db = await getDb();
+    const email = data.email.toLowerCase();
+    await db.collection("coming_soon_emails").updateOne(
+      { email },
+      { $setOnInsert: { email, createdAt: new Date().toISOString() } },
+      { upsert: true },
+    );
+    return { ok: true };
+  });
+
 export const getDailyLeaderboardFn = createServerFn({ method: "GET" }).handler(async () => {
   const db = await getDb();
   const today = formatUaeDate(new Date());
