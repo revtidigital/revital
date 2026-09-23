@@ -1023,6 +1023,15 @@ function Admin() {
     [dateWise, uaeToday],
   );
 
+  const handleExportComingSoonEmails = () => {
+    const rows: (string | number)[][] = [
+      ["Email", "Submitted At"],
+      ...comingSoonEmails.map((e) => [e.email, new Date(e.createdAt).toLocaleString()]),
+    ];
+    exportCsv(rows, `revital-get-notified-emails-${Date.now()}.csv`);
+    addLog("EXPORT_CSV", `Exported ${comingSoonEmails.length} Get Notified emails as CSV`);
+  };
+
   const handleExportCsv = () => {
     const rows: (string | number)[][] = [
       [
@@ -2459,12 +2468,24 @@ function Admin() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  <SectionTitle>Get Notified</SectionTitle>
-                  <p className="text-xs text-muted-foreground mt-1 mb-4">
-                    Emails submitted via the Coming Soon page's "Get Notified" form.
-                  </p>
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div>
+                      <SectionTitle>Get Notified</SectionTitle>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Emails submitted via the Coming Soon page's "Get Notified" form.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleExportComingSoonEmails}
+                      disabled={comingSoonEmails.length === 0}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border hover:bg-muted/30 font-bold transition-colors text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <Download className="w-3.5 h-3.5" /> Download CSV
+                    </button>
+                  </div>
 
-                  <div className="bg-gradient-card border border-border rounded-2xl overflow-x-auto shadow-card">
+                  <div className="bg-gradient-card border border-border rounded-2xl overflow-x-auto shadow-card mt-4">
                     <table className="w-full text-sm min-w-[420px]">
                       <thead>
                         <tr className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/10 text-left">
