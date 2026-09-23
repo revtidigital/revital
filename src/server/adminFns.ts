@@ -529,6 +529,22 @@ export const saveComingSoonEmailFn = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Coming Soon "Get Notified" email list — admin-only, for the admin dashboard tab.
+ */
+export const getComingSoonEmailsFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ token: z.string() }).parse(data))
+  .handler(async ({ data }) => {
+    requireAdminToken(data.token);
+    const db = await getDb();
+    const docs = await db
+      .collection<{ email: string; createdAt: string }>("coming_soon_emails")
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+    return docs.map((d) => ({ email: d.email, createdAt: d.createdAt }));
+  });
+
 export const getDailyLeaderboardFn = createServerFn({ method: "GET" }).handler(async () => {
   const db = await getDb();
   const today = formatUaeDate(new Date());

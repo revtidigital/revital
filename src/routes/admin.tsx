@@ -32,6 +32,7 @@ import {
   ArrowUp,
   ArrowDown,
   CircleHelp,
+  Mail,
 } from "lucide-react";
 import { Leaderboard } from "@/components/Leaderboard";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
@@ -44,7 +45,15 @@ export const Route = createFileRoute("/admin")({
 });
 
 // ── Types ──────────────────────────────────────────────────────────────────────
-type Tab = "overview" | "users" | "datewise" | "winners" | "streaks" | "logs" | "settings";
+type Tab =
+  | "overview"
+  | "users"
+  | "datewise"
+  | "winners"
+  | "streaks"
+  | "notify"
+  | "logs"
+  | "settings";
 type UserSortKey =
   | "userId"
   | "contact"
@@ -460,6 +469,9 @@ function Admin() {
   const [tab, setTab] = useState<Tab>("overview");
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [logs, setLogs] = useState<AdminLog[]>([]);
+  const [comingSoonEmails, setComingSoonEmails] = useState<
+    { email: string; createdAt: string }[]
+  >([]);
   const [dailyLeaders, setDailyLeaders] = useState<LeaderEntry[]>([]);
   const [globalLeaders, setGlobalLeaders] = useState<LeaderEntry[]>([]);
   const [settings, setSettings] = useState<PlatformSettings>({
@@ -553,12 +565,14 @@ function Admin() {
       setUsers(u);
       setDailyLeaders(daily);
       setGlobalLeaders(global);
-      const [l, s] = await Promise.all([
+      const [l, s, ce] = await Promise.all([
         adminMod.getAdminLogsFn({ data: { token } }),
         adminMod.getPlatformSettingsAdminFn({ data: { token } }),
+        adminMod.getComingSoonEmailsFn({ data: { token } }),
       ]);
       setLogs(l);
       setSettings(s);
+      setComingSoonEmails(ce);
     } catch (e) {
       console.error("Admin load error", e);
     } finally {
@@ -1291,6 +1305,7 @@ function Admin() {
     { id: "datewise", label: "Date-wise", icon: <CalendarDays className="w-4 h-4" /> },
     { id: "winners", label: "Daily Winners", icon: <Trophy className="w-4 h-4" /> },
     { id: "streaks", label: "Consistent Players", icon: <Flame className="w-4 h-4" /> },
+    { id: "notify", label: "Get Notified", icon: <Mail className="w-4 h-4" /> },
     { id: "logs", label: "Admin Logs", icon: <ScrollText className="w-4 h-4" /> },
     { id: "settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
   ];
@@ -2430,6 +2445,55 @@ function Admin() {
                             <Td>{u.name || "—"}</Td>
                             <Td className="text-muted-foreground">{(u.playDates ?? []).length}</Td>
                             <Td className="font-bold text-gradient-energy">{u.globalScore}</Td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </motion.div>
+              )}
+
+              {tab === "notify" && (
+                <motion.div
+                  key="notify"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <SectionTitle>Get Notified</SectionTitle>
+                  <p className="text-xs text-muted-foreground mt-1 mb-4">
+                    Emails submitted via the Coming Soon page's "Get Notified" form.
+                  </p>
+
+                  <div className="bg-gradient-card border border-border rounded-2xl overflow-x-auto shadow-card">
+                    <table className="w-full text-sm min-w-[420px]">
+                      <thead>
+                        <tr className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/10 text-left">
+                          <Th>#</Th>
+                          <Th>Email</Th>
+                          <Th>Submitted At</Th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {comingSoonEmails.length === 0 && (
+                          <tr>
+                            <td
+                              colSpan={3}
+                              className="py-10 text-center text-muted-foreground text-sm"
+                            >
+                              No emails yet.
+                            </td>
+                          </tr>
+                        )}
+                        {comingSoonEmails.map((e, i) => (
+                          <tr
+                            key={e.email}
+                            className="border-b border-border/40 hover:bg-muted/10 transition-colors"
+                          >
+                            <Td className="text-muted-foreground">{i + 1}</Td>
+                            <Td className="font-mono text-[11px]">{e.email}</Td>
+                            <Td className="text-muted-foreground">
+                              {new Date(e.createdAt).toLocaleString()}
+                            </Td>
                           </tr>
                         ))}
                       </tbody>
