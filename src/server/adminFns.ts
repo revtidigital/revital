@@ -110,6 +110,7 @@ export const getAdminLogsFn = createServerFn({ method: "POST" })
 export interface PlatformSettings {
   ga4: string;
   metaPixel: string;
+  tiktokPixel: string;
   clarity: string;
   recaptchaSite: string;
   recaptchaSecret: string;
@@ -134,6 +135,7 @@ const settingsSchema = z.object({
   token: z.string(),
   ga4: trackingIdSchema,
   metaPixel: trackingIdSchema,
+  tiktokPixel: trackingIdSchema,
   clarity: trackingIdSchema,
   recaptchaSite: z.string(),
   recaptchaSecret: z.string(),
@@ -171,6 +173,7 @@ async function loadPlatformSettings(): Promise<PlatformSettings> {
     return {
       ga4: "",
       metaPixel: "",
+      tiktokPixel: "",
       clarity: "",
       recaptchaSite: "",
       recaptchaSecret: "",

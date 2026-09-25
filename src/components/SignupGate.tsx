@@ -13,7 +13,7 @@ import {
   saveUserRemote,
   type ParticipantType,
 } from "@/lib/storage";
-import { trackEvent, setMetaAdvancedMatching } from "@/lib/analytics";
+import { trackEvent, setMetaAdvancedMatching, setTiktokAdvancedMatching } from "@/lib/analytics";
 import { executeRecaptcha } from "@/lib/recaptcha";
 import { containsProfanity } from "@/lib/profanity";
 
@@ -208,6 +208,7 @@ export function SignupGate({ onSuccess, mode = "signup", onModeChange }: SignupG
       saveUser(payload);
       await saveUserRemote(payload);
       void setMetaAdvancedMatching(payload.contact, existing?.email);
+      void setTiktokAdvancedMatching(payload.contact, existing?.email);
       trackEvent("signup_complete", {
         is_new_user: !existing,
         total: payload.total,

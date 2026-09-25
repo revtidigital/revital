@@ -477,6 +477,7 @@ function Admin() {
   const [settings, setSettings] = useState<PlatformSettings>({
     ga4: "",
     metaPixel: "",
+    tiktokPixel: "",
     clarity: "",
     recaptchaSite: "",
     recaptchaSecret: "",
@@ -2628,6 +2629,16 @@ function Admin() {
                         onChange={(v) => setSettings((s) => ({ ...s, metaPixel: v }))}
                         placeholder="123456789012345"
                         hint="Found in Facebook Events Manager → Pixels → Your Pixel → Setup."
+                      />
+                    </SettingsSection>
+
+                    <SettingsSection title="TikTok Pixel">
+                      <SettingsField
+                        label="Pixel ID"
+                        value={settings.tiktokPixel}
+                        onChange={(v) => setSettings((s) => ({ ...s, tiktokPixel: v }))}
+                        placeholder="DAR28KBC77UFPT8057J0"
+                        hint="Found in TikTok Ads Manager → Assets → Events → Web Events → Your Pixel."
                       />
                     </SettingsSection>
 

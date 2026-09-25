@@ -1,6 +1,10 @@
 type GtagFn = (...args: unknown[]) => void;
 type FbqFn = (method: string, event: string, params?: object) => void;
 type ClarityFn = (method: string, key: string, value?: string) => void;
+interface TtqObject {
+  track: (event: string, params?: object) => void;
+  identify: (userData: object) => void;
+}
 
 declare global {
   interface Window {
@@ -8,7 +12,9 @@ declare global {
     dataLayer?: unknown[];
     fbq?: FbqFn;
     clarity?: ClarityFn;
+    ttq?: TtqObject;
     __metaPixelId?: string;
+    __tiktokPixelId?: string;
   }
 }
 
@@ -41,11 +47,44 @@ export async function setMetaAdvancedMatching(phone?: string, email?: string): P
   }
 }
 
+// Sends hashed phone/email to TikTok Pixel via ttq.identify so events can be
+// matched to a real person for postback, mirroring Meta's Advanced Matching.
+// Must only ever send SHA-256 hashes to ttq, never raw PII.
+export async function setTiktokAdvancedMatching(phone?: string, email?: string): Promise<void> {
+  if (
+    typeof window === "undefined" ||
+    typeof window.ttq?.identify !== "function" ||
+    !window.__tiktokPixelId
+  ) {
+    return;
+  }
+  try {
+    const userData: Record<string, string> = {};
+    const digits = phone?.replace(/\D/g, "");
+    if (digits) userData.phone_number = await sha256Hex(digits);
+    const normalizedEmail = email?.trim().toLowerCase();
+    if (normalizedEmail) userData.email = await sha256Hex(normalizedEmail);
+    if (Object.keys(userData).length > 0) {
+      window.ttq.identify(userData);
+    }
+  } catch {
+    // Advanced Matching is best-effort — never block the calling flow.
+  }
+}
+
 // Maps our internal event names to Meta Pixel standard events for better
 // conversion optimisation in Meta Ads Manager.
 const META_STANDARD: Record<string, string> = {
   signup_complete: "Lead",
   score_saved: "Lead",
+  score_revealed: "ViewContent",
+};
+
+// Maps our internal event names to TikTok Pixel standard events for better
+// conversion optimisation in TikTok Ads Manager.
+const TIKTOK_STANDARD: Record<string, string> = {
+  signup_complete: "CompleteRegistration",
+  score_saved: "SubmitForm",
   score_revealed: "ViewContent",
 };
 
@@ -66,6 +105,16 @@ export function trackEvent(name: string, params?: Record<string, unknown>): void
       window.fbq("track", standard, params ?? {});
     } else {
       window.fbq("trackCustom", name, params ?? {});
+    }
+  }
+
+  // ── TikTok Pixel ──────────────────────────────────────────────────────────
+  if (typeof window.ttq?.track === "function") {
+    const standard = TIKTOK_STANDARD[name];
+    if (standard) {
+      window.ttq.track(standard, params ?? {});
+    } else {
+      window.ttq.track(name, params ?? {});
     }
   }
 

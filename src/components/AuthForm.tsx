@@ -15,7 +15,7 @@ import {
   saveUserRemote,
   type ParticipantType,
 } from "@/lib/storage";
-import { trackEvent, setMetaAdvancedMatching } from "@/lib/analytics";
+import { trackEvent, setMetaAdvancedMatching, setTiktokAdvancedMatching } from "@/lib/analytics";
 import { executeRecaptcha, loadRecaptcha } from "@/lib/recaptcha";
 import { containsProfanity } from "@/lib/profanity";
 
@@ -296,6 +296,7 @@ export function AuthForm({
     try {
       await saveUserRemote(payload);
       void setMetaAdvancedMatching(payload.contact, payload.email);
+      void setTiktokAdvancedMatching(payload.contact, payload.email);
       trackEvent("score_saved", { source: "auth_page", is_new_user: true });
       await goToProfile();
     } catch (e) {
