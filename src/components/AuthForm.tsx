@@ -15,7 +15,12 @@ import {
   saveUserRemote,
   type ParticipantType,
 } from "@/lib/storage";
-import { trackEvent, setMetaAdvancedMatching, setTiktokAdvancedMatching } from "@/lib/analytics";
+import {
+  trackEvent,
+  trackConversion,
+  setMetaAdvancedMatching,
+  setTiktokAdvancedMatching,
+} from "@/lib/analytics";
 import { executeRecaptcha, loadRecaptcha } from "@/lib/recaptcha";
 import { containsProfanity } from "@/lib/profanity";
 
@@ -297,7 +302,11 @@ export function AuthForm({
       await saveUserRemote(payload);
       void setMetaAdvancedMatching(payload.contact, payload.email);
       void setTiktokAdvancedMatching(payload.contact, payload.email);
-      trackEvent("score_saved", { source: "auth_page", is_new_user: true });
+      void trackConversion(
+        "score_saved",
+        { source: "auth_page", is_new_user: true },
+        { phone: payload.contact, email: payload.email },
+      );
       await goToProfile();
     } catch (e) {
       console.warn("Save encountered an issue", e);

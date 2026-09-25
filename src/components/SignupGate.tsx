@@ -13,7 +13,12 @@ import {
   saveUserRemote,
   type ParticipantType,
 } from "@/lib/storage";
-import { trackEvent, setMetaAdvancedMatching, setTiktokAdvancedMatching } from "@/lib/analytics";
+import {
+  trackEvent,
+  trackConversion,
+  setMetaAdvancedMatching,
+  setTiktokAdvancedMatching,
+} from "@/lib/analytics";
 import { executeRecaptcha } from "@/lib/recaptcha";
 import { containsProfanity } from "@/lib/profanity";
 
@@ -209,11 +214,11 @@ export function SignupGate({ onSuccess, mode = "signup", onModeChange }: SignupG
       await saveUserRemote(payload);
       void setMetaAdvancedMatching(payload.contact, existing?.email);
       void setTiktokAdvancedMatching(payload.contact, existing?.email);
-      trackEvent("signup_complete", {
-        is_new_user: !existing,
-        total: payload.total,
-        category: payload.category,
-      });
+      void trackConversion(
+        "signup_complete",
+        { is_new_user: !existing, total: payload.total, category: payload.category },
+        { phone: payload.contact, email: existing?.email },
+      );
       onSuccess();
     } catch {
       setErr("Failed to save your score. Please try again.");

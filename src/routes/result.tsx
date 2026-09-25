@@ -14,7 +14,7 @@ import {
   type GameScores,
 } from "@/lib/storage";
 import { buildShareCard, buildShareCardFromTemplate } from "@/lib/shareCard";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, trackConversion } from "@/lib/analytics";
 
 export const Route = createFileRoute("/result")({
   component: Result,
@@ -48,11 +48,12 @@ function Result() {
   useEffect(() => {
     if (!unlocked) return;
     const total = computeTotal(scores);
-    trackEvent("score_revealed", {
-      total,
-      category: categorize(total).label,
-      percentage: totalToPercentage(total),
-    });
+    const user = getUser();
+    void trackConversion(
+      "score_revealed",
+      { total, category: categorize(total).label, percentage: totalToPercentage(total) },
+      { phone: user?.contact, email: user?.email },
+    );
     let cur = 0;
     setAnimatedTotal(0);
     setAnimatedPct(0);

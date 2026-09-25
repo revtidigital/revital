@@ -2,7 +2,7 @@ type GtagFn = (...args: unknown[]) => void;
 type FbqFn = (method: string, event: string, params?: object) => void;
 type ClarityFn = (method: string, key: string, value?: string) => void;
 interface TtqObject {
-  track: (event: string, params?: object) => void;
+  track: (event: string, params?: object, options?: { event_id?: string }) => void;
   identify: (userData: object) => void;
 }
 
@@ -90,7 +90,11 @@ const TIKTOK_STANDARD: Record<string, string> = {
   coming_soon_notify: "SubmitForm",
 };
 
-export function trackEvent(name: string, params?: Record<string, unknown>): void {
+export function trackEvent(
+  name: string,
+  params?: Record<string, unknown>,
+  tiktokEventId?: string,
+): void {
   if (typeof window === "undefined") return;
 
   // ── GA4 ───────────────────────────────────────────────────────────────────
@@ -112,12 +116,9 @@ export function trackEvent(name: string, params?: Record<string, unknown>): void
 
   // ── TikTok Pixel ──────────────────────────────────────────────────────────
   if (typeof window.ttq?.track === "function") {
-    const standard = TIKTOK_STANDARD[name];
-    if (standard) {
-      window.ttq.track(standard, params ?? {});
-    } else {
-      window.ttq.track(name, params ?? {});
-    }
+    const standard = TIKTOK_STANDARD[name] ?? name;
+    const options = tiktokEventId ? { event_id: tiktokEventId } : undefined;
+    window.ttq.track(standard, params ?? {}, options);
   }
 
   // ── Microsoft Clarity ─────────────────────────────────────────────────────
@@ -131,5 +132,37 @@ export function trackEvent(name: string, params?: Record<string, unknown>): void
         }
       }
     }
+  }
+}
+
+/**
+ * Fires a conversion event through both the browser Pixel SDK and TikTok's
+ * server-side Events API (same event_id on both so TikTok dedupes them). The
+ * Events API call still lands even if the visitor has an ad blocker or the
+ * pixel script fails to load — the browser pixel remains the primary path.
+ */
+export async function trackConversion(
+  name: string,
+  params: Record<string, unknown> | undefined,
+  identity?: { email?: string; phone?: string },
+): Promise<void> {
+  const eventId = `${name}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  trackEvent(name, params, eventId);
+
+  if (typeof window === "undefined" || !window.__tiktokPixelId) return;
+  try {
+    const { sendTiktokEventFn } = await import("@/server/tiktokEvents");
+    void sendTiktokEventFn({
+      data: {
+        pixelId: window.__tiktokPixelId,
+        event: TIKTOK_STANDARD[name] ?? name,
+        eventId,
+        pageUrl: window.location.href,
+        email: identity?.email,
+        phone: identity?.phone,
+      },
+    });
+  } catch {
+    // Events API is best-effort — never block the calling flow.
   }
 }
