@@ -47,45 +47,14 @@ export const Route = createRootRoute({
         comingSoonStartAt: settings.comingSoonStartAt,
         comingSoonEndAt: settings.comingSoonEndAt,
         comingSoonMessage: settings.comingSoonMessage,
-        ga4: settings.ga4,
-        metaPixel: settings.metaPixel,
-        tiktokPixel: settings.tiktokPixel,
-        clarity: settings.clarity,
       };
     } catch {
       // Never let a settings-fetch failure take the whole site down.
-      return {
-        comingSoonEnabled: false,
-        comingSoonStartAt: "",
-        comingSoonEndAt: "",
-        comingSoonMessage: "",
-        ga4: "",
-        metaPixel: "",
-        tiktokPixel: "",
-        clarity: "",
-      };
+      return { comingSoonEnabled: false, comingSoonStartAt: "", comingSoonEndAt: "", comingSoonMessage: "" };
     }
   },
-  head: ({ loaderData, match }) => {
-    const isAdminRoute = match.pathname.toLowerCase().startsWith("/admin");
-    const scripts: Array<{ id: string; children?: string; src?: string; async?: boolean }> = [];
-    if (!isAdminRoute && loaderData) {
-      const { tiktokPixel } = loaderData;
-      // Only TikTok is rendered server-side here — TikTok's own pixel-verification
-      // tool reads raw HTML (no JS execution) and reported "no pixel" when this was
-      // client-injected. GA4/Meta/Clarity don't have that constraint, so they stay on
-      // the lazy client-side path below to avoid opening extra third-party connections
-      // during the critical initial render (SSR'ing all four visibly slowed page load).
-      if (tiktokPixel) {
-        scripts.push({
-          id: "_ttpixel",
-          children: `window.__tiktokPixelId=${JSON.stringify(tiktokPixel)};!function (w, d, t) {\n  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script");n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};\n  ttq.load('${tiktokPixel}');\n  ttq.page();\n}(window, document, 'ttq');`,
-        });
-      }
-    }
-    return {
-      scripts,
-      meta: [
+  head: () => ({
+    meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#F37421" },
@@ -126,8 +95,7 @@ export const Route = createRootRoute({
         href: "https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800;900&family=Pacifico&display=swap",
       },
     ],
-    };
-  },
+  }),
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -224,9 +192,8 @@ function RootComponent() {
       }
     }
 
-    // TikTok Pixel is rendered server-side (see route head()) for its pixel-verification
-    // tool. GA4/Meta/Clarity are injected lazily here instead, after initial paint, so they
-    // don't add extra third-party connections to the critical render path.
+    // Inject tracking scripts from platform settings stored in the database.
+    // We do this lazily so it never blocks the initial paint.
     const inject = async () => {
       try {
         const { getPlatformSettingsFn } = await import("@/server/adminFns");
@@ -254,6 +221,15 @@ function RootComponent() {
           fbInline.id = "_fbpixel";
           fbInline.textContent = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${s.metaPixel}');fbq('track','PageView');`;
           document.head.appendChild(fbInline);
+        }
+
+        // TikTok Pixel
+        if (s.tiktokPixel && !document.getElementById("_ttpixel")) {
+          (window as typeof window & { __tiktokPixelId?: string }).__tiktokPixelId = s.tiktokPixel;
+          const ttScript = document.createElement("script");
+          ttScript.id = "_ttpixel";
+          ttScript.textContent = `!function (w, d, t) {\n  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script");n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};\n  ttq.load('${s.tiktokPixel}');\n  ttq.page();\n}(window, document, 'ttq');`;
+          document.head.appendChild(ttScript);
         }
 
         // Microsoft Clarity
