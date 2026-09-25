@@ -78,6 +78,7 @@ const META_STANDARD: Record<string, string> = {
   signup_complete: "Lead",
   score_saved: "Lead",
   score_revealed: "ViewContent",
+  coming_soon_notify: "Lead",
 };
 
 // Maps our internal event names to TikTok Pixel standard events for better
@@ -86,6 +87,7 @@ const TIKTOK_STANDARD: Record<string, string> = {
   signup_complete: "CompleteRegistration",
   score_saved: "SubmitForm",
   score_revealed: "ViewContent",
+  coming_soon_notify: "SubmitForm",
 };
 
 export function trackEvent(name: string, params?: Record<string, unknown>): void {

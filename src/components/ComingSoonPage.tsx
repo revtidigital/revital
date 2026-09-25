@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import heroWordmarkUrl from "@/assets/revital-hero-wordmark.webp?url";
 import { Footer } from "@/components/Footer";
 import { saveComingSoonEmailFn } from "@/server/adminFns";
+import { trackEvent, setMetaAdvancedMatching, setTiktokAdvancedMatching } from "@/lib/analytics";
 
 function getRemaining(endAt: string) {
   const diff = new Date(endAt).getTime() - Date.now();
@@ -33,6 +34,9 @@ export function ComingSoonPage({ endAt, message }: { endAt: string; message?: st
     try {
       await saveComingSoonEmailFn({ data: { email: email.trim() } });
       setNotifyStatus("done");
+      void setMetaAdvancedMatching(undefined, email.trim());
+      void setTiktokAdvancedMatching(undefined, email.trim());
+      trackEvent("coming_soon_notify", { source: "coming_soon_page" });
     } catch {
       setNotifyStatus("error");
     }
