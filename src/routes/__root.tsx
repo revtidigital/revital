@@ -70,30 +70,16 @@ export const Route = createRootRoute({
     const isAdminRoute = match.pathname.toLowerCase().startsWith("/admin");
     const scripts: Array<{ id: string; children?: string; src?: string; async?: boolean }> = [];
     if (!isAdminRoute && loaderData) {
-      const { ga4, metaPixel, tiktokPixel, clarity } = loaderData;
-      if (ga4) {
-        scripts.push({ id: "_ga4", src: `https://www.googletagmanager.com/gtag/js?id=${ga4}`, async: true });
-        scripts.push({
-          id: "_ga4_inline",
-          children: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${ga4}');`,
-        });
-      }
-      if (metaPixel) {
-        scripts.push({
-          id: "_fbpixel",
-          children: `window.__metaPixelId=${JSON.stringify(metaPixel)};!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${metaPixel}');fbq('track','PageView');`,
-        });
-      }
+      const { tiktokPixel } = loaderData;
+      // Only TikTok is rendered server-side here — TikTok's own pixel-verification
+      // tool reads raw HTML (no JS execution) and reported "no pixel" when this was
+      // client-injected. GA4/Meta/Clarity don't have that constraint, so they stay on
+      // the lazy client-side path below to avoid opening extra third-party connections
+      // during the critical initial render (SSR'ing all four visibly slowed page load).
       if (tiktokPixel) {
         scripts.push({
           id: "_ttpixel",
           children: `window.__tiktokPixelId=${JSON.stringify(tiktokPixel)};!function (w, d, t) {\n  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script");n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};\n  ttq.load('${tiktokPixel}');\n  ttq.page();\n}(window, document, 'ttq');`,
-        });
-      }
-      if (clarity) {
-        scripts.push({
-          id: "_clarity",
-          children: `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)})(window,document,"clarity","script","${clarity}");`,
         });
       }
     }
@@ -238,25 +224,64 @@ function RootComponent() {
       }
     }
 
-    // Tracking scripts (GA4/Meta/TikTok/Clarity) are now rendered server-side via the
-    // route's head() scripts, so any HTML-only crawler (pixel verification tools, view-source)
-    // sees them immediately instead of waiting on a client fetch. As a resiliency fallback,
-    // load GA4 from the build-time env var if the DB-configured one wasn't rendered (e.g. the
-    // settings fetch failed during SSR).
-    if (!isAdminRoute) {
-      const ga4FromEnv = (import.meta.env.VITE_GA4_ID as string | undefined)?.trim() || "";
-      if (ga4FromEnv && !document.getElementById("_ga4")) {
-        const gScript = document.createElement("script");
-        gScript.id = "_ga4";
-        gScript.async = true;
-        gScript.src = `https://www.googletagmanager.com/gtag/js?id=${ga4FromEnv}`;
-        document.head.appendChild(gScript);
-        const gInline = document.createElement("script");
-        gInline.id = "_ga4_inline";
-        gInline.textContent = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${ga4FromEnv}');`;
-        document.head.appendChild(gInline);
+    // TikTok Pixel is rendered server-side (see route head()) for its pixel-verification
+    // tool. GA4/Meta/Clarity are injected lazily here instead, after initial paint, so they
+    // don't add extra third-party connections to the critical render path.
+    const inject = async () => {
+      try {
+        const { getPlatformSettingsFn } = await import("@/server/adminFns");
+        const s = await getPlatformSettingsFn();
+        const ga4FromEnv = (import.meta.env.VITE_GA4_ID as string | undefined)?.trim() || "";
+        const ga4Id = (s.ga4 || ga4FromEnv).trim();
+
+        // Google Analytics (GA4)
+        if (ga4Id && !document.getElementById("_ga4")) {
+          const gScript = document.createElement("script");
+          gScript.id = "_ga4";
+          gScript.async = true;
+          gScript.src = `https://www.googletagmanager.com/gtag/js?id=${ga4Id}`;
+          document.head.appendChild(gScript);
+          const gInline = document.createElement("script");
+          gInline.id = "_ga4_inline";
+          gInline.textContent = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${ga4Id}');`;
+          document.head.appendChild(gInline);
+        }
+
+        // Meta Pixel
+        if (s.metaPixel && !document.getElementById("_fbpixel")) {
+          (window as typeof window & { __metaPixelId?: string }).__metaPixelId = s.metaPixel;
+          const fbInline = document.createElement("script");
+          fbInline.id = "_fbpixel";
+          fbInline.textContent = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${s.metaPixel}');fbq('track','PageView');`;
+          document.head.appendChild(fbInline);
+        }
+
+        // Microsoft Clarity
+        if (s.clarity && !document.getElementById("_clarity")) {
+          const clScript = document.createElement("script");
+          clScript.id = "_clarity";
+          clScript.textContent = `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)})(window,document,"clarity","script","${s.clarity}");`;
+          document.head.appendChild(clScript);
+        }
+      } catch (e) {
+        // Tracking injection is best-effort — never throw to the user.
+        // If settings API fails, still try GA4 from env for resiliency.
+        const ga4FromEnv = (import.meta.env.VITE_GA4_ID as string | undefined)?.trim() || "";
+        if (ga4FromEnv && !document.getElementById("_ga4")) {
+          const gScript = document.createElement("script");
+          gScript.id = "_ga4";
+          gScript.async = true;
+          gScript.src = `https://www.googletagmanager.com/gtag/js?id=${ga4FromEnv}`;
+          document.head.appendChild(gScript);
+          const gInline = document.createElement("script");
+          gInline.id = "_ga4_inline";
+          gInline.textContent = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${ga4FromEnv}');`;
+          document.head.appendChild(gInline);
+        }
+        if (import.meta.env.DEV) console.warn("Tracking injection failed:", e);
       }
-    }
+    };
+    if (!isAdminRoute) inject();
   }, [isAdminRoute]);
 
   if (comingSoonActive) {
