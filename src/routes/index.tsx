@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { getUser } from "@/lib/storage";
 import { Leaderboard } from "@/components/Leaderboard";
 import { InstagramFeed } from "@/components/InstagramFeed";
+import { PlayerAvatarsCarousel } from "@/components/PlayerAvatarsCarousel";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
 import heroWordmark from "@/assets/revital-hero-wordmark.webp";
 import readyDesktop from "@/assets/ready-desktop-new.webp";
@@ -382,6 +383,8 @@ function Landing() {
               I'm Ready — Let's Go! →
             </Link>
           </motion.div>
+
+          <PlayerAvatarsCarousel />
 
           <motion.div
             initial={{ opacity: 0, y: 10 }}
