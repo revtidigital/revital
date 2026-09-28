@@ -233,14 +233,15 @@ export const saveAvatarFn = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// ── recent players' avatars (public, name + avatar only — used by homepage carousel) ──
+// ── recent players (public, name only — used by homepage carousel; always shows
+// a generic placeholder avatar, never the user's uploaded photo) ──
 export const getRecentPlayerAvatarsFn = createServerFn({ method: "GET" }).handler(async () => {
   const db = await getDb();
   const docs = await db
     .collection<UserRecord & { _id: unknown }>("users")
     .find(
       { total: { $gt: 0 } },
-      { projection: { userId: 1, name: 1, avatarUrl: 1, total: 1, playDates: 1, winnerLockDates: 1 } },
+      { projection: { userId: 1, name: 1, total: 1, playDates: 1, winnerLockDates: 1 } },
     )
     .sort({ createdAt: -1 })
     .limit(24)
@@ -248,7 +249,6 @@ export const getRecentPlayerAvatarsFn = createServerFn({ method: "GET" }).handle
   return docs.map((d) => ({
     userId: d.userId,
     name: d.name || "Player",
-    avatarUrl: d.avatarUrl,
     score: d.total,
     date: d.winnerLockDates?.[0] || d.playDates?.[0],
     isWinner: Boolean(d.winnerLockDates?.length),
