@@ -90,6 +90,7 @@ function Profile() {
   const [checkingName, setCheckingName] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState("");
+  const [avatarRemoving, setAvatarRemoving] = useState(false);
 
   useEffect(() => {
     const trimmed = name.trim();
@@ -279,6 +280,23 @@ function Profile() {
       setAvatarError("Could not upload photo right now. Please try again.");
     } finally {
       setAvatarUploading(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!safeUser) return;
+    setAvatarError("");
+    setAvatarRemoving(true);
+    try {
+      const { removeAvatarFn } = await import("@/server/userFns");
+      await removeAvatarFn({ data: { userId: safeUser.userId } });
+      const updated = { ...safeUser, avatarUrl: undefined, showAvatarOnLeaderboard: false };
+      saveUser(updated);
+      setUser(updated);
+    } catch {
+      setAvatarError("Could not remove photo right now. Please try again.");
+    } finally {
+      setAvatarRemoving(false);
     }
   };
 
@@ -549,6 +567,16 @@ function Profile() {
                   onChange={handleAvatarChange}
                 />
               </label>
+              {safeUser.avatarUrl && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  disabled={avatarRemoving}
+                  className="px-4 py-2 rounded-full border border-destructive/40 text-destructive text-xs font-semibold hover:bg-destructive/10 transition-colors disabled:opacity-60"
+                >
+                  {avatarRemoving ? "Removing…" : "Remove photo"}
+                </button>
+              )}
             </div>
             <p className="mt-1.5 text-[11px] text-muted-foreground">Image files only, up to 5 MB.</p>
             {avatarError && <p className="mt-1.5 text-[11px] text-destructive">{avatarError}</p>}

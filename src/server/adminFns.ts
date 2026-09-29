@@ -106,6 +106,78 @@ export const getAdminLogsFn = createServerFn({ method: "POST" })
     return docs.map(({ _id: _unused, ...rest }) => rest as AdminLog);
   });
 
+// ── Avatar Upload Notifications ─────────────────────────────────────────────────
+// One row per photo upload by a player (created in userFns.saveAvatarFn). Shown
+// as a bell/badge on the admin dashboard so uploads don't need to be discovered
+// by manually browsing users. Never shown on the public frontend.
+export interface AvatarNotification {
+  notificationId: string;
+  userId: string;
+  name: string;
+  type: "upload" | "delete";
+  createdAt: string;
+  read: boolean;
+}
+
+export const getAvatarNotificationsFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ token: z.string() }).parse(data))
+  .handler(async ({ data }) => {
+    requireAdminToken(data.token);
+    const db = await getDb();
+    const docs = await db
+      .collection<AvatarNotification & { _id: unknown }>("avatarNotifications")
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .toArray();
+    return docs.map(({ _id: _unused, ...rest }) => rest as AvatarNotification);
+  });
+
+export const markAvatarNotificationsReadFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ token: z.string() }).parse(data))
+  .handler(async ({ data }) => {
+    requireAdminToken(data.token);
+    const db = await getDb();
+    await db
+      .collection("avatarNotifications")
+      .updateMany({ read: false }, { $set: { read: true } });
+    return { ok: true };
+  });
+
+// ── Admin-controlled: show a winner's uploaded photo on the homepage carousel ──
+// This is an admin-only decision (not a player self-service toggle) — the admin
+// reviews the uploaded photo, then decides whether it replaces the default
+// placeholder avatar on the public "Players Climbing the Leaderboard" carousel.
+// Only available once this player has been officially announced/locked as a
+// winner (winnerLockDates non-empty) AND has uploaded a photo — a not-yet-locked
+// top scorer isn't a confirmed winner yet.
+const setAvatarVisibilityAdminSchema = z.object({
+  token: z.string(),
+  userId: z.string().min(1),
+  visible: z.boolean(),
+});
+
+export const setAvatarVisibilityAdminFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => setAvatarVisibilityAdminSchema.parse(data))
+  .handler(async ({ data }) => {
+    requireAdminToken(data.token);
+    const db = await getDb();
+    const user = await db
+      .collection<UserRecord>("users")
+      .findOne({ userId: data.userId }, { projection: { avatarUrl: 1, winnerLockDates: 1 } });
+    if (!user) throw new Error("User not found.");
+    if (data.visible) {
+      if (!user.avatarUrl) throw new Error("This user hasn't uploaded a photo.");
+      if (!user.winnerLockDates?.length) {
+        throw new Error("Only officially announced winners can be shown on the leaderboard.");
+      }
+    }
+    await db
+      .collection<UserRecord>("users")
+      .updateOne({ userId: data.userId }, { $set: { showAvatarOnLeaderboard: data.visible } });
+    return { ok: true };
+  });
+
 // ── Platform Settings ──────────────────────────────────────────────────────────
 export interface PlatformSettings {
   ga4: string;

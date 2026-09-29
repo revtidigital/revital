@@ -33,12 +33,13 @@ import {
   ArrowDown,
   CircleHelp,
   Mail,
+  Bell,
 } from "lucide-react";
 import { Leaderboard } from "@/components/Leaderboard";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
 import { calcStreak, dedupeAttempts, PARTICIPANT_TYPES, type UserRecord } from "@/lib/storage";
 import { CategoryBadge, ParticipantTypeBadge } from "@/components/AdminBadges";
-import type { AdminLog, PlatformSettings } from "@/server/adminFns";
+import type { AdminLog, AvatarNotification, PlatformSettings } from "@/server/adminFns";
 
 export const Route = createFileRoute("/admin")({
   component: Admin,
@@ -540,6 +541,13 @@ function Admin() {
   const [usersPage, setUsersPage] = useState(1);
   const [usersPerPage, setUsersPerPage] = useState(10);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [avatarNotifications, setAvatarNotifications] = useState<AvatarNotification[]>([]);
+  const [notifPanelOpen, setNotifPanelOpen] = useState(false);
+  const unreadAvatarCount = avatarNotifications.filter((n) => !n.read).length;
+  const [avatarVisibilitySavingId, setAvatarVisibilitySavingId] = useState<string | null>(null);
+  const [avatarToasts, setAvatarToasts] = useState<AvatarNotification[]>([]);
+  const seenAvatarNotificationIds = useRef<Set<string> | null>(null);
+  const notifPanelRef = useRef<HTMLDivElement | null>(null);
 
   const getAdminToken = () => sessionStorage.getItem("adminToken") ?? "";
 
@@ -566,14 +574,19 @@ function Admin() {
       setUsers(u);
       setDailyLeaders(daily);
       setGlobalLeaders(global);
-      const [l, s, ce] = await Promise.all([
+      const [l, s, ce, avatarNotifs] = await Promise.all([
         adminMod.getAdminLogsFn({ data: { token } }),
         adminMod.getPlatformSettingsAdminFn({ data: { token } }),
         adminMod.getComingSoonEmailsFn({ data: { token } }),
+        adminMod.getAvatarNotificationsFn({ data: { token } }),
       ]);
       setLogs(l);
       setSettings(s);
       setComingSoonEmails(ce);
+      setAvatarNotifications(avatarNotifs);
+      // Baseline: don't toast for notifications that already existed before
+      // this dashboard session opened — only ones that arrive afterward.
+      seenAvatarNotificationIds.current = new Set(avatarNotifs.map((n) => n.notificationId));
     } catch (e) {
       console.error("Admin load error", e);
     } finally {
@@ -587,6 +600,48 @@ function Admin() {
       addLog("DASHBOARD_OPEN", "Admin dashboard opened");
     }
   }, [authenticated, loadData, addLog]);
+
+  // Poll avatar-upload/delete notifications — kept in its own interval with
+  // its own try/catch so a slow or failing users-list fetch elsewhere can
+  // never silently prevent the popup from appearing. This is the one thing
+  // that must not get swallowed by an unrelated error.
+  useEffect(() => {
+    if (!authenticated) return;
+    const poll = async () => {
+      try {
+        const { getAvatarNotificationsFn } = await import("@/server/adminFns");
+        const avatarNotifs = await getAvatarNotificationsFn({ data: { token: getAdminToken() } });
+        if (seenAvatarNotificationIds.current) {
+          const fresh = avatarNotifs.filter(
+            (n) => !seenAvatarNotificationIds.current!.has(n.notificationId),
+          );
+          if (fresh.length > 0) {
+            for (const n of fresh) seenAvatarNotificationIds.current.add(n.notificationId);
+            // Stays on screen until the admin dismisses it or opens the bell —
+            // a timed auto-dismiss risks disappearing before anyone notices it.
+            setAvatarToasts((prev) => [...prev, ...fresh]);
+          }
+        }
+        setAvatarNotifications(avatarNotifs);
+      } catch (e) {
+        if (import.meta.env.DEV) console.warn("Failed to poll avatar notifications:", e);
+      }
+    };
+    const interval = setInterval(poll, 8000);
+    return () => clearInterval(interval);
+  }, [authenticated]);
+
+  // Close the notifications dropdown when clicking anywhere outside it.
+  useEffect(() => {
+    if (!notifPanelOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifPanelRef.current && !notifPanelRef.current.contains(e.target as Node)) {
+        setNotifPanelOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [notifPanelOpen]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1024,6 +1079,40 @@ function Admin() {
     [dateWise, uaeToday],
   );
 
+  // Lookup by userId — the winners list only carries a name-at-win-time
+  // snapshot, so avatarUrl / showAvatarOnLeaderboard come from here instead.
+  const usersById = useMemo(() => new Map(users.map((u) => [u.userId, u])), [users]);
+
+  // Most recent photo upload/delete event per user, for the inline "last
+  // activity" note next to each winner in the Daily Winners list.
+  const latestAvatarEventByUser = useMemo(() => {
+    const map = new Map<string, AvatarNotification>();
+    for (const n of avatarNotifications) {
+      const existing = map.get(n.userId);
+      if (!existing || n.createdAt > existing.createdAt) map.set(n.userId, n);
+    }
+    return map;
+  }, [avatarNotifications]);
+
+  const handleToggleWinnerAvatarVisibility = async (userId: string, visible: boolean) => {
+    setAvatarVisibilitySavingId(userId);
+    try {
+      const { setAvatarVisibilityAdminFn } = await import("@/server/adminFns");
+      await setAvatarVisibilityAdminFn({ data: { token: getAdminToken(), userId, visible } });
+      setUsers((prev) =>
+        prev.map((u) => (u.userId === userId ? { ...u, showAvatarOnLeaderboard: visible } : u)),
+      );
+      await addLog(
+        "AVATAR_VISIBILITY",
+        `${visible ? "Enabled" : "Disabled"} homepage photo display for user ${userId}`,
+      );
+    } catch (e) {
+      alert((e as Error).message || "Could not update photo visibility.");
+    } finally {
+      setAvatarVisibilitySavingId(null);
+    }
+  };
+
   const handleExportComingSoonEmails = () => {
     const rows: (string | number)[][] = [
       ["Email", "Submitted At"],
@@ -1322,6 +1411,50 @@ function Admin() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
+      {/* Auto-popup for new photo upload/delete events — same visual weight as the
+          site's cookie/referral popups, stays up until dismissed or the bell is opened */}
+      <div className="fixed top-16 inset-x-4 md:inset-x-auto md:right-6 md:max-w-md z-[100] flex flex-col gap-3 max-h-[80vh] overflow-y-auto">
+        <AnimatePresence>
+          {avatarToasts.map((n) => (
+            <motion.div
+              key={n.notificationId}
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              transition={{ type: "spring", damping: 22 }}
+            >
+              <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-5 shadow-card">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl shrink-0">{n.type === "delete" ? "🗑️" : "📸"}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-foreground truncate">{n.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {n.type === "delete"
+                        ? "Removed their profile photo"
+                        : "Uploaded a new profile photo"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/70 mt-1">
+                      {new Date(n.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() =>
+                      setAvatarToasts((prev) =>
+                        prev.filter((t) => t.notificationId !== n.notificationId),
+                      )
+                    }
+                    className="text-muted-foreground hover:text-foreground text-sm shrink-0"
+                    aria-label="Dismiss"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
       {/* Top bar */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border h-14 flex items-center px-4 gap-3">
         <button
@@ -1338,6 +1471,56 @@ function Admin() {
           Admin <span className="text-gradient-energy">Dashboard</span>
         </span>
         <div className="ml-auto flex items-center gap-2">
+          <div className="relative" ref={notifPanelRef}>
+            <button
+              onClick={async () => {
+                const opening = !notifPanelOpen;
+                setNotifPanelOpen(opening);
+                if (opening) setAvatarToasts([]);
+                if (opening && unreadAvatarCount > 0) {
+                  try {
+                    const { markAvatarNotificationsReadFn } = await import("@/server/adminFns");
+                    await markAvatarNotificationsReadFn({ data: { token: getAdminToken() } });
+                    setAvatarNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+                  } catch (e) {
+                    if (import.meta.env.DEV) console.warn("Failed to mark notifications read:", e);
+                  }
+                }
+              }}
+              title="Profile photo uploads"
+              className="relative p-1.5 rounded-lg hover:bg-muted/30 transition-colors"
+            >
+              <Bell className="w-4 h-4" />
+              {unreadAvatarCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center">
+                  {unreadAvatarCount > 9 ? "9+" : unreadAvatarCount}
+                </span>
+              )}
+            </button>
+            {notifPanelOpen && (
+              <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-background border border-border rounded-2xl shadow-card z-50">
+                <div className="px-4 py-3 border-b border-border font-bold text-sm">
+                  Profile photo uploads
+                </div>
+                {avatarNotifications.length === 0 ? (
+                  <p className="px-4 py-6 text-xs text-muted-foreground text-center">
+                    No uploads yet.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {avatarNotifications.map((n) => (
+                      <li key={n.notificationId} className="px-4 py-3 text-xs">
+                        <span className="font-semibold">{n.name}</span> uploaded a profile photo
+                        <div className="text-muted-foreground mt-0.5">
+                          {new Date(n.createdAt).toLocaleString()}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
           <button
             onClick={loadData}
             disabled={loading}
@@ -2378,17 +2561,67 @@ function Admin() {
                         </div>
                         {d.date !== uaeToday ? (
                           <div className="grid grid-cols-1 gap-2">
-                            {d.winners.map((winner, idx) => (
-                              <div
-                                key={`${d.date}-${winner.userId}-${idx}`}
-                                className="text-xs rounded-xl px-3 py-2 border border-accent/30 bg-accent/10 flex justify-between"
-                              >
-                                <span className="font-semibold">
-                                  #{idx + 1} {winner.name || winner.contact}
-                                </span>
-                                <span className="font-bold text-accent">{winner.total}</span>
-                              </div>
-                            ))}
+                            {d.winners.map((winner, idx) => {
+                              const full = usersById.get(winner.userId);
+                              const lastEvent = latestAvatarEventByUser.get(winner.userId);
+                              return (
+                                <div
+                                  key={`${d.date}-${winner.userId}-${idx}`}
+                                  className="text-xs rounded-xl px-3 py-2 border border-accent/30 bg-accent/10 flex flex-col gap-1.5"
+                                >
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="font-semibold flex items-center gap-2.5 min-w-0">
+                                      {full?.avatarUrl && (
+                                        <img
+                                          src={full.avatarUrl}
+                                          alt=""
+                                          className="h-20 w-20 rounded-full object-cover border-2 border-border shrink-0"
+                                        />
+                                      )}
+                                      <span className="truncate">
+                                        #{idx + 1} {winner.name || winner.contact}
+                                      </span>
+                                    </span>
+                                    <span className="font-bold text-accent shrink-0">
+                                      {winner.total}
+                                    </span>
+                                  </div>
+                                  {full?.avatarUrl && (
+                                    <label
+                                      className={`flex items-center gap-2 cursor-pointer select-none self-start px-2.5 py-1 rounded-full border transition-colors ${
+                                        full.showAvatarOnLeaderboard
+                                          ? "border-emerald-400/60 bg-emerald-50 text-emerald-700"
+                                          : "border-border bg-white/70 text-foreground"
+                                      }`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={Boolean(full.showAvatarOnLeaderboard)}
+                                        disabled={avatarVisibilitySavingId === winner.userId}
+                                        onChange={(e) =>
+                                          handleToggleWinnerAvatarVisibility(
+                                            winner.userId,
+                                            e.target.checked,
+                                          )
+                                        }
+                                        className="h-3.5 w-3.5 accent-accent"
+                                      />
+                                      <span className="text-[11px] font-semibold">
+                                        {full.showAvatarOnLeaderboard
+                                          ? "🏠 Live on homepage carousel"
+                                          : "Publish photo to homepage"}
+                                      </span>
+                                    </label>
+                                  )}
+                                  {lastEvent && (
+                                    <p className="text-[11px] font-medium text-garnet/80 bg-white/60 rounded-full px-2.5 py-1 self-start">
+                                      {lastEvent.type === "delete" ? "🗑️ Removed photo" : "📸 Uploaded photo"}{" "}
+                                      · {new Date(lastEvent.createdAt).toLocaleString()}
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         ) : null}
                       </div>
