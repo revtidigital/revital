@@ -214,7 +214,14 @@ async function main() {
         const firstBestAt = todayAttempts
           .filter((a) => a.total === best)
           .reduce((min, a) => (!min || a.playedAt < min ? a.playedAt : min), "");
-        return { userId: u.userId, name: u.name || u.contact, contact: u.contact, score: best, firstBestAt };
+        return {
+          userId: u.userId,
+          name: u.name || u.contact,
+          contact: u.contact,
+          instagramUsername: u.instagramUsername,
+          score: best,
+          firstBestAt,
+        };
       })
       .filter((u) => u.score >= 0)
       .sort((a, b) => b.score - a.score || a.firstBestAt.localeCompare(b.firstBestAt))
@@ -253,7 +260,10 @@ async function main() {
 
     const winner = ranked[0];
     const subject = `Winner Locked: ${lockDate} (${dayName}) UAE`;
-    const text = `Daily Winner\n\n${winner.name} — Score: ${winner.score}\nContact: ${winner.contact || "N/A"}`;
+    const instagramLine = winner.instagramUsername
+      ? `\nInstagram: https://instagram.com/${winner.instagramUsername.replace(/^@/, "")}`
+      : "";
+    const text = `Daily Winner\n\n${winner.name} — Score: ${winner.score}\nContact: ${winner.contact || "N/A"}${instagramLine}`;
     const winnersPng = await generateWinnersPng(ranked);
 
     await Promise.all(

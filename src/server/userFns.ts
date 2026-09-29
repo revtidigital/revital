@@ -294,30 +294,42 @@ export const getRecentPlayerAvatarsFn = createServerFn({ method: "GET" }).handle
   const docs = await db
     .collection<UserRecord & { _id: unknown }>("users")
     .find(
-      { total: { $gt: 0 } },
+      { winnerLockDates: { $exists: true, $ne: [] } },
       {
         projection: {
           userId: 1,
           name: 1,
-          total: 1,
-          playDates: 1,
+          playAttempts: 1,
           winnerLockDates: 1,
           avatarUrl: 1,
           showAvatarOnLeaderboard: 1,
         },
       },
     )
-    .sort({ createdAt: -1 })
-    .limit(24)
     .toArray();
-  return docs.map((d) => ({
-    userId: d.userId,
-    name: d.name || "Player",
-    score: d.total,
-    date: d.winnerLockDates?.[0] || d.playDates?.[0],
-    isWinner: Boolean(d.winnerLockDates?.length),
-    avatarUrl: d.showAvatarOnLeaderboard && d.avatarUrl ? d.avatarUrl : undefined,
-  }));
+
+  // Each user's winnerLockDates holds every date they were locked as THAT
+  // day's daily winner — expand into one entry per (date, winner) pair so
+  // the carousel shows the actual daily winner with their actual win date,
+  // not just each user's most-recently-created record.
+  const entries = docs.flatMap((d) => {
+    const dates = d.winnerLockDates ?? [];
+    return dates.map((date) => {
+      const bestForDate = (d.playAttempts ?? [])
+        .filter((a) => a.date === date)
+        .reduce<number>((m, a) => Math.max(m, a.total), 0);
+      return {
+        userId: d.userId,
+        name: d.name || "Player",
+        score: bestForDate,
+        date,
+        isWinner: true,
+        avatarUrl: d.showAvatarOnLeaderboard && d.avatarUrl ? d.avatarUrl : undefined,
+      };
+    });
+  });
+
+  return entries.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 24);
 });
 
 // ── referral info (referrer name + referral count) ─────────────────────────────

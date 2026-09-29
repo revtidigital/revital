@@ -556,7 +556,12 @@ export const sendLastLockedWinnerEmailFn = createServerFn({ method: "POST" })
         const best = (u.playAttempts ?? [])
           .filter((a) => a.date === lockDate)
           .reduce<number>((m, a) => Math.max(m, a.total), 0);
-        return { name: u.name || u.contact || "Player", score: best, contact: u.contact };
+        return {
+          name: u.name || u.contact || "Player",
+          score: best,
+          contact: u.contact,
+          instagramUsername: u.instagramUsername,
+        };
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, 1);
@@ -570,7 +575,10 @@ export const sendLastLockedWinnerEmailFn = createServerFn({ method: "POST" })
     }).format(new Date(`${lockDate}T12:00:00+04:00`));
     const enrichedSubject = `Winner Locked: ${lockDate} (${dayName}) UAE`;
     const winner = ranked[0];
-    const text = `Daily Winner\n\n${winner.name} — Score: ${winner.score}\nContact: ${winner.contact || "N/A"}`;
+    const instagramLine = winner.instagramUsername
+      ? `\nInstagram: https://instagram.com/${winner.instagramUsername.replace(/^@/, "")}`
+      : "";
+    const text = `Daily Winner\n\n${winner.name} — Score: ${winner.score}\nContact: ${winner.contact || "N/A"}${instagramLine}`;
     const winnersPng = await generateWinnersPng(ranked);
     await Promise.all(
       adminEmails.map((email) =>
