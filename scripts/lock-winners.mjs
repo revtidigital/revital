@@ -129,6 +129,20 @@ async function sendViaGmailSmtp(to, subject, body, attachment) {
   }
 }
 
+async function sendViaGmailSmtpWithRetry(to, subject, body, attachment, retries = 3) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await sendViaGmailSmtp(to, subject, body, attachment);
+      return;
+    } catch (err) {
+      if (attempt === retries) throw err;
+      const delayMs = 2000 * 2 ** (attempt - 1); // 2s, 4s, 8s...
+      console.error(`[lock-winners] SMTP send to ${to} failed (attempt ${attempt}/${retries}): ${err.message}. Retrying in ${delayMs}ms...`);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+}
+
 // ── PNG generation ────────────────────────────────────────────────────────────
 // Single-winner layout — mirrors src/server/adminFns.ts:generateWinnersPng
 // exactly (same template, slot, and font sizing) so both code paths render
@@ -268,7 +282,7 @@ async function main() {
 
     await Promise.all(
       adminEmails.map((email) =>
-        sendViaGmailSmtp(email, subject, text, {
+        sendViaGmailSmtpWithRetry(email, subject, text, {
           filename: `revital-winner-${lockDate}.png`,
           contentType: "image/png",
           content: winnersPng,
