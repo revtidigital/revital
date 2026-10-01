@@ -1433,7 +1433,7 @@ function Admin() {
     { id: "datewise", label: "Date-wise", icon: <CalendarDays className="w-4 h-4" /> },
     { id: "winners", label: "Daily Winners", icon: <Trophy className="w-4 h-4" /> },
     { id: "streaks", label: "Consistent Players", icon: <Flame className="w-4 h-4" /> },
-    { id: "welcomeEmails", label: "Welcome Emails", icon: <Mail className="w-4 h-4" /> },
+    { id: "welcomeEmails", label: "Automation Emails", icon: <Mail className="w-4 h-4" /> },
     { id: "notify", label: "Get Notified", icon: <Mail className="w-4 h-4" /> },
     { id: "logs", label: "Admin Logs", icon: <ScrollText className="w-4 h-4" /> },
     { id: "settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
@@ -2733,10 +2733,11 @@ function Admin() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  <SectionTitle>Welcome Emails</SectionTitle>
+                  <SectionTitle>Automation Emails</SectionTitle>
                   <p className="text-xs text-muted-foreground mt-1 mb-4">
-                    Status of the 48-hour welcome email (Brevo) for each user it has been sent to —
-                    delivered, opened, clicked, or bounced.
+                    Users who were sent the 48-hour automated welcome email (Brevo) — status shows
+                    delivered, opened, clicked, or bounced. Only emails sent by this automation are
+                    listed here.
                   </p>
 
                   <div className="bg-gradient-card border border-border rounded-2xl overflow-x-auto shadow-card">
