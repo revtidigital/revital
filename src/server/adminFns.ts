@@ -628,6 +628,97 @@ export const getComingSoonEmailsFn = createServerFn({ method: "POST" })
     return docs.map((d) => ({ email: d.email, createdAt: d.createdAt }));
   });
 
+// ── Welcome Email Activity (Brevo) ──────────────────────────────────────────────
+// Read-only view for the admin dashboard showing, for each user the 48h
+// welcome-email cron (scripts/welcome-email.mjs) has sent to, what actually
+// happened to that email per Brevo's own tracking (delivered/opened/clicked/
+// bounced). Does not send anything or write to the DB — purely a reporting
+// join between our `users.welcomeEmailSentAt` and Brevo's events API.
+export interface WelcomeEmailActivityRow {
+  userId: string;
+  name: string;
+  email: string;
+  sentAt: string;
+  status: "clicked" | "opened" | "delivered" | "bounced" | "sent" | "unknown";
+}
+
+const BREVO_WELCOME_TEMPLATE_ID = 326;
+
+export const getWelcomeEmailActivityFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ token: z.string() }).parse(data))
+  .handler(async ({ data }): Promise<WelcomeEmailActivityRow[]> => {
+    requireAdminToken(data.token);
+    const db = await getDb();
+    const users = await db
+      .collection<UserRecord & { welcomeEmailSentAt?: string }>("users")
+      .find({ welcomeEmailSentAt: { $exists: true } })
+      .project({ userId: 1, name: 1, email: 1, welcomeEmailSentAt: 1 })
+      .sort({ welcomeEmailSentAt: -1 })
+      .limit(500)
+      .toArray();
+
+    if (users.length === 0) return [];
+
+    // Pull Brevo's event log for our welcome-email template and build an
+    // email -> best-known-status map. Brevo returns events newest-first;
+    // we keep the "best" (most-informative) event per address rather than
+    // just the latest, so e.g. a bounce doesn't hide an earlier open.
+    const statusRank: Record<string, number> = {
+      bounced: 4,
+      clicked: 3,
+      opened: 2,
+      delivered: 1,
+      sent: 0,
+    };
+    const emailStatus = new Map<string, WelcomeEmailActivityRow["status"]>();
+    const apiKey = process.env.BREVO_API_KEY;
+    if (apiKey) {
+      try {
+        const limit = 500;
+        for (let offset = 0; offset < 2000; offset += limit) {
+          const res = await fetch(
+            `https://api.brevo.com/v3/smtp/statistics/events?templateId=${BREVO_WELCOME_TEMPLATE_ID}&limit=${limit}&offset=${offset}`,
+            { headers: { "api-key": apiKey, Accept: "application/json" } },
+          );
+          if (!res.ok) break;
+          const body = (await res.json()) as { events?: Array<{ email: string; event: string }> };
+          const events = body.events ?? [];
+          for (const ev of events) {
+            const mapped: WelcomeEmailActivityRow["status"] | null =
+              ev.event === "clicks" || ev.event === "uniqueOpens" || ev.event === "opened"
+                ? ev.event === "clicks"
+                  ? "clicked"
+                  : "opened"
+                : ev.event === "delivered"
+                  ? "delivered"
+                  : ev.event === "hardBounces" || ev.event === "softBounces"
+                    ? "bounced"
+                    : ev.event === "requests" || ev.event === "request"
+                      ? "sent"
+                      : null;
+            if (!mapped) continue;
+            const existing = emailStatus.get(ev.email);
+            if (!existing || statusRank[mapped] > statusRank[existing]) {
+              emailStatus.set(ev.email, mapped);
+            }
+          }
+          if (events.length < limit) break;
+        }
+      } catch {
+        // Brevo unreachable — fall back to "unknown" for all rows below,
+        // the dashboard tab still renders with sent/user data.
+      }
+    }
+
+    return users.map((u) => ({
+      userId: u.userId,
+      name: u.name || "",
+      email: u.email || "",
+      sentAt: u.welcomeEmailSentAt || "",
+      status: emailStatus.get(u.email || "") ?? "unknown",
+    }));
+  });
+
 export const getDailyLeaderboardFn = createServerFn({ method: "GET" }).handler(async () => {
   const db = await getDb();
   const today = formatUaeDate(new Date());

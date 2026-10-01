@@ -39,7 +39,12 @@ import { Leaderboard } from "@/components/Leaderboard";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
 import { calcStreak, dedupeAttempts, PARTICIPANT_TYPES, type UserRecord } from "@/lib/storage";
 import { CategoryBadge, ParticipantTypeBadge } from "@/components/AdminBadges";
-import type { AdminLog, AvatarNotification, PlatformSettings } from "@/server/adminFns";
+import type {
+  AdminLog,
+  AvatarNotification,
+  PlatformSettings,
+  WelcomeEmailActivityRow,
+} from "@/server/adminFns";
 
 export const Route = createFileRoute("/admin")({
   component: Admin,
@@ -52,6 +57,7 @@ type Tab =
   | "datewise"
   | "winners"
   | "streaks"
+  | "welcomeEmails"
   | "notify"
   | "logs"
   | "settings";
@@ -546,6 +552,9 @@ function Admin() {
   const unreadAvatarCount = avatarNotifications.filter((n) => !n.read).length;
   const [avatarVisibilitySavingId, setAvatarVisibilitySavingId] = useState<string | null>(null);
   const [avatarToasts, setAvatarToasts] = useState<AvatarNotification[]>([]);
+  const [welcomeEmailRows, setWelcomeEmailRows] = useState<WelcomeEmailActivityRow[]>([]);
+  const [welcomeEmailsLoading, setWelcomeEmailsLoading] = useState(false);
+  const welcomeEmailsLoadedRef = useRef(false);
   const seenAvatarNotificationIds = useRef<Set<string> | null>(null);
   const notifPanelRef = useRef<HTMLDivElement | null>(null);
 
@@ -1347,12 +1356,32 @@ function Admin() {
     }
   };
 
+  const loadWelcomeEmailActivity = useCallback(async () => {
+    setWelcomeEmailsLoading(true);
+    try {
+      const { getWelcomeEmailActivityFn } = await import("@/server/adminFns");
+      const rows = await getWelcomeEmailActivityFn({ data: { token: getAdminToken() } });
+      setWelcomeEmailRows(rows);
+      welcomeEmailsLoadedRef.current = true;
+    } catch (e) {
+      console.error("Welcome email activity load error", e);
+    } finally {
+      setWelcomeEmailsLoading(false);
+    }
+  }, []);
+
   const handleTabChange = (t: Tab) => {
     setTab(t);
     setSidebarOpen(false);
     addLog("TAB_CHANGE", `Navigated to ${t}`);
     if (isUserDetailRoute) {
       navigate({ to: "/admin" });
+    }
+    // Fetched on-demand (not part of the initial loadData batch) since it
+    // calls out to Brevo's API — no point paying that cost unless the admin
+    // actually opens this tab.
+    if (t === "welcomeEmails" && !welcomeEmailsLoadedRef.current) {
+      loadWelcomeEmailActivity();
     }
   };
 
@@ -1404,6 +1433,7 @@ function Admin() {
     { id: "datewise", label: "Date-wise", icon: <CalendarDays className="w-4 h-4" /> },
     { id: "winners", label: "Daily Winners", icon: <Trophy className="w-4 h-4" /> },
     { id: "streaks", label: "Consistent Players", icon: <Flame className="w-4 h-4" /> },
+    { id: "welcomeEmails", label: "Welcome Emails", icon: <Mail className="w-4 h-4" /> },
     { id: "notify", label: "Get Notified", icon: <Mail className="w-4 h-4" /> },
     { id: "logs", label: "Admin Logs", icon: <ScrollText className="w-4 h-4" /> },
     { id: "settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
@@ -2690,6 +2720,100 @@ function Admin() {
                             <Td className="font-bold text-gradient-energy">{u.globalScore}</Td>
                           </tr>
                         ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ── WELCOME EMAILS ─────────────────────────────────────────── */}
+              {tab === "welcomeEmails" && (
+                <motion.div
+                  key="welcomeEmails"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <SectionTitle>Welcome Emails</SectionTitle>
+                  <p className="text-xs text-muted-foreground mt-1 mb-4">
+                    Status of the 48-hour welcome email (Brevo) for each user it has been sent to —
+                    delivered, opened, clicked, or bounced.
+                  </p>
+
+                  <div className="bg-gradient-card border border-border rounded-2xl overflow-x-auto shadow-card">
+                    <table className="w-full text-sm min-w-[640px]">
+                      <thead>
+                        <tr className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/10 text-left">
+                          <Th>#</Th>
+                          <Th>User ID</Th>
+                          <Th>Name</Th>
+                          <Th>Email</Th>
+                          <Th>Sent At</Th>
+                          <Th>Status</Th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {welcomeEmailsLoading && (
+                          <tr>
+                            <td
+                              colSpan={6}
+                              className="py-10 text-center text-muted-foreground text-sm"
+                            >
+                              Loading…
+                            </td>
+                          </tr>
+                        )}
+                        {!welcomeEmailsLoading && welcomeEmailRows.length === 0 && (
+                          <tr>
+                            <td
+                              colSpan={6}
+                              className="py-10 text-center text-muted-foreground text-sm"
+                            >
+                              No welcome emails sent yet.
+                            </td>
+                          </tr>
+                        )}
+                        {!welcomeEmailsLoading &&
+                          welcomeEmailRows.map((r, i) => (
+                            <tr
+                              key={r.userId}
+                              className="border-b border-border/40 hover:bg-muted/10 transition-colors"
+                            >
+                              <Td className="text-muted-foreground">{i + 1}</Td>
+                              <Td className="font-mono text-[11px]">{r.userId}</Td>
+                              <Td>{r.name || "—"}</Td>
+                              <Td className="font-mono text-[11px]">{r.email || "—"}</Td>
+                              <Td className="text-muted-foreground">
+                                {r.sentAt ? new Date(r.sentAt).toLocaleString() : "—"}
+                              </Td>
+                              <Td>
+                                <span
+                                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                                    r.status === "clicked"
+                                      ? "bg-green-500/15 text-green-500"
+                                      : r.status === "opened"
+                                        ? "bg-blue-500/15 text-blue-400"
+                                        : r.status === "bounced"
+                                          ? "bg-red-500/15 text-red-400"
+                                          : r.status === "delivered" || r.status === "sent"
+                                            ? "bg-muted text-muted-foreground"
+                                            : "bg-muted text-muted-foreground"
+                                  }`}
+                                >
+                                  {r.status === "clicked"
+                                    ? "✅ Clicked link"
+                                    : r.status === "opened"
+                                      ? "👁️ Opened"
+                                      : r.status === "bounced"
+                                        ? "⚠️ Bounced"
+                                        : r.status === "delivered"
+                                          ? "Delivered"
+                                          : r.status === "sent"
+                                            ? "Sent"
+                                            : "Unknown"}
+                                </span>
+                              </Td>
+                            </tr>
+                          ))}
                       </tbody>
                     </table>
                   </div>
