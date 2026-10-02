@@ -1385,6 +1385,17 @@ function Admin() {
     }
   };
 
+  // Keep the Automation Emails tab live: once it's been opened, poll for
+  // newly-sent 48h emails (and status changes on existing ones) every 60s
+  // while that tab stays active.
+  useEffect(() => {
+    if (tab !== "welcomeEmails") return;
+    const interval = setInterval(() => {
+      loadWelcomeEmailActivity();
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [tab, loadWelcomeEmailActivity]);
+
   // ── Login Screen ─────────────────────────────────────────────────────────────
   if (!authenticated) {
     return (
@@ -2737,7 +2748,8 @@ function Admin() {
                   <p className="text-xs text-muted-foreground mt-1 mb-4">
                     Users who were sent the 48-hour automated welcome email (Brevo) — status shows
                     delivered, opened, clicked, or bounced. Only emails sent by this automation are
-                    listed here.
+                    listed here. Refreshes automatically every 60s.
+                    {welcomeEmailsLoading && " Updating…"}
                   </p>
 
                   <div className="bg-gradient-card border border-border rounded-2xl overflow-x-auto shadow-card">
