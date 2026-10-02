@@ -649,9 +649,13 @@ export const getWelcomeEmailActivityFn = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<WelcomeEmailActivityRow[]> => {
     requireAdminToken(data.token);
     const db = await getDb();
+    // This automation only started sending on 2026-09-28 — exclude anything
+    // (manually set or otherwise) dated before that so the dashboard only
+    // reflects actual automation sends.
+    const AUTOMATION_START = new Date("2026-09-28T00:00:00.000Z");
     const users = await db
       .collection<UserRecord & { welcomeEmailSentAt?: string }>("users")
-      .find({ welcomeEmailSentAt: { $exists: true } })
+      .find({ welcomeEmailSentAt: { $exists: true, $gte: AUTOMATION_START as unknown as string } })
       .project({ userId: 1, name: 1, email: 1, welcomeEmailSentAt: 1 })
       .sort({ welcomeEmailSentAt: -1 })
       .limit(500)
