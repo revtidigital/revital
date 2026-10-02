@@ -649,10 +649,10 @@ export const getWelcomeEmailActivityFn = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<WelcomeEmailActivityRow[]> => {
     requireAdminToken(data.token);
     const db = await getDb();
-    // This automation only started sending on 2026-09-28 — exclude anything
-    // (manually set or otherwise) dated before that so the dashboard only
-    // reflects actual automation sends.
-    const AUTOMATION_START = new Date("2026-09-28T00:00:00.000Z");
+    // The cron's first run on 2026-09-28 blasted the entire pre-existing
+    // backlog at once (not a real 48h-delayed send) — exclude that day so
+    // the dashboard only reflects genuine ongoing 48h-delay automation sends.
+    const AUTOMATION_START = new Date("2026-09-29T00:00:00.000Z");
     const users = await db
       .collection<UserRecord & { welcomeEmailSentAt?: string }>("users")
       .find({ welcomeEmailSentAt: { $exists: true, $gte: AUTOMATION_START as unknown as string } })
