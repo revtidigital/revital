@@ -329,7 +329,7 @@ export const getRecentPlayerAvatarsFn = createServerFn({ method: "GET" }).handle
     });
   });
 
-  return entries.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 24);
+  return entries.sort((a, b) => b.date.localeCompare(a.date));
 });
 
 // ── referral info (referrer name + referral count) ─────────────────────────────
