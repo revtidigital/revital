@@ -13,9 +13,6 @@ function RulesPage() {
         <h1 className="text-4xl md:text-5xl font-black text-garnet">
           Revital Energy Challenge — Official Rules
         </h1>
-        <p className="mt-2 text-sm font-semibold text-garnet">
-          Campaign Duration: 15 August – 15 September 2026
-        </p>
         <p className="mt-4 text-sm text-muted-foreground">
           Welcome to the Revital Energy Challenge — a 30-day energy gaming challenge where your
           reflexes, memory, balance, consistency, and referrals help you climb the leaderboard and
