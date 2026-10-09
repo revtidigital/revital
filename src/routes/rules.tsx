@@ -14,7 +14,7 @@ function RulesPage() {
           Revital Energy Challenge — Official Rules
         </h1>
         <p className="mt-4 text-sm text-muted-foreground">
-          Welcome to the Revital Energy Challenge — a 30-day energy gaming challenge where your
+          Welcome to the Revital Energy Challenge — an energy gaming challenge where your
           reflexes, memory, balance, consistency, and referrals help you climb the leaderboard and
           win exciting rewards.
         </p>
