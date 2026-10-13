@@ -199,15 +199,6 @@ function Landing() {
 
       {/* HERO */}
       <main className="relative max-w-6xl mx-auto px-4 pt-6 md:pt-10 max-[900px]:pt-4 pb-16">
-        {endingSoon && (
-          <EndingSoonBanner
-            endAt={endingSoon.endAt}
-            heading={endingSoon.heading}
-            subheading={endingSoon.subheading}
-            message={endingSoon.message}
-          />
-        )}
-
         <section id="hero-section" className="scroll-mt-24 text-center">
           <motion.img
             src={heroWordmark}
@@ -217,6 +208,15 @@ function Landing() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", damping: 12, delay: 0.1 }}
           />
+
+          {endingSoon && (
+            <EndingSoonBanner
+              endAt={endingSoon.endAt}
+              heading={endingSoon.heading}
+              subheading={endingSoon.subheading}
+              message={endingSoon.message}
+            />
+          )}
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
