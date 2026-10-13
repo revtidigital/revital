@@ -199,6 +199,15 @@ function Landing() {
 
       {/* HERO */}
       <main className="relative max-w-6xl mx-auto px-4 pt-6 md:pt-10 max-[900px]:pt-4 pb-16">
+        {endingSoon && (
+          <EndingSoonBanner
+            endAt={endingSoon.endAt}
+            heading={endingSoon.heading}
+            subheading={endingSoon.subheading}
+            message={endingSoon.message}
+          />
+        )}
+
         <section id="hero-section" className="scroll-mt-24 text-center">
           <motion.img
             src={heroWordmark}
@@ -325,15 +334,6 @@ function Landing() {
               </div>
             ))}
           </motion.div>
-
-          {endingSoon && (
-            <EndingSoonBanner
-              endAt={endingSoon.endAt}
-              heading={endingSoon.heading}
-              subheading={endingSoon.subheading}
-              message={endingSoon.message}
-            />
-          )}
         </section>
 
         {/* HOW TO PARTICIPATE */}
