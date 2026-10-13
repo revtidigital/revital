@@ -502,6 +502,11 @@ function Admin() {
     comingSoonStartAt: "",
     comingSoonEndAt: "",
     comingSoonMessage: "",
+    endingSoonEnabled: false,
+    endingSoonEndAt: "",
+    endingSoonHeading: "",
+    endingSoonSubheading: "",
+    endingSoonMessage: "",
   });
   const [savedFlash, setSavedFlash] = useState(false);
   const [sendingLastWinnerEmail, setSendingLastWinnerEmail] = useState(false);
@@ -3219,6 +3224,104 @@ function Admin() {
                         <p className="text-[11px] text-muted-foreground mt-1">
                           Shown exactly as typed on the Coming Soon page. Leave blank to use the
                           default message.
+                        </p>
+                      </label>
+                    </SettingsSection>
+
+                    <SettingsSection title="Ending Soon Banner">
+                      <p className="text-[11px] text-muted-foreground mb-3">
+                        Independent of the Coming Soon page above — this never gates the site. It
+                        just shows a small countdown banner on the homepage, and hides itself
+                        automatically once the end time below passes.
+                      </p>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.endingSoonEnabled}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              endingSoonEnabled: e.target.checked,
+                            }))
+                          }
+                          className="w-4 h-4 accent-accent"
+                        />
+                        <span className="text-sm font-semibold">
+                          Show "Ending Soon" countdown banner on homepage
+                        </span>
+                      </label>
+                      <label className="block max-w-xs mt-4">
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                          End date & time (UAE time)
+                        </span>
+                        <input
+                          type="datetime-local"
+                          value={isoToUaeLocalInput(settings.endingSoonEndAt)}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              endingSoonEndAt: uaeLocalInputToIso(e.target.value),
+                            }))
+                          }
+                          className="mt-1 w-full bg-background/60 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Enter this in UAE (GST, UTC+4) time. The banner counts down to this
+                          moment, then hides itself automatically.
+                        </p>
+                      </label>
+                      <label className="block mt-4">
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                          Heading
+                        </span>
+                        <input
+                          type="text"
+                          value={settings.endingSoonHeading}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              endingSoonHeading: e.target.value,
+                            }))
+                          }
+                          placeholder="THE REVITAL ENERGY CHALLENGE ENDS IN"
+                          className="mt-1 w-full bg-background/60 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </label>
+                      <label className="block mt-4">
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                          Subheading
+                        </span>
+                        <input
+                          type="text"
+                          value={settings.endingSoonSubheading}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              endingSoonSubheading: e.target.value,
+                            }))
+                          }
+                          placeholder="YOUR LAST CHANCE TO CLAIM THE GRAND PRIZE"
+                          className="mt-1 w-full bg-background/60 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </label>
+                      <label className="block mt-4">
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                          Message
+                        </span>
+                        <textarea
+                          value={settings.endingSoonMessage}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              endingSoonMessage: e.target.value,
+                            }))
+                          }
+                          rows={3}
+                          placeholder="Time is running out! Make your final move, build your Grand Score, and compete for a place among our 3 Grand Winners."
+                          className="mt-1 w-full bg-background/60 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-y"
+                        />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Leave heading/subheading/message blank to use the default text.
                         </p>
                       </label>
                     </SettingsSection>

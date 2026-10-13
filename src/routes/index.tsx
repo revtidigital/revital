@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { getUser } from "@/lib/storage";
 import { Leaderboard } from "@/components/Leaderboard";
 import { InstagramFeed } from "@/components/InstagramFeed";
+import { EndingSoonBanner } from "@/components/EndingSoonBanner";
 import { PlayerAvatarsCarousel } from "@/components/PlayerAvatarsCarousel";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
 import heroWordmark from "@/assets/revital-hero-wordmark.webp";
@@ -52,6 +53,12 @@ function Landing() {
   const [announcements, setAnnouncements] = useState<string[]>([defaultAnnouncement]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showInstaBadge, setShowInstaBadge] = useState(true);
+  const [endingSoon, setEndingSoon] = useState<{
+    endAt: string;
+    heading?: string;
+    subheading?: string;
+    message?: string;
+  } | null>(null);
   useEffect(() => {
     setIsLoggedIn(Boolean(getUser()));
     const syncAuth = () => setIsLoggedIn(Boolean(getUser()));
@@ -62,6 +69,18 @@ function Landing() {
     import("@/server/adminFns")
       .then((mod) => mod.getPlatformSettingsFn())
       .then((settings) => {
+        if (
+          settings.endingSoonEnabled &&
+          settings.endingSoonEndAt &&
+          Date.now() < new Date(settings.endingSoonEndAt).getTime()
+        ) {
+          setEndingSoon({
+            endAt: settings.endingSoonEndAt,
+            heading: settings.endingSoonHeading,
+            subheading: settings.endingSoonSubheading,
+            message: settings.endingSoonMessage,
+          });
+        }
         if (settings.homeAnnouncementMode === "text") {
           const texts = (settings.homeAnnouncementTexts ?? [])
             .map((text) => text.trim())
@@ -306,6 +325,15 @@ function Landing() {
               </div>
             ))}
           </motion.div>
+
+          {endingSoon && (
+            <EndingSoonBanner
+              endAt={endingSoon.endAt}
+              heading={endingSoon.heading}
+              subheading={endingSoon.subheading}
+              message={endingSoon.message}
+            />
+          )}
         </section>
 
         {/* HOW TO PARTICIPATE */}

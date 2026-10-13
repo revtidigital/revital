@@ -194,6 +194,13 @@ export interface PlatformSettings {
   comingSoonStartAt: string; // ISO UTC timestamp — site auto-locks once now >= this (blank = immediately, if enabled)
   comingSoonEndAt: string; // ISO UTC timestamp — site auto-unlocks once now >= this
   comingSoonMessage: string; // shown as-is on the Coming Soon page; blank = default message
+  // Independent of comingSoon* — this is a non-blocking countdown banner on the homepage,
+  // never gates the site. Does not read or write any comingSoon* field.
+  endingSoonEnabled: boolean;
+  endingSoonEndAt: string; // ISO UTC timestamp — banner auto-hides once now >= this
+  endingSoonHeading: string; // blank = default heading
+  endingSoonSubheading: string; // blank = default subheading
+  endingSoonMessage: string; // blank = default message
 }
 
 // Tracking IDs are interpolated directly into an inline <script> tag on every
@@ -219,6 +226,11 @@ const settingsSchema = z.object({
   comingSoonStartAt: z.string().default(""),
   comingSoonEndAt: z.string().default(""),
   comingSoonMessage: z.string().default(""),
+  endingSoonEnabled: z.boolean().default(false),
+  endingSoonEndAt: z.string().default(""),
+  endingSoonHeading: z.string().default(""),
+  endingSoonSubheading: z.string().default(""),
+  endingSoonMessage: z.string().default(""),
 });
 
 /** Requires a valid admin session token — settings include the reCAPTCHA secret key. */
@@ -263,6 +275,11 @@ async function loadPlatformSettings(): Promise<PlatformSettings> {
       comingSoonStartAt: "",
       comingSoonEndAt: "",
       comingSoonMessage: "",
+      endingSoonEnabled: false,
+      endingSoonEndAt: "",
+      endingSoonHeading: "",
+      endingSoonSubheading: "",
+      endingSoonMessage: "",
     } as PlatformSettings;
   const { _id: _a, _key: _b, updatedAt: _c, ...rest } = doc as Record<string, unknown>;
 
@@ -285,6 +302,12 @@ async function loadPlatformSettings(): Promise<PlatformSettings> {
     comingSoonStartAt: typeof rest.comingSoonStartAt === "string" ? rest.comingSoonStartAt : "",
     comingSoonEndAt: typeof rest.comingSoonEndAt === "string" ? rest.comingSoonEndAt : "",
     comingSoonMessage: typeof rest.comingSoonMessage === "string" ? rest.comingSoonMessage : "",
+    endingSoonEnabled: rest.endingSoonEnabled === true,
+    endingSoonEndAt: typeof rest.endingSoonEndAt === "string" ? rest.endingSoonEndAt : "",
+    endingSoonHeading: typeof rest.endingSoonHeading === "string" ? rest.endingSoonHeading : "",
+    endingSoonSubheading:
+      typeof rest.endingSoonSubheading === "string" ? rest.endingSoonSubheading : "",
+    endingSoonMessage: typeof rest.endingSoonMessage === "string" ? rest.endingSoonMessage : "",
   } as PlatformSettings;
 }
 
