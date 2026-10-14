@@ -742,6 +742,12 @@ export const getWelcomeEmailActivityFn = createServerFn({ method: "POST" })
     }));
   });
 
+// Challenge closed permanently at 2026-10-14 23:59 UAE (same instant as the
+// winner-lock cron). Any play attempt timestamped at or after this instant is
+// excluded from both leaderboards below — the attempt itself still saves to
+// the DB (users can keep playing), it just never counts toward ranking again.
+const LEADERBOARD_FREEZE_AT = "2026-10-14T19:59:00.000Z";
+
 export const getDailyLeaderboardFn = createServerFn({ method: "GET" }).handler(async () => {
   const db = await getDb();
   const today = formatUaeDate(new Date());
@@ -766,7 +772,9 @@ export const getDailyLeaderboardFn = createServerFn({ method: "GET" }).handler(a
     .filter((u) => !isExcludedContact(u.contact))
     .filter((u) => !u.winnerLockDates || u.winnerLockDates.length === 0) // past daily winners don't reappear on Today's Leaders
     .map((u) => {
-      const todaysAttempts = (u.playAttempts ?? []).filter((a) => a.date === today);
+      const todaysAttempts = (u.playAttempts ?? []).filter(
+        (a) => a.date === today && a.playedAt < LEADERBOARD_FREEZE_AT,
+      );
       if (todaysAttempts.length === 0) return null;
       const best = todaysAttempts.reduce((best, cur) =>
         cur.total > best.total || (cur.total === best.total && cur.playedAt < best.playedAt)
@@ -831,7 +839,7 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
   const scored = users
     .filter((u) => !isExcludedContact(u.contact))
     .map((u) => {
-      const attempts = u.playAttempts ?? [];
+      const attempts = (u.playAttempts ?? []).filter((a) => a.playedAt < LEADERBOARD_FREEZE_AT);
       const uniqueDates = [...new Set(attempts.map((a) => a.date))];
       const activeDays = uniqueDates.length;
       if (activeDays === 0) return null;
@@ -985,7 +993,7 @@ export const getUserRankFn = createServerFn({ method: "GET" })
     const scored = users
       .filter((u) => !isExcludedContact(u.contact))
       .map((u) => {
-        const attempts = u.playAttempts ?? [];
+        const attempts = (u.playAttempts ?? []).filter((a) => a.playedAt < LEADERBOARD_FREEZE_AT);
         const uniqueDates = [...new Set(attempts.map((a) => a.date))];
         const activeDays = uniqueDates.length;
         if (activeDays === 0) return null;
