@@ -57,7 +57,6 @@ function Landing() {
     endAt: string;
     heading?: string;
     subheading?: string;
-    message?: string;
   } | null>(null);
   useEffect(() => {
     setIsLoggedIn(Boolean(getUser()));
@@ -78,7 +77,6 @@ function Landing() {
             endAt: settings.endingSoonEndAt,
             heading: settings.endingSoonHeading,
             subheading: settings.endingSoonSubheading,
-            message: settings.endingSoonMessage,
           });
         }
         if (settings.homeAnnouncementMode === "text") {
@@ -209,15 +207,6 @@ function Landing() {
             transition={{ type: "spring", damping: 12, delay: 0.1 }}
           />
 
-          {endingSoon && (
-            <EndingSoonBanner
-              endAt={endingSoon.endAt}
-              heading={endingSoon.heading}
-              subheading={endingSoon.subheading}
-              message={endingSoon.message}
-            />
-          )}
-
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -274,6 +263,14 @@ function Landing() {
               View My Score
             </Link>
           </motion.div>
+
+          {endingSoon && (
+            <EndingSoonBanner
+              endAt={endingSoon.endAt}
+              heading={endingSoon.heading}
+              subheading={endingSoon.subheading}
+            />
+          )}
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}

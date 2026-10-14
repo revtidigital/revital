@@ -506,7 +506,6 @@ function Admin() {
     endingSoonEndAt: "",
     endingSoonHeading: "",
     endingSoonSubheading: "",
-    endingSoonMessage: "",
   });
   const [savedFlash, setSavedFlash] = useState(false);
   const [sendingLastWinnerEmail, setSendingLastWinnerEmail] = useState(false);
@@ -3303,25 +3302,8 @@ function Admin() {
                           placeholder="YOUR LAST CHANCE TO CLAIM THE GRAND PRIZE"
                           className="mt-1 w-full bg-background/60 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         />
-                      </label>
-                      <label className="block mt-4">
-                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
-                          Message
-                        </span>
-                        <textarea
-                          value={settings.endingSoonMessage}
-                          onChange={(e) =>
-                            setSettings((prev) => ({
-                              ...prev,
-                              endingSoonMessage: e.target.value,
-                            }))
-                          }
-                          rows={3}
-                          placeholder="Time is running out! Make your final move, build your Grand Score, and compete for a place among our 3 Grand Winners."
-                          className="mt-1 w-full bg-background/60 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-y"
-                        />
                         <p className="text-[11px] text-muted-foreground mt-1">
-                          Leave heading/subheading/message blank to use the default text.
+                          Leave heading/subheading blank to use the default text.
                         </p>
                       </label>
                     </SettingsSection>

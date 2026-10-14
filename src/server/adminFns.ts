@@ -200,7 +200,6 @@ export interface PlatformSettings {
   endingSoonEndAt: string; // ISO UTC timestamp — banner auto-hides once now >= this
   endingSoonHeading: string; // blank = default heading
   endingSoonSubheading: string; // blank = default subheading
-  endingSoonMessage: string; // blank = default message
 }
 
 // Tracking IDs are interpolated directly into an inline <script> tag on every
@@ -230,7 +229,6 @@ const settingsSchema = z.object({
   endingSoonEndAt: z.string().default(""),
   endingSoonHeading: z.string().default(""),
   endingSoonSubheading: z.string().default(""),
-  endingSoonMessage: z.string().default(""),
 });
 
 /** Requires a valid admin session token — settings include the reCAPTCHA secret key. */
@@ -279,7 +277,6 @@ async function loadPlatformSettings(): Promise<PlatformSettings> {
       endingSoonEndAt: "",
       endingSoonHeading: "",
       endingSoonSubheading: "",
-      endingSoonMessage: "",
     } as PlatformSettings;
   const { _id: _a, _key: _b, updatedAt: _c, ...rest } = doc as Record<string, unknown>;
 
@@ -307,7 +304,6 @@ async function loadPlatformSettings(): Promise<PlatformSettings> {
     endingSoonHeading: typeof rest.endingSoonHeading === "string" ? rest.endingSoonHeading : "",
     endingSoonSubheading:
       typeof rest.endingSoonSubheading === "string" ? rest.endingSoonSubheading : "",
-    endingSoonMessage: typeof rest.endingSoonMessage === "string" ? rest.endingSoonMessage : "",
   } as PlatformSettings;
 }
 
