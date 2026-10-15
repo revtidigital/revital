@@ -11,426 +11,334 @@ function TermsPage() {
       <Header />
       <main className="flex-1 max-w-3xl mx-auto px-4 py-12">
         <h1 className="text-4xl md:text-5xl font-black text-garnet">Terms &amp; Conditions</h1>
-        <p className="mt-2 text-sm font-semibold text-garnet">Revital Energy Challenge</p>
-        <p className="mt-1 text-sm text-muted-foreground">Last Updated: August 2026</p>
+        <p className="mt-2 text-sm font-semibold text-garnet">Revital UAE Website</p>
+        <p className="mt-1 text-sm text-muted-foreground">Last Updated: October 2026</p>
         <p className="mt-4 text-sm text-muted-foreground">
-          These Terms &amp; Conditions govern participation in the Revital Energy Challenge
-          promotional campaign. By accessing or participating in the campaign website, you agree
-          to comply with these Terms &amp; Conditions.
+          These Terms &amp; Conditions govern your access to and use of the Revital UAE website,
+          including any features, content, and mini-games that remain available. By accessing or
+          using the website, you agree to comply with these Terms &amp; Conditions.
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          If you do not agree with these Terms, please do not participate in the campaign.
+          If you do not agree with these Terms, please discontinue use of the website.
         </p>
 
         <div className="prose prose-sm md:prose-base mt-8 space-y-6 text-garnet/85">
           <section>
-            <h2 className="text-xl font-bold text-garnet">1. Campaign Overview</h2>
+            <h2 className="text-xl font-bold text-garnet">1. Website Overview</h2>
             <p>
-              The Revital Energy Challenge is a promotional gaming campaign where participants
-              compete by playing three mini-games, earning Daily Energy Scores, climbing the
-              Grand Leaderboard, and becoming eligible for daily and grand rewards.
+              The Revital UAE website provides information about Revital and may offer
+              interactive mini-games for recreational use.
             </p>
             <p className="mt-1">
-              Revital reserves the right to modify, extend, suspend, or terminate the campaign if
-              required for operational, legal, or technical reasons.
+              The Revital Energy Challenge competition has concluded. The website no longer
+              accepts competition entries, awards competition points, or provides opportunities to
+              qualify for competition prizes.
+            </p>
+            <p className="mt-1">
+              Any mini-games that remain accessible are provided for entertainment purposes only.
+            </p>
+            <p className="mt-1">
+              Revital reserves the right to modify, suspend, or discontinue any website feature
+              where necessary for operational, technical, security, or legal reasons.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-bold text-garnet">2. Eligibility</h2>
-            <p>To participate in the campaign, participants must:</p>
-            <ul>
-              <li>Be eligible to participate under applicable laws in the United Arab Emirates.</li>
-              <li>Participate during the official campaign period.</li>
-              <li>Submit a valid mobile number after completing gameplay to save their score.</li>
-              <li>Comply with these Terms &amp; Conditions.</li>
-            </ul>
-            <p className="mt-1">
-              Participants may also choose to upload a profile image in the profile section.
-              Uploading a profile image is optional and is not required to participate in the
-              campaign or qualify for any reward.
-            </p>
-            <p className="mt-1">
-              Revital may request additional verification before confirming winners.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold text-garnet">3. How the Challenge Works</h2>
-            <p>Participants can:</p>
-            <ul>
-              <li>Start the challenge without OTP verification.</li>
-              <li>
-                Play all three mini-games: Reflex Test, Memory Game, Balance Game.
-              </li>
-              <li>Complete all games to generate a Daily Energy Score.</li>
-              <li>Submit their mobile number to save their score.</li>
-              <li>Optionally upload a profile image in the profile section.</li>
-              <li>Return daily to improve their ranking.</li>
-              <li>Share their referral code to earn Grand Leaderboard points.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold text-garnet">4. Daily Energy Score</h2>
-            <ul>
-              <li>Each game has a maximum score of 1,500 points.</li>
-              <li>The Daily Energy Score is the average of the three game scores.</li>
-              <li>Maximum Daily Energy Score is 1,500 points.</li>
-              <li>
-                If a participant plays multiple times in one day, only the best Daily Energy Score
-                is considered.
-              </li>
-              <li>Daily Scores determine Daily Leaderboard rankings and Daily Winners.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold text-garnet">5. Grand Leaderboard Score</h2>
             <p>
-              The Grand Leaderboard reflects a participant's overall campaign performance.
+              Visitors may access publicly available website content, subject to these Terms &amp;
+              Conditions and applicable laws.
             </p>
-            <p className="font-semibold mt-3">Gameplay Score Components</p>
-            <div className="mt-3 overflow-hidden rounded-2xl border border-border">
-              <table className="w-full border-collapse text-sm">
-                <thead>
-                  <tr className="bg-garnet/10">
-                    <th className="text-left px-4 py-2 font-bold text-garnet">Component</th>
-                    <th className="text-left px-4 py-2 font-bold text-garnet">Maximum Points</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-t border-border">
-                    <td className="px-4 py-2">Average Gameplay Performance</td>
-                    <td className="px-4 py-2">1,500</td>
-                  </tr>
-                  <tr className="border-t border-border">
-                    <td className="px-4 py-2">Consistency Bonus</td>
-                    <td className="px-4 py-2">1,000</td>
-                  </tr>
-                  <tr className="border-t border-border">
-                    <td className="px-4 py-2">Performance Streak Bonus</td>
-                    <td className="px-4 py-2">500</td>
-                  </tr>
-                  <tr className="border-t border-border">
-                    <td className="px-4 py-2 font-semibold">Maximum Gameplay Score</td>
-                    <td className="px-4 py-2 font-semibold">3,000</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <p className="font-semibold mt-4">Referral Points</p>
-            <ul>
-              <li>Every successful verified referral earns 100 points.</li>
-              <li>Referrals are unlimited.</li>
-              <li>Referral points are added only to the Grand Leaderboard score.</li>
-            </ul>
-            <p className="font-semibold mt-4">Grand Score Formula</p>
-            <p className="mt-1">Grand Score = Gameplay Score + (Successful Referrals × 100)</p>
             <p className="mt-1">
-              Referral points do not affect Daily Scores or Daily Winner selection.
+              Where a particular feature has additional age or eligibility requirements, those
+              requirements must be followed.
+            </p>
+            <p className="mt-1">
+              The website's recreational mini-games do not provide eligibility for the concluded
+              competition or any associated prizes.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-garnet">6. Daily Winners</h2>
-            <p>A Daily Winner is selected every campaign day.</p>
-            <p className="font-semibold mt-3">Winner Selection Criteria</p>
+            <h2 className="text-xl font-bold text-garnet">3. Use of the Website and Mini-Games</h2>
+            <p>Visitors may:</p>
             <ul>
-              <li>Highest Daily Energy Score of the day.</li>
-              <li>Only the participant's best score of that day is considered.</li>
-              <li>Referrals do not influence Daily Winners.</li>
+              <li>Browse publicly available website content.</li>
+              <li>Access available mini-games for recreational use.</li>
+              <li>View information about Revital and its products.</li>
+              <li>Contact Revital through available communication channels.</li>
             </ul>
-            <p className="font-semibold mt-3">Tie-Breaker</p>
             <p className="mt-1">
-              If multiple participants achieve the same Daily Score, the participant who achieved
-              the score first (earliest recorded timestamp) will be selected as the Daily Winner.
+              Visitors must not use the website to engage in fraudulent, unlawful, abusive, or
+              unauthorised activities.
+            </p>
+            <p className="mt-1">
+              Any scores generated through recreational gameplay are for personal entertainment
+              only. Previous competition mechanics, including participation registration, referral
+              scoring, leaderboard progression, and prize eligibility, are no longer active.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-garnet">7. Grand Winners</h2>
+            <h2 className="text-xl font-bold text-garnet">4. Gameplay Scores</h2>
             <p>
-              Three Grand Winners will be selected based on the final Grand Leaderboard rankings
-              at the end of the campaign.
+              The website may allow visitors to play the Reflex Test, Memory Game, and Balance
+              Game, where these features remain available.
             </p>
-            <p className="mt-1">
-              The three participants with the highest eligible Grand Scores at the end of the
-              campaign will be selected as the Grand Winners, subject to successful verification
-              and compliance with these Terms &amp; Conditions.
-            </p>
-            <p className="mt-1">
-              Revital reserves the right to verify eligibility before prize distribution.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold text-garnet">8. Winner Verification &amp; Prize Eligibility</h2>
-            <p>Before announcing any winner, Revital may verify:</p>
             <ul>
-              <li>Registered mobile number.</li>
-              <li>Participant identity, where required for prize fulfilment.</li>
-              <li>Campaign eligibility.</li>
-              <li>Gameplay and referral validity.</li>
+              <li>Any scores generated through these games are recreational results only.</li>
+              <li>Gameplay scores do not qualify visitors for competition rankings.</li>
+              <li>Historical competition scores do not represent an active leaderboard.</li>
+              <li>No competition points, bonuses, or prizes can be earned through continued gameplay.</li>
+              <li>Revital does not guarantee that gameplay results will be saved or remain available.</li>
               <li>
-                Any profile image or other content submitted by the participant, where relevant
-                to campaign administration or publication.
+                Revital may modify or remove game features to maintain website functionality,
+                security, or performance.
               </li>
             </ul>
-            <p className="mt-1">
-              Revital may disqualify participants if verification fails or fraudulent activity is
-              detected.
-            </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-garnet">9. Referral Policy</h2>
+            <h2 className="text-xl font-bold text-garnet">
+              5. Historical Leaderboards and Competition Records
+            </h2>
             <p>
-              Referral points are awarded only for successful verified referrals.
+              Any historical leaderboard information or competition results that remain visible on
+              the website are provided as records of the concluded competition.
             </p>
-            <p className="mt-1">The following will not qualify:</p>
-            <ul>
-              <li>Duplicate registrations.</li>
-              <li>Self-referrals.</li>
-              <li>Fake or invalid mobile numbers.</li>
-              <li>Fraudulent or automated referrals.</li>
-              <li>Referrals generated using bots, scripts, or manipulated accounts.</li>
-            </ul>
             <p className="mt-1">
-              Revital reserves the right to remove invalid referral points at any time.
+              Such information does not indicate that the competition is active or that visitors
+              can earn new rankings or prizes.
+            </p>
+            <p className="mt-1">
+              Historical records may be updated, removed, or retained as necessary, subject to
+              applicable law and legitimate operational requirements.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-garnet">10. Fair Play Policy</h2>
-            <p>Participants must play fairly and honestly.</p>
-            <p className="mt-1">The following activities are strictly prohibited:</p>
-            <ul>
-              <li>Using bots, automation tools, scripts, or third-party software.</li>
-              <li>Manipulating gameplay scores.</li>
-              <li>Exploiting technical bugs or loopholes.</li>
-              <li>Attempting to interfere with leaderboard rankings.</li>
-              <li>Creating multiple accounts for unfair advantage.</li>
-            </ul>
-            <p className="mt-1">
-              Any suspicious activity may result in score removal, leaderboard removal, or
-              permanent disqualification.
-            </p>
-            <p className="mt-1">Revital's decision regarding fraudulent gameplay will be final.</p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold text-garnet">11. User Content, Profile Images &amp; Acceptable Use</h2>
+            <h2 className="text-xl font-bold text-garnet">6. Prizes and Winner Verification</h2>
             <p>
-              Participants are responsible for all information and content submitted during the
-              campaign, including names, profile information, profile images, referrals, and any
-              other content entered or uploaded on the website.
+              The Revital Energy Challenge competition has concluded, and no new prizes are
+              available through the website.
             </p>
             <p className="mt-1">
-              Uploading a profile image is optional. Participants may choose not to upload an
-              image and may still participate fully in the campaign and remain eligible for
-              rewards.
-            </p>
-            <p className="mt-1">By uploading a profile image, the participant confirms that:</p>
-            <ul>
-              <li>
-                The image is their own image or that they have all necessary rights and
-                permissions to submit it.
-              </li>
-              <li>
-                The image does not infringe the privacy, publicity, copyright, trademark, or
-                other rights of any person or entity.
-              </li>
-              <li>The image does not contain any prohibited or unlawful content.</li>
-              <li>
-                The image is suitable for display on the campaign website and associated digital
-                channels.
-              </li>
-            </ul>
-            <p className="font-semibold mt-3">Use of Profile Images</p>
-            <p className="mt-1">
-              By voluntarily uploading a profile image, the participant grants Revital and its
-              authorised agencies, partners, and service providers a non-exclusive, royalty-free,
-              worldwide licence to use, reproduce, display, publish, adapt, and distribute the
-              submitted profile image for campaign-related purposes.
-            </p>
-            <p className="mt-1">This may include displaying the image:</p>
-            <ul>
-              <li>On the campaign website.</li>
-              <li>On campaign leaderboards or participant profiles.</li>
-              <li>On Revital's official social media channels.</li>
-              <li>In campaign-related digital content, communications, or promotional materials.</li>
-            </ul>
-            <p className="mt-1">
-              The participant understands that content published online or on social media may be
-              viewed, shared, reposted, or downloaded by third parties. Revital cannot guarantee
-              that content published online will be removed from all third-party platforms or
-              copies.
+              Any outstanding prize fulfilment or winner verification relating to the concluded
+              competition will be handled separately, where applicable.
             </p>
             <p className="mt-1">
-              Participants may contact Revital through the official campaign support details to
-              request removal of their profile image from Revital-controlled campaign channels.
-              Revital will consider such requests subject to applicable law, campaign
-              requirements, existing publications, and legitimate business or legal needs.
-            </p>
-            <p className="mt-1">The following content is strictly prohibited:</p>
-            <ul>
-              <li>Offensive, abusive, defamatory, or hateful language.</li>
-              <li>Obscene, sexually explicit, or inappropriate content.</li>
-              <li>Religious, political, or discriminatory content.</li>
-              <li>Violent, threatening, or illegal content.</li>
-              <li>Impersonation of another individual or organization.</li>
-              <li>False, misleading, or fraudulent information.</li>
-              <li>Spam, promotional messages, or unauthorized advertisements.</li>
-              <li>Images containing another person without their consent.</li>
-              <li>Images that infringe any third-party rights.</li>
-              <li>Images containing personal, confidential, or sensitive information.</li>
-              <li>Content that misuses or imitates Revital branding without authorization.</li>
-            </ul>
-            <p className="font-semibold mt-3">Revital's Moderation Rights</p>
-            <p className="mt-1">Revital has the full right and authority to:</p>
-            <ul>
-              <li>
-                Review, remove, edit, crop, resize, reject, or replace any name, username,
-                profile image, referral information, or other content that violates these Terms.
-              </li>
-              <li>Remove inappropriate or unauthorized content without prior notice.</li>
-              <li>Decline to publish or display any profile image for any reason.</li>
-              <li>Disqualify participants who repeatedly submit prohibited content.</li>
-              <li>Suspend or permanently block accounts involved in misuse of the platform.</li>
-            </ul>
-            <p className="mt-1">
-              Any unauthorized, offensive, misleading, unlawful, or inappropriate content
-              submitted or uploaded anywhere on the platform will not be accepted and may be
-              removed immediately at Revital's sole discretion.
+              Revital may request information reasonably necessary to verify an eligible winner or
+              fulfil an outstanding prize obligation.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-garnet">12. Intellectual Property</h2>
-            <p>All campaign content, including:</p>
-            <ul>
-              <li>Revital branding,</li>
-              <li>Logos,</li>
-              <li>Graphics,</li>
-              <li>Game designs,</li>
-              <li>Animations,</li>
-              <li>Website content,</li>
-              <li>Leaderboards,</li>
-              <li>Campaign creatives,</li>
-            </ul>
-            <p className="mt-1">is owned by Revital or its licensors.</p>
-            <p className="mt-1">
-              Participants may not reproduce, distribute, modify, or commercially use any campaign
-              content without prior written permission.
+            <h2 className="text-xl font-bold text-garnet">7. Referral Policy</h2>
+            <p>
+              The referral-based scoring system associated with the concluded competition is no
+              longer active.
             </p>
             <p className="mt-1">
-              Participants retain ownership of any profile image they upload, subject to the
-              licence granted to Revital under Section 11 of these Terms &amp; Conditions.
+              Sharing or using historical referral codes does not generate competition points,
+              improve leaderboard rankings, or qualify any person for prizes.
+            </p>
+            <p className="mt-1">
+              Visitors must not misuse website links or features to engage in spam, impersonation,
+              fraudulent activity, or other unlawful conduct.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-garnet">13. Privacy &amp; Personal Data</h2>
-            <p>Participation in the campaign is subject to the Revital Privacy Policy.</p>
-            <p className="mt-1">
-              By participating, you consent to the collection and processing of your personal
-              information for:
-            </p>
+            <h2 className="text-xl font-bold text-garnet">8. Fair Use Policy</h2>
+            <p>Visitors must use the website responsibly and must not:</p>
             <ul>
-              <li>Gameplay administration.</li>
-              <li>Leaderboard management.</li>
-              <li>Winner verification.</li>
-              <li>Prize fulfilment.</li>
-              <li>Fraud prevention.</li>
-              <li>Campaign analytics.</li>
-              <li>Profile management.</li>
+              <li>Use bots, scripts, or automated tools to interfere with website functionality.</li>
+              <li>Attempt to manipulate gameplay results or website data.</li>
+              <li>Exploit technical vulnerabilities or security weaknesses.</li>
+              <li>Attempt to gain unauthorised access to systems or information.</li>
+              <li>Interfere with the website's operation or availability.</li>
+              <li>Use the website for unlawful, misleading, or fraudulent purposes.</li>
+            </ul>
+            <p className="mt-1">
+              Revital may restrict access, remove content, or take other appropriate action in
+              response to misuse or security concerns.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-garnet">9. User Content and Acceptable Use</h2>
+            <p>Visitors may submit information through available website forms or communication channels.</p>
+            <p className="mt-1">
+              You are responsible for ensuring that any information or content you submit is
+              accurate, lawful, and does not infringe the rights of others.
+            </p>
+            <p className="mt-1">You must not submit content that is:</p>
+            <ul>
+              <li>Offensive, abusive, defamatory, or hateful.</li>
+              <li>Obscene, threatening, or unlawful.</li>
+              <li>Discriminatory or intended to harass another person.</li>
+              <li>Misleading, fraudulent, or impersonating another individual or organisation.</li>
+              <li>Infringing of copyright, trademark, privacy, or other third-party rights.</li>
+              <li>Unauthorised promotional material, spam, or malicious content.</li>
               <li>
-                Displaying participant profile images on the campaign website, leaderboards, and
-                Revital's official social media channels where voluntarily submitted and permitted
-                under these Terms.
+                Containing personal or confidential information belonging to another person
+                without appropriate authorisation.
               </li>
             </ul>
             <p className="mt-1">
-              Profile images are optional. Participants who do not upload a profile image will not
-              be disadvantaged or prevented from participating.
+              Revital may remove or restrict access to submitted content that violates these Terms
+              or applicable law.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-garnet">10. Intellectual Property</h2>
+            <p>All website content, including:</p>
+            <ul>
+              <li>Revital branding and logos.</li>
+              <li>Text, graphics, and illustrations.</li>
+              <li>Website design and layouts.</li>
+              <li>Game designs and animations.</li>
+              <li>Images, videos, and other media.</li>
+              <li>Previously published campaign materials.</li>
+            </ul>
+            <p className="mt-1">is owned by Revital, its affiliates, or its licensors, as applicable.</p>
+            <p className="mt-1">
+              You may access and view this content for personal, non-commercial purposes. You may
+              not reproduce, distribute, modify, publish, or commercially use website content
+              without prior written permission from the relevant rights holder.
+            </p>
+            <p className="mt-1">All rights not expressly granted are reserved.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-garnet">11. Privacy and Personal Data</h2>
+            <p>Your use of the website is subject to the Revital UAE Privacy Policy.</p>
+            <p className="mt-1">Personal information may be collected and processed where necessary to:</p>
+            <ul>
+              <li>Operate and maintain the website.</li>
+              <li>Provide available website features.</li>
+              <li>Respond to enquiries and support requests.</li>
+              <li>Maintain website security and prevent misuse.</li>
+              <li>Analyse website performance and usage, where applicable.</li>
+              <li>Meet legal and regulatory obligations.</li>
+            </ul>
+            <p className="mt-1">
+              Information previously collected in connection with the concluded competition may be
+              retained where necessary for outstanding obligations or other lawful purposes.
             </p>
             <p className="mt-1">
-              Personal data and submitted content will be processed in accordance with applicable
-              UAE privacy laws and the Revital Privacy Policy.
+              Personal information will be handled in accordance with the Privacy Policy and
+              applicable data protection laws.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-garnet">12. Cookies and Analytics</h2>
+            <p>
+              The website may use cookies and similar technologies to support functionality,
+              security, analytics, and performance.
+            </p>
+            <p className="mt-1">
+              These technologies may collect technical information about your device, browser,
+              website visits, and interactions with available features.
+            </p>
+            <p className="mt-1">
+              You may manage cookies through your browser settings or any cookie preference
+              controls provided on the website. Disabling certain cookies may affect website
+              functionality.
+            </p>
+            <p className="mt-1">Further details are provided in the Privacy Policy.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-garnet">13. Third-Party Services and Links</h2>
+            <p>The website may contain links to third-party websites, services, or platforms.</p>
+            <p className="mt-1">
+              These third parties operate independently and may have their own terms, privacy
+              policies, and practices.
+            </p>
+            <p className="mt-1">
+              Revital is not responsible for the content, availability, security, or practices of
+              third-party websites. Visitors should review the applicable terms and policies
+              before using those services.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-bold text-garnet">14. Limitation of Liability</h2>
-            <p>Revital is not responsible for:</p>
+            <p>To the extent permitted by applicable law, Revital is not responsible for:</p>
             <ul>
-              <li>Internet connectivity issues.</li>
-              <li>Device compatibility issues.</li>
-              <li>Technical interruptions or server downtime.</li>
-              <li>Delayed or incomplete submissions caused by technical failures.</li>
-              <li>Loss of participation due to circumstances beyond reasonable control.</li>
+              <li>Temporary website interruptions or unavailability.</li>
+              <li>Internet connectivity or device compatibility issues.</li>
+              <li>Technical errors, delays, or data loss.</li>
+              <li>The unavailability or modification of website features.</li>
               <li>
-                Any unauthorised use, copying, sharing, or redistribution of profile images or
-                other content by third parties after publication online.
+                Unauthorised access or misuse arising from circumstances beyond reasonable
+                control.
               </li>
+              <li>The content, availability, or practices of third-party websites and services.</li>
             </ul>
             <p className="mt-1">
-              Revital may temporarily suspend gameplay for maintenance or security reasons.
+              Nothing in these Terms excludes or limits liability where such exclusion or
+              limitation is prohibited by applicable law.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-garnet">15. Suspension, Cancellation &amp; Disqualification</h2>
-            <p>Revital reserves the right to suspend, cancel, or disqualify any participant if:</p>
+            <h2 className="text-xl font-bold text-garnet">15. Suspension and Restriction of Access</h2>
+            <p>
+              Revital reserves the right to suspend, restrict, or terminate access to the website
+              or any feature where:
+            </p>
             <ul>
-              <li>Campaign rules are violated.</li>
-              <li>Fraudulent gameplay or referrals are detected.</li>
-              <li>Unauthorized or inappropriate content is submitted.</li>
-              <li>A profile image or other submitted content infringes third-party rights.</li>
-              <li>Multiple accounts are created for unfair advantage.</li>
-              <li>Technical manipulation or abuse of the platform is identified.</li>
+              <li>These Terms &amp; Conditions are violated.</li>
+              <li>Fraudulent, unlawful, or abusive activity is detected.</li>
+              <li>Website security or functionality is threatened.</li>
+              <li>A legal or regulatory requirement necessitates such action.</li>
+              <li>Maintenance or technical changes require temporary or permanent suspension.</li>
             </ul>
             <p className="mt-1">
-              Disqualified participants may lose eligibility for leaderboard rankings and prizes.
+              Where appropriate, Revital may take action without prior notice to protect the
+              website, its visitors, or its legitimate interests.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-garnet">16. Changes to the Campaign</h2>
-            <p>Revital reserves the right to:</p>
-            <ul>
-              <li>Update these Terms &amp; Conditions.</li>
-              <li>Modify gameplay rules.</li>
-              <li>Change scoring mechanisms if required for fairness or security.</li>
-              <li>Update prize structures or campaign timelines where necessary.</li>
-              <li>
-                Modify how participant content, including profile images, is displayed or used,
-                subject to applicable law and the Revital Privacy Policy.
-              </li>
-            </ul>
-            <p className="mt-1">Any updates will be published on the campaign website.</p>
+            <h2 className="text-xl font-bold text-garnet">16. Changes to These Terms</h2>
+            <p>
+              Revital may update these Terms &amp; Conditions to reflect changes in website
+              functionality, operations, security requirements, or applicable laws.
+            </p>
+            <p className="mt-1">
+              Updated Terms will be published on this page with a revised &ldquo;Last
+              Updated&rdquo; date.
+            </p>
+            <p className="mt-1">
+              Continued use of the website after changes are published constitutes acceptance of
+              the updated Terms, to the extent permitted by applicable law.
+            </p>
           </section>
 
           <section>
             <h2 className="text-xl font-bold text-garnet">17. Governing Law</h2>
             <p>
               These Terms &amp; Conditions shall be governed by and interpreted in accordance with
-              the laws of the United Arab Emirates.
+              the applicable laws of the United Arab Emirates.
             </p>
             <p className="mt-1">
-              Any disputes arising from the campaign shall be subject to the competent courts of
-              the United Arab Emirates, unless otherwise required under applicable law.
+              Any disputes arising from the use of the website shall be subject to the jurisdiction
+              of the competent courts of the United Arab Emirates, unless otherwise required by
+              applicable law.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-bold text-garnet">18. Contact Us</h2>
             <p>
-              For questions regarding the Revital Energy Challenge, Terms &amp; Conditions,
-              profile image use, privacy, or winner verification, participants may contact the
-              official Revital campaign support team through the contact details provided on the
-              campaign website.
+              If you have questions regarding these Terms &amp; Conditions or your use of the
+              Revital UAE website, please contact Revital through the official contact details
+              provided on the website.
             </p>
           </section>
         </div>
