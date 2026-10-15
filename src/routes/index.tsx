@@ -186,11 +186,15 @@ function Landing() {
 
       <div className="announcement-track">
         <div className="announcement-marquee">
-          {[...announcements, ...announcements].map((item, index) => (
-            <span key={`${item}-${index}`} aria-hidden={index >= announcements.length}>
-              {item}
-            </span>
-          ))}
+          {(() => {
+            const repeatCount = Math.max(1, Math.ceil(8 / announcements.length));
+            const base = Array.from({ length: repeatCount }, () => announcements).flat();
+            return [...base, ...base].map((item, index) => (
+              <span key={`${item}-${index}`} aria-hidden={index >= base.length}>
+                {item}
+              </span>
+            ));
+          })()}
         </div>
       </div>
       <Header />
