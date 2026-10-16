@@ -86,14 +86,6 @@ export function Footer({ hideLegalLinks = false }: { hideLegalLinks?: boolean })
           {!hideLegalLinks && (
             <>
               <Link
-                to="/rules"
-                onClick={() => trackEvent("nav_click", { nav_label: "rules", source: "footer" })}
-                className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]"
-              >
-                Rules
-              </Link>
-              <span className="text-garnet/30">•</span>
-              <Link
                 to="/privacy"
                 onClick={() => trackEvent("nav_click", { nav_label: "privacy", source: "footer" })}
                 className="font-semibold text-garnet/80 transition-colors hover:text-[var(--tiger)]"

@@ -124,9 +124,6 @@ function Landing() {
             <span className="text-[9px] sm:text-[12px] font-bold leading-tight text-garnet">
               Follow us on Instagram
             </span>
-            <span className="text-[8px] sm:text-[11px] font-medium leading-tight text-garnet/70">
-              for the winner updates
-            </span>
           </motion.a>
         )}
       </AnimatePresence>
@@ -219,66 +216,6 @@ function Landing() {
               View My Score
             </Link>
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="mt-6 max-[900px]:mt-4 max-w-4xl mx-auto rounded-3xl border-2 border-[var(--garnet)]/10 bg-white/85 p-3 md:p-4 max-[900px]:p-2 backdrop-blur shadow-card"
-          >
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="flex items-start gap-3 rounded-2xl border border-[var(--garnet)]/10 bg-white/70 p-4 text-left">
-                <div className="text-5xl md:text-6xl leading-none">🏆</div>
-                <div>
-                  <p className="text-2xl font-black uppercase leading-tight text-garnet">
-                    <span className="text-[var(--tiger)]">1 Winner</span> Everyday
-                  </p>
-                  <p className="mt-1 text-sm md:text-base text-garnet/80">
-                    Top the daily leaderboard and win the daily reward.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 rounded-2xl border border-[var(--garnet)]/10 bg-white/70 p-4 text-left">
-                <div className="text-5xl md:text-6xl leading-none">🎁</div>
-                <div>
-                  <p className="text-2xl font-black uppercase leading-tight text-garnet">
-                    <span className="text-[var(--tiger)]">3 Grand</span> Winners
-                  </p>
-                  <p className="mt-1 text-sm md:text-base text-garnet/80">
-                    Compete across players and win the ultimate prize.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <p className="mt-3 text-center text-sm font-semibold text-garnet/70">
-              Daily winners announced on our Instagram.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="mt-8 max-[900px]:mt-5 grid grid-cols-3 gap-2 sm:gap-3 md:gap-6 max-w-2xl mx-auto"
-          >
-            {[
-              { n: "3", label: "Quick games" },
-              { n: "15s", label: "Per challenge" },
-              { n: "Daily", label: "Leaderboard" },
-            ].map((s) => (
-              <div
-                key={s.label}
-                className="bg-white/90 border-2 border-[var(--garnet)]/10 rounded-2xl p-2 sm:p-4 backdrop-blur shadow-card min-w-0"
-              >
-                <div className="text-xl sm:text-2xl md:text-4xl font-black text-gradient-energy">
-                  {s.n}
-                </div>
-                <div className="text-[9px] sm:text-[11px] md:text-sm text-muted-foreground uppercase tracking-wide sm:tracking-wider mt-1 font-semibold whitespace-nowrap sm:whitespace-normal">
-                  {s.label}
-                </div>
-              </div>
-            ))}
-          </motion.div>
         </section>
 
         {/* HOW TO PARTICIPATE */}
@@ -357,6 +294,77 @@ function Landing() {
             </Link>
           </motion.div>
 
+          {global.length >= 3 && (
+            <div className="relative mt-12 md:mt-16 w-full max-w-4xl mx-auto px-2 sm:px-4">
+              <div className="text-center mb-8 sm:mb-10">
+                <div className="inline-block px-4 sm:px-6 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-[#FDE68A] via-[#FBBF24] to-[#FDE68A] text-[#78350F] text-[10px] sm:text-xs uppercase tracking-[0.25em] font-black border border-[#F59E0B]/40 mb-3">
+                  THE TOP 3 CHAMPIONS
+                </div>
+                <div className="flex items-center justify-center gap-2 sm:gap-4">
+                  <svg viewBox="0 0 40 28" className="w-7 h-5 sm:w-10 sm:h-7 text-[#D97706] fill-current">
+                    <path d="M38 24 C28 20 14 14 4 4" stroke="#B45309" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                    <ellipse cx="6" cy="6" rx="4.5" ry="2.5" transform="rotate(-30 6 6)" />
+                    <ellipse cx="14" cy="11" rx="4.5" ry="2.5" transform="rotate(-20 14 11)" />
+                    <ellipse cx="23" cy="16" rx="4.5" ry="2.5" transform="rotate(-10 23 16)" />
+                    <ellipse cx="32" cy="21" rx="4.5" ry="2.5" transform="rotate(0 32 21)" />
+                  </svg>
+                  <span className="text-3xl sm:text-5xl filter drop-shadow-[0_4px_6px_rgba(217,119,6,0.35)] select-none">
+                    🏆
+                  </span>
+                  <h2 className="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-[#451A03] drop-shadow-sm">
+                    GRAND WINNERS
+                  </h2>
+                  <svg viewBox="0 0 40 28" className="w-7 h-5 sm:w-10 sm:h-7 text-[#D97706] fill-current scale-x-[-1]">
+                    <path d="M38 24 C28 20 14 14 4 4" stroke="#B45309" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                    <ellipse cx="6" cy="6" rx="4.5" ry="2.5" transform="rotate(-30 6 6)" />
+                    <ellipse cx="14" cy="11" rx="4.5" ry="2.5" transform="rotate(-20 14 11)" />
+                    <ellipse cx="23" cy="16" rx="4.5" ry="2.5" transform="rotate(-10 23 16)" />
+                    <ellipse cx="32" cy="21" rx="4.5" ry="2.5" transform="rotate(0 32 21)" />
+                  </svg>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3 sm:gap-5 items-end">
+                {[
+                  { entry: global[1], rank: "2nd", medal: "🥈", size: "w-20 h-20 sm:w-28 sm:h-28", nameSize: "text-xs sm:text-base", border: "border-[#F59E0B]/70 shadow-[0_8px_20px_-6px_rgba(217,119,6,0.28)]", scale: "" },
+                  { entry: global[0], rank: "1st", medal: "🥇", size: "w-24 h-24 sm:w-32 sm:h-32", nameSize: "text-sm sm:text-lg", border: "border-[#FEF08A] shadow-[0_0_0_4px_rgba(253,230,138,0.55),0_20px_45px_-8px_rgba(217,119,6,0.45)]", scale: "scale-[1.06] z-10" },
+                  { entry: global[2], rank: "3rd", medal: "🥉", size: "w-20 h-20 sm:w-28 sm:h-28", nameSize: "text-xs sm:text-base", border: "border-[#F59E0B]/70 shadow-[0_8px_20px_-6px_rgba(217,119,6,0.28)]", scale: "" },
+                ].map(({ entry, rank, medal, size, nameSize, border, scale }) => (
+                  <div
+                    key={rank}
+                    className={`relative flex flex-col items-center rounded-2xl sm:rounded-3xl border-2 bg-gradient-to-b from-[#FCD34D] via-[#FBBF24] to-[#F59E0B] p-3 sm:p-4 text-center ${border} ${scale}`}
+                  >
+                    <span className="text-[10px] sm:text-xs font-black text-[#78350F]/80 tracking-widest uppercase mb-2 select-none">
+                      {medal} {rank}
+                    </span>
+                    <div
+                      className={`rounded-full overflow-hidden flex items-end justify-center bg-gradient-to-b from-[#FFFDF0] via-[#FDE68A] to-[#F59E0B] p-[3px] sm:p-1 mb-3 ${size}`}
+                      style={{ containerType: "inline-size" }}
+                    >
+                      <div
+                        className="w-full h-full rounded-full overflow-hidden flex items-end justify-center bg-gradient-energy"
+                        style={{ containerType: "inline-size" }}
+                      >
+                        <span
+                          className="leading-none drop-shadow-sm origin-bottom scale-x-[1.35] scale-y-[1.25] select-none"
+                          style={{ fontSize: "clamp(2rem, 60cqw, 6rem)" }}
+                        >
+                          👤
+                        </span>
+                      </div>
+                    </div>
+                    <p className={`font-black truncate w-full px-1 text-[#3E1B02] leading-tight ${nameSize}`}>
+                      {entry?.name}
+                    </p>
+                    <div className="mt-1.5 inline-flex items-center gap-1 bg-white/30 text-[#78350F] font-black text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 rounded-full border border-white/50">
+                      <span className="text-[#D97706]">★</span>
+                      <span>{entry?.total.toLocaleString()} pts</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <PlayerAvatarsCarousel />
 
           <motion.div
@@ -383,6 +391,9 @@ function Landing() {
 
         {/* LEADERBOARDS */}
         <section id="leaderboard-section" className="scroll-mt-24 mt-20 md:mt-28">
+          {/* Leaderboard block hidden on staging, set to true to restore */}
+          {false && (
+          <>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -430,6 +441,8 @@ function Landing() {
               Join the Leaderboard →
             </Link>
           </div>
+          </>
+          )}
 
           <div id="instagram-feed" className="mt-20 md:mt-24 scroll-mt-24 text-center">
             <a
