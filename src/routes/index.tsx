@@ -227,13 +227,13 @@ function Landing() {
             className="text-center mb-10"
           >
             <div className="inline-block px-4 py-1.5 rounded-full bg-[var(--tiger)] text-white text-xs uppercase tracking-[0.2em] font-black">
-              🎮 How to Participate
+              HOW TO PLAY
             </div>
             <h2 className="mt-3 text-3xl md:text-5xl font-black text-garnet">
               Get Started in <span className="text-gradient-energy">3 Easy Steps</span>
             </h2>
             <p className="mt-2 text-muted-foreground">
-              No sign-up required. Just show up, play, and win.
+              Three quick games. One energy-filled experience.
             </p>
           </motion.div>
 
@@ -242,20 +242,20 @@ function Landing() {
               {
                 step: "01",
                 emoji: "⚡",
-                title: "Start the Challenge",
-                desc: 'Hit "Start Now!" to kick off your first mini-game. No account needed — just your energy and reflexes.',
+                title: "START PLAYING",
+                desc: 'Hit "Start Now!" to jump into the Revital Energy Challenge.',
               },
               {
                 step: "02",
                 emoji: "🎯",
-                title: "Play 3 Quick Games",
-                desc: "Complete the Reflex, Balance, and Memory challenges. Each game takes about 15 seconds. Score as high as you can!",
+                title: "PLAY 3 QUICK GAMES",
+                desc: "Take on Reflex, Balance, and Memory, with each game testing a different skill.",
               },
               {
                 step: "03",
                 emoji: "🏆",
-                title: "Claim Your Score",
-                desc: "Enter your number to save your score, climb the leaderboard, and compete for the daily prize.",
+                title: "GET YOUR ENERGY SCORE",
+                desc: "Complete all three games and discover your Energy Score.",
               },
             ].map((item, i) => (
               <motion.div
