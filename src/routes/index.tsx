@@ -177,9 +177,6 @@ function Landing() {
             <span className="text-[9px] sm:text-[12px] font-bold leading-tight text-garnet">
               Follow us on Instagram
             </span>
-            <span className="text-[8px] sm:text-[11px] font-medium leading-tight text-garnet/70">
-              for the winner updates
-            </span>
           </motion.a>
         )}
       </AnimatePresence>
@@ -242,7 +239,7 @@ function Landing() {
               Energy Challenge
             </span>
             <br />
-            Play 3 quick games. Score your energy. Climb the leaderboard.
+            Play 3 quick games. Score your energy.
           </motion.p>
 
           <motion.div
