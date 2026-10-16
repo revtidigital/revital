@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { getUser } from "@/lib/storage";
 import { Leaderboard } from "@/components/Leaderboard";
 import { InstagramFeed } from "@/components/InstagramFeed";
+import { EndingSoonBanner } from "@/components/EndingSoonBanner";
 import { PlayerAvatarsCarousel } from "@/components/PlayerAvatarsCarousel";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
 import heroWordmark from "@/assets/revital-hero-wordmark.webp";
@@ -16,42 +17,19 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const SCORE_BOOST_HACKS = [
-  {
-    emoji: "📅",
-    title: "PLAY REGULARLY",
-    description: "Play on more days to unlock Consistency Bonus points.",
-  },
-  {
-    emoji: "🔥",
-    title: "BUILD YOUR STREAK",
-    description: "Maintain consecutive days of gameplay to earn Streak Bonus points.",
-  },
-  {
-    emoji: "🎮",
-    title: "IMPROVE YOUR GAMEPLAY",
-    description: "Your Gameplay Score can contribute up to 1,500 points to your Grand Score.",
-  },
-  {
-    emoji: "🤝",
-    title: "REFER & CLIMB",
-    description:
-      "Earn 100 bonus points for every successful verified referral, with no limit. Referral points boost your Grand Prize Leaderboard score only.",
-  },
-  {
-    emoji: "🏔️",
-    title: "KEEP PLAYING, KEEP CLIMBING",
-    description: "Every day and every point can take you closer to the top.",
-  },
-] as const;
-
 function Landing() {
-  const defaultAnnouncement = "🔥 Play now and become today's Revital Energy Challenge winner!";
+  const defaultAnnouncement = "The challenge has ended";
   const [daily, setDaily] = useState<LeaderEntry[]>([]);
   const [global, setGlobal] = useState<LeaderEntry[]>([]);
   const [announcements, setAnnouncements] = useState<string[]>([defaultAnnouncement]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showInstaBadge, setShowInstaBadge] = useState(true);
+  const [endingSoon, setEndingSoon] = useState<{
+    endAt: string;
+    heading: string;
+    subheading: string;
+    message: string;
+  } | null>(null);
   useEffect(() => {
     setIsLoggedIn(Boolean(getUser()));
     const syncAuth = () => setIsLoggedIn(Boolean(getUser()));
@@ -62,33 +40,19 @@ function Landing() {
     import("@/server/adminFns")
       .then((mod) => mod.getPlatformSettingsFn())
       .then((settings) => {
-        if (settings.homeAnnouncementMode === "text") {
-          const texts = (settings.homeAnnouncementTexts ?? [])
-            .map((text) => text.trim())
-            .filter(Boolean);
-          setAnnouncements(texts.length ? texts : [defaultAnnouncement]);
-          return;
-        }
-        if (settings.homeAnnouncementMode === "leaderboard") {
-          getDailyLeaderboard().then((entries) => {
-            const leaderboardTexts = entries
-              .slice(0, 10)
-              .map((entry, index) => `🏅 #${index + 1} ${entry.name} — ${entry.total} pts`);
-            setAnnouncements(leaderboardTexts.length ? leaderboardTexts : [defaultAnnouncement]);
+        if (
+          settings.endingSoonEnabled &&
+          settings.endingSoonEndAt &&
+          Date.now() < new Date(settings.endingSoonEndAt).getTime()
+        ) {
+          setEndingSoon({
+            endAt: settings.endingSoonEndAt,
+            heading: settings.endingSoonHeading,
+            subheading: settings.endingSoonSubheading,
+            message: settings.endingSoonMessage,
           });
-          return;
         }
-        import("@/server/adminFns")
-          .then((mod) => mod.getPreviousDayWinnersFn())
-          .then(({ date, winners }) => {
-            if (!winners.length) {
-              setAnnouncements([defaultAnnouncement]);
-              return;
-            }
-            const texts = winners.map((w) => `🏆 Winner (${date}): ${w.name} — ${w.score} pts`);
-            setAnnouncements(texts);
-          })
-          .catch(() => setAnnouncements([defaultAnnouncement]));
+        setAnnouncements([defaultAnnouncement]);
       })
       .catch(() => null);
 
@@ -190,6 +154,15 @@ function Landing() {
             transition={{ type: "spring", damping: 12, delay: 0.1 }}
           />
 
+          {endingSoon && (
+            <EndingSoonBanner
+              endAt={endingSoon.endAt}
+              heading={endingSoon.heading}
+              subheading={endingSoon.subheading}
+              message={endingSoon.message}
+            />
+          )}
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -221,7 +194,7 @@ function Landing() {
               Energy Challenge
             </span>
             <br />
-            Play 3 quick games. Score your energy. Climb the leaderboard.
+            Play 3 quick games. Score your energy.
           </motion.p>
 
           <motion.div
@@ -456,39 +429,6 @@ function Landing() {
             >
               Join the Leaderboard →
             </Link>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-14 text-center"
-          >
-            <div className="inline-block px-4 py-1.5 rounded-full bg-[var(--tiger)] text-white text-xs uppercase tracking-[0.2em] font-black">
-              🚀 Hacks to Boost Your Grand Score
-            </div>
-          </motion.div>
-
-          <div className="mt-8 flex flex-wrap justify-center gap-5">
-            {SCORE_BOOST_HACKS.map((hack, i) => (
-              <motion.div
-                key={hack.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="relative bg-white/90 border-2 border-[var(--garnet)]/10 rounded-2xl p-6 backdrop-blur shadow-card flex flex-col gap-3 w-full sm:w-[calc(50%-0.625rem)] md:w-[calc(33.333%-0.834rem)]"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">{hack.emoji}</span>
-                  <span className="text-xs font-black text-[var(--tiger)] uppercase tracking-widest">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                </div>
-                <h3 className="text-lg font-black text-garnet">{hack.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{hack.description}</p>
-              </motion.div>
-            ))}
           </div>
 
           <div id="instagram-feed" className="mt-20 md:mt-24 scroll-mt-24 text-center">

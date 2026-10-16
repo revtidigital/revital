@@ -348,7 +348,7 @@ function Auth() {
           <p className="text-sm text-muted-foreground mt-2">
             {mode === "login"
               ? "Enter your registered mobile number to log in"
-              : "Register to save your scores and win prizes"}
+              : "Register to save your scores"}
           </p>
         </motion.div>
 
@@ -539,9 +539,6 @@ function Auth() {
                       className="w-full border-0 bg-transparent px-2 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
                     />
                   </div>
-                  <p className="mt-1.5 text-[11px] text-muted-foreground">
-                    Enter your friend's User ID who referred you — they'll get more chances to win! 🏆
-                  </p>
                 </div>
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
@@ -554,7 +551,7 @@ function Auth() {
                     className="mt-1 accent-[oklch(0.72_0.19_50)]"
                   />
                   <span className="text-xs text-muted-foreground">
-                    I agree to be contacted via phone about Revital campaigns, and accept the{" "}
+                    I agree to and accept the{" "}
                     <Link to="/rules" target="_blank" className="underline hover:text-foreground">
                       Rules
                     </Link>

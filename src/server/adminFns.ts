@@ -106,6 +106,75 @@ export const getAdminLogsFn = createServerFn({ method: "POST" })
     return docs.map(({ _id: _unused, ...rest }) => rest as AdminLog);
   });
 
+// ── Avatar Upload Notifications ─────────────────────────────────────────────────
+// One row per photo upload by a player (created in userFns.saveAvatarFn). Shown
+// as a bell/badge on the admin dashboard so uploads don't need to be discovered
+// by manually browsing users. Never shown on the public frontend.
+export interface AvatarNotification {
+  notificationId: string;
+  userId: string;
+  name: string;
+  type: "upload" | "delete";
+  createdAt: string;
+  read: boolean;
+}
+
+export const getAvatarNotificationsFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ token: z.string() }).parse(data))
+  .handler(async ({ data }) => {
+    requireAdminToken(data.token);
+    const db = await getDb();
+    const docs = await db
+      .collection<AvatarNotification & { _id: unknown }>("avatarNotifications")
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .toArray();
+    return docs.map(({ _id: _unused, ...rest }) => rest as AvatarNotification);
+  });
+
+export const markAvatarNotificationsReadFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ token: z.string() }).parse(data))
+  .handler(async ({ data }) => {
+    requireAdminToken(data.token);
+    const db = await getDb();
+    await db
+      .collection("avatarNotifications")
+      .updateMany({ read: false }, { $set: { read: true } });
+    return { ok: true };
+  });
+
+// ── Admin-controlled: show a winner's uploaded photo on the homepage carousel ──
+// This is an admin-only decision (not a player self-service toggle) — the admin
+// reviews the uploaded photo, then decides whether it replaces the default
+// placeholder avatar on the public "Players Climbing the Leaderboard" carousel.
+// Available for anyone shown in the Daily Winners list who has uploaded a
+// photo — the admin UI is the trusted gate here, so the only server-side
+// requirement is that a photo actually exists to show.
+const setAvatarVisibilityAdminSchema = z.object({
+  token: z.string(),
+  userId: z.string().min(1),
+  visible: z.boolean(),
+});
+
+export const setAvatarVisibilityAdminFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => setAvatarVisibilityAdminSchema.parse(data))
+  .handler(async ({ data }) => {
+    requireAdminToken(data.token);
+    const db = await getDb();
+    const user = await db
+      .collection<UserRecord>("users")
+      .findOne({ userId: data.userId }, { projection: { avatarUrl: 1 } });
+    if (!user) throw new Error("User not found.");
+    if (data.visible && !user.avatarUrl) {
+      throw new Error("This user hasn't uploaded a photo.");
+    }
+    await db
+      .collection<UserRecord>("users")
+      .updateOne({ userId: data.userId }, { $set: { showAvatarOnLeaderboard: data.visible } });
+    return { ok: true };
+  });
+
 // ── Platform Settings ──────────────────────────────────────────────────────────
 export interface PlatformSettings {
   ga4: string;
@@ -121,6 +190,11 @@ export interface PlatformSettings {
   comingSoonStartAt: string; // ISO UTC timestamp — site auto-locks once now >= this (blank = immediately, if enabled)
   comingSoonEndAt: string; // ISO UTC timestamp — site auto-unlocks once now >= this
   comingSoonMessage: string;
+  endingSoonEnabled: boolean;
+  endingSoonEndAt: string; // ISO UTC timestamp — banner auto-hides once now >= this
+  endingSoonHeading: string;
+  endingSoonSubheading: string;
+  endingSoonMessage: string;
 }
 
 // Tracking IDs are interpolated directly into an inline <script> tag on every
@@ -145,6 +219,11 @@ const settingsSchema = z.object({
   comingSoonStartAt: z.string().default(""),
   comingSoonEndAt: z.string().default(""),
   comingSoonMessage: z.string().default(""),
+  endingSoonEnabled: z.boolean().default(false),
+  endingSoonEndAt: z.string().default(""),
+  endingSoonHeading: z.string().default(""),
+  endingSoonSubheading: z.string().default(""),
+  endingSoonMessage: z.string().default(""),
 });
 
 /** Requires a valid admin session token — settings include the reCAPTCHA secret key. */
@@ -188,6 +267,11 @@ async function loadPlatformSettings(): Promise<PlatformSettings> {
       comingSoonStartAt: "",
       comingSoonEndAt: "",
       comingSoonMessage: "",
+      endingSoonEnabled: false,
+      endingSoonEndAt: "",
+      endingSoonHeading: "",
+      endingSoonSubheading: "",
+      endingSoonMessage: "",
     } as PlatformSettings;
   const { _id: _a, _key: _b, updatedAt: _c, ...rest } = doc as Record<string, unknown>;
 
@@ -210,6 +294,12 @@ async function loadPlatformSettings(): Promise<PlatformSettings> {
     comingSoonStartAt: typeof rest.comingSoonStartAt === "string" ? rest.comingSoonStartAt : "",
     comingSoonEndAt: typeof rest.comingSoonEndAt === "string" ? rest.comingSoonEndAt : "",
     comingSoonMessage: typeof rest.comingSoonMessage === "string" ? rest.comingSoonMessage : "",
+    endingSoonEnabled: rest.endingSoonEnabled === true,
+    endingSoonEndAt: typeof rest.endingSoonEndAt === "string" ? rest.endingSoonEndAt : "",
+    endingSoonHeading: typeof rest.endingSoonHeading === "string" ? rest.endingSoonHeading : "",
+    endingSoonSubheading:
+      typeof rest.endingSoonSubheading === "string" ? rest.endingSoonSubheading : "",
+    endingSoonMessage: typeof rest.endingSoonMessage === "string" ? rest.endingSoonMessage : "",
   } as PlatformSettings;
 }
 

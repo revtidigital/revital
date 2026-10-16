@@ -46,14 +46,7 @@ export function Header() {
                 onClick={() => trackEvent("nav_click", { nav_label: "how_to_participate" })}
                 className="inline-flex px-2.5 sm:px-3 py-2 rounded-full text-garnet/80 hover:text-garnet hover:bg-[var(--marigold)]/30 transition-colors font-medium whitespace-nowrap"
               >
-                🎮 How to Participate
-              </a>
-              <a
-                href="#leaderboard-section"
-                onClick={() => trackEvent("nav_click", { nav_label: "leaderboard" })}
-                className="inline-flex px-2.5 sm:px-3 py-2 rounded-full text-garnet/80 hover:text-garnet hover:bg-[var(--marigold)]/30 transition-colors font-medium whitespace-nowrap"
-              >
-                Leaderboard
+                🎮 How to Play
               </a>
             </>
           )}

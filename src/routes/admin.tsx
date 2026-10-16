@@ -32,12 +32,13 @@ import {
   ArrowUp,
   ArrowDown,
   CircleHelp,
+  Bell,
 } from "lucide-react";
 import { Leaderboard } from "@/components/Leaderboard";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
 import { calcStreak, dedupeAttempts, PARTICIPANT_TYPES, type UserRecord } from "@/lib/storage";
 import { CategoryBadge, ParticipantTypeBadge } from "@/components/AdminBadges";
-import type { AdminLog, PlatformSettings } from "@/server/adminFns";
+import type { AdminLog, AvatarNotification, PlatformSettings } from "@/server/adminFns";
 
 export const Route = createFileRoute("/admin")({
   component: Admin,
@@ -325,8 +326,12 @@ async function downloadDailyWinnersImage(
   a.click();
 }
 
-function isComplete(scores: UserRecord["scores"]) {
-  return scores.reflex !== null && scores.memory !== null && scores.balance !== null;
+function isComplete(scores: UserRecord["scores"] | undefined) {
+  return (
+    (scores?.reflex ?? null) !== null &&
+    (scores?.memory ?? null) !== null &&
+    (scores?.balance ?? null) !== null
+  );
 }
 
 function pickBestAttempt(user: UserRecord, from?: string, to?: string) {
@@ -482,6 +487,11 @@ function Admin() {
     comingSoonStartAt: "",
     comingSoonEndAt: "",
     comingSoonMessage: "",
+    endingSoonEnabled: false,
+    endingSoonEndAt: "",
+    endingSoonHeading: "",
+    endingSoonSubheading: "",
+    endingSoonMessage: "",
   });
   const [savedFlash, setSavedFlash] = useState(false);
   const [sendingLastWinnerEmail, setSendingLastWinnerEmail] = useState(false);
@@ -489,6 +499,7 @@ function Admin() {
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const topReferrersRef = useRef<HTMLDivElement | null>(null);
+  const notifPanelRef = useRef<HTMLDivElement | null>(null);
 
   // Filters
   const [filterCat, setFilterCat] = useState("all");
@@ -527,6 +538,12 @@ function Admin() {
   const [usersPage, setUsersPage] = useState(1);
   const [usersPerPage, setUsersPerPage] = useState(10);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [avatarNotifications, setAvatarNotifications] = useState<AvatarNotification[]>([]);
+  const [notifPanelOpen, setNotifPanelOpen] = useState(false);
+  const unreadAvatarCount = avatarNotifications.filter((n) => !n.read).length;
+  const [avatarVisibilitySavingId, setAvatarVisibilitySavingId] = useState<string | null>(null);
+  const [avatarToasts, setAvatarToasts] = useState<AvatarNotification[]>([]);
+  const seenAvatarNotificationIds = useRef<Set<string> | null>(null);
 
   const getAdminToken = () => sessionStorage.getItem("adminToken") ?? "";
 
@@ -553,12 +570,17 @@ function Admin() {
       setUsers(u);
       setDailyLeaders(daily);
       setGlobalLeaders(global);
-      const [l, s] = await Promise.all([
+      const [l, s, avatarNotifs] = await Promise.all([
         adminMod.getAdminLogsFn({ data: { token } }),
         adminMod.getPlatformSettingsAdminFn({ data: { token } }),
+        adminMod.getAvatarNotificationsFn({ data: { token } }),
       ]);
       setLogs(l);
       setSettings(s);
+      setAvatarNotifications(avatarNotifs);
+      // Baseline: don't toast for notifications that already existed before
+      // this dashboard session opened — only ones that arrive afterward.
+      seenAvatarNotificationIds.current = new Set(avatarNotifs.map((n) => n.notificationId));
     } catch (e) {
       console.error("Admin load error", e);
     } finally {
@@ -572,6 +594,64 @@ function Admin() {
       addLog("DASHBOARD_OPEN", "Admin dashboard opened");
     }
   }, [authenticated, loadData, addLog]);
+
+  // Poll avatar-upload/delete notifications — kept in its own interval with
+  // its own try/catch so a slow or failing users-list fetch elsewhere can
+  // never silently prevent the popup from appearing. This is the one thing
+  // that must not get swallowed by an unrelated error.
+  useEffect(() => {
+    if (!authenticated) return;
+    const poll = async () => {
+      try {
+        const { getAvatarNotificationsFn } = await import("@/server/adminFns");
+        const avatarNotifs = await getAvatarNotificationsFn({ data: { token: getAdminToken() } });
+        if (seenAvatarNotificationIds.current) {
+          const fresh = avatarNotifs.filter(
+            (n) => !seenAvatarNotificationIds.current!.has(n.notificationId),
+          );
+          if (fresh.length > 0) {
+            for (const n of fresh) seenAvatarNotificationIds.current.add(n.notificationId);
+            // Stays on screen until the admin dismisses it or opens the bell —
+            // a timed auto-dismiss risks disappearing before anyone notices it.
+            setAvatarToasts((prev) => [...prev, ...fresh]);
+          }
+        }
+        setAvatarNotifications(avatarNotifs);
+      } catch (e) {
+        if (import.meta.env.DEV) console.warn("Failed to poll avatar notifications:", e);
+      }
+    };
+    const interval = setInterval(poll, 8000);
+    return () => clearInterval(interval);
+  }, [authenticated]);
+
+  // Separately poll the users list so each winner's photo/toggle in the Daily
+  // Winners tab stays in sync with what a player just did (upload/remove).
+  useEffect(() => {
+    if (!authenticated) return;
+    const interval = setInterval(async () => {
+      try {
+        const { getAllUsersAdminFn } = await import("@/server/userFns");
+        const freshUsers = await getAllUsersAdminFn({ data: { token: getAdminToken() } });
+        setUsers(freshUsers);
+      } catch (e) {
+        if (import.meta.env.DEV) console.warn("Failed to poll users list:", e);
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [authenticated]);
+
+  // Close the notifications dropdown when clicking anywhere outside it.
+  useEffect(() => {
+    if (!notifPanelOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifPanelRef.current && !notifPanelRef.current.contains(e.target as Node)) {
+        setNotifPanelOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [notifPanelOpen]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -771,11 +851,14 @@ function Admin() {
       count: users.filter((u) => u.participantType === label).length,
     }));
     const completed = users.filter(
-      (u) => u.scores.reflex !== null && u.scores.memory !== null && u.scores.balance !== null,
+      (u) =>
+        (u.scores?.reflex ?? null) !== null &&
+        (u.scores?.memory ?? null) !== null &&
+        (u.scores?.balance ?? null) !== null,
     ).length;
-    const reflexPlayed = users.filter((u) => u.scores.reflex !== null).length;
-    const memoryPlayed = users.filter((u) => u.scores.memory !== null).length;
-    const balancePlayed = users.filter((u) => u.scores.balance !== null).length;
+    const reflexPlayed = users.filter((u) => (u.scores?.reflex ?? null) !== null).length;
+    const memoryPlayed = users.filter((u) => (u.scores?.memory ?? null) !== null).length;
+    const balancePlayed = users.filter((u) => (u.scores?.balance ?? null) !== null).length;
     const participation = [
       { name: "Reflex", value: reflexPlayed },
       { name: "Memory", value: memoryPlayed },
@@ -907,15 +990,15 @@ function Admin() {
           .filter((a) => a.date === date)
           .reduce((best, cur) => {
             const curSum =
-              (cur.scores.reflex ?? 0) + (cur.scores.memory ?? 0) + (cur.scores.balance ?? 0);
+              (cur.scores?.reflex ?? 0) + (cur.scores?.memory ?? 0) + (cur.scores?.balance ?? 0);
             const bestSum =
-              (best.scores.reflex ?? 0) + (best.scores.memory ?? 0) + (best.scores.balance ?? 0);
+              (best.scores?.reflex ?? 0) + (best.scores?.memory ?? 0) + (best.scores?.balance ?? 0);
             return curSum > bestSum ? cur : best;
           }),
       );
       const sumDailyTotals = dailyBests.reduce(
         (s, a) =>
-          s + ((a.scores.reflex ?? 0) + (a.scores.memory ?? 0) + (a.scores.balance ?? 0)) / 3,
+          s + ((a.scores?.reflex ?? 0) + (a.scores?.memory ?? 0) + (a.scores?.balance ?? 0)) / 3,
         0,
       );
       const avgGameplayPerformance = sumDailyTotals / activeDays;
@@ -1008,6 +1091,40 @@ function Admin() {
         .filter((d) => d.date !== uaeToday && d.winners.length > 0),
     [dateWise, uaeToday],
   );
+
+  // Lookup by userId — the winners list only carries a name-at-win-time
+  // snapshot, so avatarUrl / showAvatarOnLeaderboard come from here instead.
+  const usersById = useMemo(() => new Map(users.map((u) => [u.userId, u])), [users]);
+
+  // Most recent photo upload/delete event per user, for the inline "last
+  // activity" note next to each winner in the Daily Winners list.
+  const latestAvatarEventByUser = useMemo(() => {
+    const map = new Map<string, AvatarNotification>();
+    for (const n of avatarNotifications) {
+      const existing = map.get(n.userId);
+      if (!existing || n.createdAt > existing.createdAt) map.set(n.userId, n);
+    }
+    return map;
+  }, [avatarNotifications]);
+
+  const handleToggleWinnerAvatarVisibility = async (userId: string, visible: boolean) => {
+    setAvatarVisibilitySavingId(userId);
+    try {
+      const { setAvatarVisibilityAdminFn } = await import("@/server/adminFns");
+      await setAvatarVisibilityAdminFn({ data: { token: getAdminToken(), userId, visible } });
+      setUsers((prev) =>
+        prev.map((u) => (u.userId === userId ? { ...u, showAvatarOnLeaderboard: visible } : u)),
+      );
+      await addLog(
+        "AVATAR_VISIBILITY",
+        `${visible ? "Enabled" : "Disabled"} homepage photo display for user ${userId}`,
+      );
+    } catch (e) {
+      alert((e as Error).message || "Could not update photo visibility.");
+    } finally {
+      setAvatarVisibilitySavingId(null);
+    }
+  };
 
   const handleExportCsv = () => {
     const rows: (string | number)[][] = [
@@ -1159,9 +1276,9 @@ function Admin() {
           u.contact,
           u.email || "",
           u.name || "",
-          u.scores.reflex ?? "",
-          u.scores.memory ?? "",
-          u.scores.balance ?? "",
+          u.scores?.reflex ?? "",
+          u.scores?.memory ?? "",
+          u.scores?.balance ?? "",
           u.total,
           u.category,
         ]),
@@ -1297,6 +1414,73 @@ function Admin() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
+      {/* Auto-popup for new photo upload/delete events — same visual weight as the
+          site's cookie/referral popups, stays up until dismissed or the bell is opened */}
+      <div className="fixed top-16 inset-x-4 md:inset-x-auto md:right-6 md:max-w-md z-[100] flex flex-col gap-3 max-h-[80vh] overflow-y-auto">
+        <AnimatePresence>
+          {avatarToasts.map((n) => (
+            <motion.div
+              key={n.notificationId}
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              transition={{ type: "spring", damping: 22 }}
+            >
+              <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-5 shadow-card">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl shrink-0">{n.type === "delete" ? "🗑️" : "📸"}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-foreground truncate">{n.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {n.type === "delete"
+                        ? "Removed their profile photo"
+                        : "Uploaded a new profile photo — review it in Daily Winners"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/70 mt-1">
+                      {new Date(n.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() =>
+                      setAvatarToasts((prev) =>
+                        prev.filter((t) => t.notificationId !== n.notificationId),
+                      )
+                    }
+                    className="text-muted-foreground hover:text-foreground text-sm shrink-0"
+                    aria-label="Dismiss"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => {
+                      setAvatarToasts((prev) =>
+                        prev.filter((t) => t.notificationId !== n.notificationId),
+                      );
+                      setTab("winners");
+                    }}
+                    className="flex-1 py-2 rounded-full bg-gradient-energy text-energy-foreground font-semibold text-xs shadow-button active:scale-95 transition-transform"
+                  >
+                    View in Daily Winners
+                  </button>
+                  <button
+                    onClick={() =>
+                      setAvatarToasts((prev) =>
+                        prev.filter((t) => t.notificationId !== n.notificationId),
+                      )
+                    }
+                    className="px-3.5 py-2 rounded-full bg-muted text-muted-foreground font-medium text-xs hover:text-foreground transition-colors whitespace-nowrap"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
       {/* Top bar */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border h-14 flex items-center px-4 gap-3">
         <button
@@ -1313,6 +1497,56 @@ function Admin() {
           Admin <span className="text-gradient-energy">Dashboard</span>
         </span>
         <div className="ml-auto flex items-center gap-2">
+          <div className="relative" ref={notifPanelRef}>
+            <button
+              onClick={async () => {
+                const opening = !notifPanelOpen;
+                setNotifPanelOpen(opening);
+                if (opening) setAvatarToasts([]);
+                if (opening && unreadAvatarCount > 0) {
+                  try {
+                    const { markAvatarNotificationsReadFn } = await import("@/server/adminFns");
+                    await markAvatarNotificationsReadFn({ data: { token: getAdminToken() } });
+                    setAvatarNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+                  } catch (e) {
+                    if (import.meta.env.DEV) console.warn("Failed to mark notifications read:", e);
+                  }
+                }
+              }}
+              title="Profile photo uploads"
+              className="relative p-1.5 rounded-lg hover:bg-muted/30 transition-colors"
+            >
+              <Bell className="w-4 h-4" />
+              {unreadAvatarCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center">
+                  {unreadAvatarCount > 9 ? "9+" : unreadAvatarCount}
+                </span>
+              )}
+            </button>
+            {notifPanelOpen && (
+              <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-background border border-border rounded-2xl shadow-card z-50">
+                <div className="px-4 py-3 border-b border-border font-bold text-sm">
+                  Profile photo uploads
+                </div>
+                {avatarNotifications.length === 0 ? (
+                  <p className="px-4 py-6 text-xs text-muted-foreground text-center">
+                    No uploads yet.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {avatarNotifications.map((n) => (
+                      <li key={n.notificationId} className="px-4 py-3 text-xs">
+                        <span className="font-semibold">{n.name}</span> uploaded a profile photo
+                        <div className="text-muted-foreground mt-0.5">
+                          {new Date(n.createdAt).toLocaleString()}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
           <button
             onClick={loadData}
             disabled={loading}
@@ -2255,9 +2489,9 @@ function Admin() {
                                         <Td className="font-mono text-[11px]">{u.contact}</Td>
                                         <Td className="font-mono text-[11px]">{u.email || "—"}</Td>
                                         <Td>{u.name || "—"}</Td>
-                                        <Td>{u.scores.reflex ?? "—"}</Td>
-                                        <Td>{u.scores.memory ?? "—"}</Td>
-                                        <Td>{u.scores.balance ?? "—"}</Td>
+                                        <Td>{u.scores?.reflex ?? "—"}</Td>
+                                        <Td>{u.scores?.memory ?? "—"}</Td>
+                                        <Td>{u.scores?.balance ?? "—"}</Td>
                                         <Td className="font-bold text-gradient-energy">
                                           {u.total}
                                         </Td>
@@ -2316,7 +2550,10 @@ function Admin() {
                 >
                   <SectionTitle>Daily Winner (Date-wise)</SectionTitle>
                   <p className="text-xs text-muted-foreground mt-1 mb-3">
-                    Only selected winners are shown here, grouped by date.
+                    Only selected winners are shown here, grouped by date. If a winner has
+                    uploaded a profile photo, use the toggle to show it on the homepage
+                    &quot;Players Climbing the Leaderboard&quot; carousel instead of the default
+                    avatar — players cannot enable this themselves.
                   </p>
                   <div className="space-y-3">
                     {winnersByDate.length === 0 && (
@@ -2353,17 +2590,67 @@ function Admin() {
                         </div>
                         {d.date !== uaeToday ? (
                           <div className="grid grid-cols-1 gap-2">
-                            {d.winners.map((winner, idx) => (
-                              <div
-                                key={`${d.date}-${winner.userId}-${idx}`}
-                                className="text-xs rounded-xl px-3 py-2 border border-accent/30 bg-accent/10 flex justify-between"
-                              >
-                                <span className="font-semibold">
-                                  #{idx + 1} {winner.name || winner.contact}
-                                </span>
-                                <span className="font-bold text-accent">{winner.total}</span>
-                              </div>
-                            ))}
+                            {d.winners.map((winner, idx) => {
+                              const full = usersById.get(winner.userId);
+                              const lastEvent = latestAvatarEventByUser.get(winner.userId);
+                              return (
+                                <div
+                                  key={`${d.date}-${winner.userId}-${idx}`}
+                                  className="text-xs rounded-xl px-3 py-2 border border-accent/30 bg-accent/10 flex flex-col gap-1.5"
+                                >
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="font-semibold flex items-center gap-2.5 min-w-0">
+                                      {full?.avatarUrl && (
+                                        <img
+                                          src={full.avatarUrl}
+                                          alt=""
+                                          className="h-20 w-20 rounded-full object-cover border-2 border-border shrink-0"
+                                        />
+                                      )}
+                                      <span className="truncate">
+                                        #{idx + 1} {winner.name || winner.contact}
+                                      </span>
+                                    </span>
+                                    <span className="font-bold text-accent shrink-0">
+                                      {winner.total}
+                                    </span>
+                                  </div>
+                                  {full?.avatarUrl && (
+                                    <label
+                                      className={`flex items-center gap-2 cursor-pointer select-none self-start px-2.5 py-1 rounded-full border transition-colors ${
+                                        full.showAvatarOnLeaderboard
+                                          ? "border-emerald-400/60 bg-emerald-50 text-emerald-700"
+                                          : "border-border bg-white/70 text-foreground"
+                                      }`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={Boolean(full.showAvatarOnLeaderboard)}
+                                        disabled={avatarVisibilitySavingId === winner.userId}
+                                        onChange={(e) =>
+                                          handleToggleWinnerAvatarVisibility(
+                                            winner.userId,
+                                            e.target.checked,
+                                          )
+                                        }
+                                        className="h-3.5 w-3.5 accent-accent"
+                                      />
+                                      <span className="text-[11px] font-semibold">
+                                        {full.showAvatarOnLeaderboard
+                                          ? "🏠 Live on homepage carousel"
+                                          : "Publish photo to homepage"}
+                                      </span>
+                                    </label>
+                                  )}
+                                  {lastEvent && (
+                                    <p className="text-[11px] font-medium text-garnet/80 bg-white/60 rounded-full px-2.5 py-1 self-start">
+                                      {lastEvent.type === "delete" ? "🗑️ Removed photo" : "📸 Uploaded photo"}{" "}
+                                      · {new Date(lastEvent.createdAt).toLocaleString()}
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         ) : null}
                       </div>
@@ -2752,6 +3039,103 @@ function Admin() {
                         />
                         <p className="text-[11px] text-muted-foreground mt-1">
                           Shown on the Coming Soon page. Leave blank to use the default message.
+                        </p>
+                      </label>
+                    </SettingsSection>
+
+                    <SettingsSection title="Ending Soon Banner (Home Page)">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.endingSoonEnabled}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              endingSoonEnabled: e.target.checked,
+                            }))
+                          }
+                          className="w-4 h-4 accent-accent"
+                        />
+                        <span className="text-sm font-semibold">
+                          Show "Ending Soon" countdown banner on home page
+                        </span>
+                      </label>
+                      <p className="text-[11px] text-muted-foreground mt-1 mb-3">
+                        Unlike the Coming Soon page, this does not block the site — it just shows a
+                        countdown banner on the home page. It automatically hides on its own once
+                        the end time below passes — no need to manually turn this off.
+                      </p>
+                      <label className="block max-w-xs">
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                          Challenge end date & time (UAE time)
+                        </span>
+                        <input
+                          type="datetime-local"
+                          value={isoToUaeLocalInput(settings.endingSoonEndAt)}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              endingSoonEndAt: uaeLocalInputToIso(e.target.value),
+                            }))
+                          }
+                          className="mt-1 w-full bg-background/60 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Enter this in UAE (GST, UTC+4) time — e.g. Wed 11:59 PM UAE time.
+                        </p>
+                      </label>
+                      <label className="block mt-4">
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                          Heading
+                        </span>
+                        <input
+                          type="text"
+                          value={settings.endingSoonHeading}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              endingSoonHeading: e.target.value,
+                            }))
+                          }
+                          placeholder="THE REVITAL ENERGY CHALLENGE ENDS IN"
+                          className="mt-1 w-full bg-background/60 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </label>
+                      <label className="block mt-4">
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                          Subheading
+                        </span>
+                        <input
+                          type="text"
+                          value={settings.endingSoonSubheading}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              endingSoonSubheading: e.target.value,
+                            }))
+                          }
+                          placeholder="YOUR LAST CHANCE TO CLAIM THE GRAND PRIZE"
+                          className="mt-1 w-full bg-background/60 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </label>
+                      <label className="block mt-4">
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                          Body text
+                        </span>
+                        <textarea
+                          value={settings.endingSoonMessage}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              endingSoonMessage: e.target.value,
+                            }))
+                          }
+                          rows={3}
+                          placeholder="Time is running out! Make your final move, build your Grand Score, and compete for a place among our 3 Grand Winners."
+                          className="mt-1 w-full bg-background/60 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-y"
+                        />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Leave any field blank to use its default text.
                         </p>
                       </label>
                     </SettingsSection>

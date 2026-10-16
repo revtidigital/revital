@@ -227,21 +227,79 @@ export const saveAvatarFn = createServerFn({ method: "POST" })
       throw new Error("Image is too large. Please choose a file under 5 MB.");
     }
     const db = await getDb();
+    const user = await db
+      .collection<UserRecord>("users")
+      .findOne({ userId: data.userId }, { projection: { name: 1 } });
     await db
       .collection<UserRecord>("users")
       .updateOne({ userId: data.userId }, { $set: { avatarUrl: data.avatarUrl } });
+    // Notify admin dashboard — every fresh upload, so the team knows to review it.
+    await db.collection("avatarNotifications").insertOne({
+      notificationId: crypto.randomUUID(),
+      userId: data.userId,
+      name: user?.name || "Player",
+      type: "upload",
+      createdAt: new Date().toISOString(),
+      read: false,
+    });
     return { ok: true };
   });
 
-// ── recent players (public, name only — used by homepage carousel; always shows
-// a generic placeholder avatar, never the user's uploaded photo) ──
+// ── remove profile picture ───────────────────────────────────────────────────
+// Also force-disables leaderboard visibility so a removed photo can never be
+// left showing (the flag would otherwise be orphaned pointing at nothing).
+const removeAvatarSchema = z.object({ userId: z.string().min(1) });
+
+export const removeAvatarFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => removeAvatarSchema.parse(data))
+  .handler(async ({ data }) => {
+    await checkRateLimit(`remove-avatar:${getClientIp()}`, 10, 300);
+    const db = await getDb();
+    const user = await db
+      .collection<UserRecord>("users")
+      .findOne({ userId: data.userId }, { projection: { name: 1 } });
+    await db
+      .collection<UserRecord>("users")
+      .updateOne(
+        { userId: data.userId },
+        { $unset: { avatarUrl: "" }, $set: { showAvatarOnLeaderboard: false } },
+      );
+    // Notify admin dashboard about the removal too, same as an upload.
+    await db.collection("avatarNotifications").insertOne({
+      notificationId: crypto.randomUUID(),
+      userId: data.userId,
+      name: user?.name || "Player",
+      type: "delete",
+      createdAt: new Date().toISOString(),
+      read: false,
+    });
+    return { ok: true };
+  });
+
+// Note: whether a winner's uploaded photo is shown on the homepage carousel is
+// an admin-only decision — see `setAvatarVisibilityAdminFn` in adminFns.ts.
+// Players cannot toggle this themselves.
+
+// ── recent players (public, name only — used by homepage carousel; shows the
+// user's uploaded photo only if they are a winner AND opted in, otherwise the
+// generic placeholder avatar) ──
 export const getRecentPlayerAvatarsFn = createServerFn({ method: "GET" }).handler(async () => {
   const db = await getDb();
   const docs = await db
     .collection<UserRecord & { _id: unknown }>("users")
     .find(
       { total: { $gt: 0 } },
-      { projection: { userId: 1, name: 1, total: 1, playDates: 1, winnerLockDates: 1 } },
+      {
+        projection: {
+          userId: 1,
+          name: 1,
+          total: 1,
+          playDates: 1,
+          winnerLockDates: 1,
+          avatarUrl: 1,
+          showAvatarOnLeaderboard: 1,
+        },
+      },
     )
     .sort({ createdAt: -1 })
     .limit(24)
@@ -252,6 +310,7 @@ export const getRecentPlayerAvatarsFn = createServerFn({ method: "GET" }).handle
     score: d.total,
     date: d.winnerLockDates?.[0] || d.playDates?.[0],
     isWinner: Boolean(d.winnerLockDates?.length),
+    avatarUrl: d.showAvatarOnLeaderboard && d.avatarUrl ? d.avatarUrl : undefined,
   }));
 });
 
