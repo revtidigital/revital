@@ -273,6 +273,7 @@ function Landing() {
             />
           )}
 
+          {/* HIGHLIGHTS SECTION REMOVED PER USER REQUEST (2026-10-17) - uncomment to restore
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -332,6 +333,7 @@ function Landing() {
               </div>
             ))}
           </motion.div>
+          */}
         </section>
 
         {/* HOW TO PARTICIPATE */}
