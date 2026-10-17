@@ -837,6 +837,17 @@ function Admin() {
   // ── Stats ────────────────────────────────────────────────────────────────────
   const stats = useMemo(() => {
     const total = users.length;
+    // Campaign ended 2026-10-14 11:59:59 PM UAE time (UTC+4) — split signups
+    // into "during campaign" vs "after campaign" for the overview KPIs.
+    const campaignEndMs = new Date("2026-10-14T23:59:59+04:00").getTime();
+    const usersDuringCampaign = users.filter((u) => {
+      const t = getSafeDate(u.createdAt)?.getTime();
+      return t !== undefined && t <= campaignEndMs;
+    }).length;
+    const usersAfterCampaign = users.filter((u) => {
+      const t = getSafeDate(u.createdAt)?.getTime();
+      return t !== undefined && t > campaignEndMs;
+    }).length;
     const avg = total ? Math.round(users.reduce((s, u) => s + u.total, 0) / total) : 0;
     const totals = users.map((u) => u.total).sort((a, b) => a - b);
     const median = totals.length
@@ -900,6 +911,8 @@ function Admin() {
       .slice(0, 5);
     return {
       total,
+      usersDuringCampaign,
+      usersAfterCampaign,
       avg,
       median,
       bestScore,
@@ -1671,6 +1684,18 @@ function Admin() {
                       title="Total Users"
                       value={stats.total}
                       info="Unique registered users in the platform. Calculated as the count of user records."
+                      onClick={() => handleTabChange("users")}
+                    />
+                    <KpiCard
+                      title="Users (Till Campaign End)"
+                      value={stats.usersDuringCampaign}
+                      info="Users who signed up on or before 14 Oct 11:59:59 PM UAE time (campaign end)."
+                      onClick={() => handleTabChange("users")}
+                    />
+                    <KpiCard
+                      title="Users (After Campaign)"
+                      value={stats.usersAfterCampaign}
+                      info="Users who signed up from 15 Oct onward (after the campaign ended)."
                       onClick={() => handleTabChange("users")}
                     />
                     <KpiCard
