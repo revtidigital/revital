@@ -543,10 +543,6 @@ export function AuthForm({
                   />
                   <span className="text-xs text-muted-foreground">
                     I accept the{" "}
-                    <Link to="/rules" target="_blank" className="underline hover:text-foreground">
-                      Rules
-                    </Link>
-                    ,{" "}
                     <Link to="/terms" target="_blank" className="underline hover:text-foreground">
                       Terms and Conditions
                     </Link>{" "}
