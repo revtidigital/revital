@@ -276,7 +276,8 @@ function RootComponent() {
       </div>
       {!isAdminRoute && <Footer />}
       {!isAdminRoute && <CookieConsent />}
-      {!isAdminRoute && <ReferralPopup />}
+      {/* ReferralPopup removed per user request (2026-10-17) - uncomment to restore
+      {!isAdminRoute && <ReferralPopup />} */}
     </div>
   );
 }
