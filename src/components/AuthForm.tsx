@@ -530,9 +530,6 @@ export function AuthForm({
                       className="w-full border-0 bg-transparent px-2 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
                     />
                   </div>
-                  <p className="mt-1.5 text-[11px] text-muted-foreground">
-                    Enter your friend's User ID who referred you — they'll get more chances to win! 🏆
-                  </p>
                 </div>
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
