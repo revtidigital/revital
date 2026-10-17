@@ -542,7 +542,7 @@ export function AuthForm({
                     className="mt-1 accent-[oklch(0.72_0.19_50)]"
                   />
                   <span className="text-xs text-muted-foreground">
-                    I agree to be contacted via phone about Revital campaigns, and accept the{" "}
+                    I accept the{" "}
                     <Link to="/rules" target="_blank" className="underline hover:text-foreground">
                       Rules
                     </Link>
