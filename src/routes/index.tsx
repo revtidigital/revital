@@ -436,7 +436,7 @@ function Landing() {
           </motion.div>
         </section>
 
-        {/* LEADERBOARDS */}
+        {/* LEADERBOARDS SECTION REMOVED PER USER REQUEST (2026-10-17) - uncomment to restore
         <section id="leaderboard-section" className="scroll-mt-24 mt-20 md:mt-28">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -518,8 +518,10 @@ function Landing() {
               </motion.div>
             ))}
           </div>
+          */}
 
-          <div id="instagram-feed" className="mt-20 md:mt-24 scroll-mt-24 text-center">
+        <section id="instagram-feed-section" className="scroll-mt-24 mt-20 md:mt-28">
+          <div id="instagram-feed" className="scroll-mt-24 text-center">
             <a
               href="https://www.instagram.com/revital.uae"
               target="_blank"
