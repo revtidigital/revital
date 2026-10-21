@@ -332,6 +332,55 @@ export const getRecentPlayerAvatarsFn = createServerFn({ method: "GET" }).handle
   return entries.sort((a, b) => b.date.localeCompare(a.date));
 });
 
+// ── homepage "Grand Winners" podium (public) — admin manually picks exactly
+// which 3 players (from the Grand Prize Leaderboard tab) appear here via
+// `setGrandWinnerRankFn` in adminFns.ts. Shows their uploaded photo only if
+// they've also been opted in via showAvatarOnLeaderboard, otherwise the
+// generic placeholder avatar. ──
+export const getGrandWinnersFn = createServerFn({ method: "GET" }).handler(async () => {
+  const db = await getDb();
+  // Referral-based scoring needs every user's referredBy to tally live counts
+  // (see computeScoredUsers), so this can't be a { grandWinnerRank } filter —
+  // fetch all users, score them all, then keep only the 3 picked ones.
+  const docs = await db
+    .collection<UserRecord & { _id: unknown }>("users")
+    .find(
+      {},
+      {
+        projection: {
+          userId: 1,
+          name: 1,
+          contact: 1,
+          category: 1,
+          playAttempts: 1,
+          referredBy: 1,
+          grandWinnerRank: 1,
+          avatarUrl: 1,
+          showAvatarOnLeaderboard: 1,
+        },
+      },
+    )
+    .toArray();
+  const byUserId = new Map(docs.map((d) => [d.userId, d]));
+  const { computeScoredUsers } = await import("./adminFns");
+  return computeScoredUsers(docs)
+    .filter((entry) => {
+      const rank = byUserId.get(entry.userId)?.grandWinnerRank;
+      return rank === 1 || rank === 2 || rank === 3;
+    })
+    .map((entry) => {
+      const full = byUserId.get(entry.userId);
+      return {
+        userId: entry.userId,
+        name: entry.name,
+        total: entry.total,
+        rank: full?.grandWinnerRank as 1 | 2 | 3,
+        avatarUrl: full?.showAvatarOnLeaderboard && full?.avatarUrl ? full.avatarUrl : undefined,
+      };
+    })
+    .sort((a, b) => a.rank - b.rank);
+});
+
 // ── referral info (referrer name + referral count) ─────────────────────────────
 // Used by the profile page, which only needs one name and a count — not the
 // entire user collection.

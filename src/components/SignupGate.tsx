@@ -395,7 +395,7 @@ export function SignupGate({ onSuccess, mode = "signup", onModeChange }: SignupG
               Unlock Your Score
             </h2>
             <p className="text-sm text-muted-foreground mt-2">
-              Enter your details to reveal your Energy Score and qualify for the global prize.
+              Enter your details to reveal your Energy Score.
             </p>
           </div>
 
@@ -588,8 +588,7 @@ export function SignupGate({ onSuccess, mode = "signup", onModeChange }: SignupG
                     />
                   </div>
                   <p className="mt-1 text-[11px] text-muted-foreground">
-                    Enter your friend's User ID who referred you — they'll get more chances to win!
-                    🏆
+                    Enter your friend's User ID who referred you.
                   </p>
                 </div>
               )}
@@ -605,8 +604,7 @@ export function SignupGate({ onSuccess, mode = "signup", onModeChange }: SignupG
                     className="mt-1 accent-[oklch(0.72_0.19_50)]"
                   />
                   <span className="text-xs text-muted-foreground">
-                    I agree to be contacted by Revital about campaigns & rewards by phone, and
-                    accept the{" "}
+                    I agree to accept the{" "}
                     <a
                       href="/rules"
                       target="_blank"

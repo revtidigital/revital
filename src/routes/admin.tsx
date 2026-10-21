@@ -34,6 +34,7 @@ import {
   CircleHelp,
   Mail,
   Bell,
+  Crown,
 } from "lucide-react";
 import { Leaderboard } from "@/components/Leaderboard";
 import { getDailyLeaderboard, getGlobalLeaderboard, type LeaderEntry } from "@/lib/leaderboard";
@@ -56,6 +57,7 @@ type Tab =
   | "users"
   | "datewise"
   | "winners"
+  | "grandWinners"
   | "streaks"
   | "welcomeEmails"
   | "notify"
@@ -555,6 +557,34 @@ function Admin() {
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
   const unreadAvatarCount = avatarNotifications.filter((n) => !n.read).length;
   const [avatarVisibilitySavingId, setAvatarVisibilitySavingId] = useState<string | null>(null);
+  const [grandWinnerSavingId, setGrandWinnerSavingId] = useState<string | null>(null);
+  const [grandPrizeCandidates, setGrandPrizeCandidates] = useState<
+    {
+      userId: string;
+      name: string;
+      total: number;
+      avatarUrl?: string;
+      grandWinnerRank: 1 | 2 | 3 | null;
+    }[]
+  >([]);
+  const [grandPrizeCandidatesLoading, setGrandPrizeCandidatesLoading] = useState(false);
+
+  const loadGrandPrizeCandidates = useCallback(async () => {
+    setGrandPrizeCandidatesLoading(true);
+    try {
+      const { getGrandPrizeCandidatesAdminFn } = await import("@/server/adminFns");
+      const data = await getGrandPrizeCandidatesAdminFn({ data: { token: getAdminToken() } });
+      setGrandPrizeCandidates(data);
+    } catch (e) {
+      alert((e as Error).message || "Could not load Grand Prize Leaderboard.");
+    } finally {
+      setGrandPrizeCandidatesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (tab === "grandWinners") loadGrandPrizeCandidates();
+  }, [tab, loadGrandPrizeCandidates]);
   const [avatarToasts, setAvatarToasts] = useState<AvatarNotification[]>([]);
   const [welcomeEmailRows, setWelcomeEmailRows] = useState<WelcomeEmailActivityRow[]>([]);
   const [welcomeEmailsLoading, setWelcomeEmailsLoading] = useState(false);
@@ -1139,6 +1169,31 @@ function Admin() {
     }
   };
 
+  const handleSetGrandWinnerRank = async (userId: string, rank: 1 | 2 | 3 | null) => {
+    setGrandWinnerSavingId(userId);
+    try {
+      const { setGrandWinnerRankFn } = await import("@/server/adminFns");
+      await setGrandWinnerRankFn({ data: { token: getAdminToken(), userId, rank } });
+      setGrandPrizeCandidates((prev) =>
+        prev.map((u) => {
+          if (u.userId === userId) return { ...u, grandWinnerRank: rank };
+          if (rank !== null && u.grandWinnerRank === rank) return { ...u, grandWinnerRank: null };
+          return u;
+        }),
+      );
+      await addLog(
+        "GRAND_WINNER_RANK",
+        rank
+          ? `Set homepage Grand Winners slot #${rank} to user ${userId}`
+          : `Removed user ${userId} from homepage Grand Winners carousel`,
+      );
+    } catch (e) {
+      alert((e as Error).message || "Could not update Grand Winners selection.");
+    } finally {
+      setGrandWinnerSavingId(null);
+    }
+  };
+
   const handleExportComingSoonEmails = () => {
     const rows: (string | number)[][] = [
       ["Email", "Submitted At"],
@@ -1460,6 +1515,7 @@ function Admin() {
     { id: "users", label: "Users", icon: <Users className="w-4 h-4" /> },
     { id: "datewise", label: "Date-wise", icon: <CalendarDays className="w-4 h-4" /> },
     { id: "winners", label: "Daily Winners", icon: <Trophy className="w-4 h-4" /> },
+    { id: "grandWinners", label: "Grand Winners Carousel", icon: <Crown className="w-4 h-4" /> },
     { id: "streaks", label: "Consistent Players", icon: <Flame className="w-4 h-4" /> },
     { id: "welcomeEmails", label: "Automation Emails", icon: <Mail className="w-4 h-4" /> },
     { id: "notify", label: "Get Notified", icon: <Mail className="w-4 h-4" /> },
@@ -2696,6 +2752,105 @@ function Admin() {
                         ) : null}
                       </div>
                     ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ── GRAND WINNERS CAROUSEL ────────────────────────────────────── */}
+              {tab === "grandWinners" && (
+                <motion.div
+                  key="grandWinners"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                      <SectionTitle>Homepage Grand Winners Carousel</SectionTitle>
+                      <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
+                        Pick exactly 3 players from the full Grand Prize Leaderboard (ranked by
+                        Grand Score) to show on the homepage "GRAND WINNERS" podium. If a player
+                        has uploaded a photo, it's shown automatically — no separate toggle needed
+                        here.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={loadGrandPrizeCandidates}
+                      disabled={grandPrizeCandidatesLoading}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/70 border border-border text-xs font-bold hover:border-accent disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${grandPrizeCandidatesLoading ? "animate-spin" : ""}`} />
+                      Refresh
+                    </button>
+                  </div>
+                  <div className="mt-4 bg-gradient-card border border-border rounded-2xl overflow-x-auto shadow-card">
+                    <table className="w-full text-sm min-w-[640px]">
+                      <thead>
+                        <tr className="text-left text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border">
+                          <Th>#</Th>
+                          <Th>Photo</Th>
+                          <Th>Name</Th>
+                          <Th>Grand Score</Th>
+                          <Th>Podium Slot</Th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {grandPrizeCandidatesLoading && grandPrizeCandidates.length === 0 && (
+                          <tr>
+                            <td colSpan={5} className="text-center text-muted-foreground py-8">
+                              Loading…
+                            </td>
+                          </tr>
+                        )}
+                        {grandPrizeCandidates.map((entry, i) => {
+                          const currentRank = entry.grandWinnerRank;
+                          return (
+                            <tr key={entry.userId} className="border-b border-border/40">
+                              <Td className="font-bold text-accent">#{i + 1}</Td>
+                              <Td>
+                                {entry.avatarUrl ? (
+                                  <img
+                                    src={entry.avatarUrl}
+                                    alt=""
+                                    className="h-10 w-10 rounded-full object-cover border border-border"
+                                  />
+                                ) : (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                              </Td>
+                              <Td>{entry.name}</Td>
+                              <Td className="font-bold text-gradient-energy">
+                                {entry.total.toLocaleString()}
+                              </Td>
+                              <Td>
+                                <div className="flex items-center gap-1.5">
+                                  {([1, 2, 3] as const).map((rank) => (
+                                    <button
+                                      key={rank}
+                                      type="button"
+                                      disabled={grandWinnerSavingId === entry.userId}
+                                      onClick={() =>
+                                        handleSetGrandWinnerRank(
+                                          entry.userId,
+                                          currentRank === rank ? null : rank,
+                                        )
+                                      }
+                                      className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors ${
+                                        currentRank === rank
+                                          ? "bg-gradient-energy text-energy-foreground border-transparent"
+                                          : "bg-white/70 text-foreground border-border hover:border-accent"
+                                      }`}
+                                    >
+                                      {currentRank === rank ? "✓ " : ""}#{rank}
+                                    </button>
+                                  ))}
+                                </div>
+                              </Td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 </motion.div>
               )}

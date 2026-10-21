@@ -178,6 +178,35 @@ export const setAvatarVisibilityAdminFn = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ── Admin-controlled: pick which 3 players appear on the homepage "Grand
+// Winners" podium, from the Grand Prize Leaderboard tab. Assigning a rank to
+// a user clears that same rank off whoever previously held it, so each of
+// 1/2/3 is held by at most one user at a time. ──
+const setGrandWinnerRankSchema = z.object({
+  token: z.string(),
+  userId: z.string().min(1),
+  rank: z.union([z.literal(1), z.literal(2), z.literal(3), z.null()]),
+});
+
+export const setGrandWinnerRankFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => setGrandWinnerRankSchema.parse(data))
+  .handler(async ({ data }) => {
+    requireAdminToken(data.token);
+    const db = await getDb();
+    const collection = db.collection<UserRecord>("users");
+    if (data.rank !== null) {
+      await collection.updateMany(
+        { grandWinnerRank: data.rank, userId: { $ne: data.userId } },
+        { $set: { grandWinnerRank: null } },
+      );
+    }
+    await collection.updateOne(
+      { userId: data.userId },
+      { $set: { grandWinnerRank: data.rank } },
+    );
+    return { ok: true };
+  });
+
 // ── Platform Settings ──────────────────────────────────────────────────────────
 export interface PlatformSettings {
   ga4: string;
@@ -798,36 +827,15 @@ export const getDailyLeaderboardFn = createServerFn({ method: "GET" }).handler(a
     .map(({ playedAt: _playedAt, ...rest }) => rest);
 });
 
-export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(async () => {
-  const db = await getDb();
-  // Projected: this computation only needs name/contact/scores/refer data — never email/address.
-  const users = await db
-    .collection<UserRecord>("users")
-    .find(
-      {},
-      {
-        projection: {
-          userId: 1,
-          name: 1,
-          contact: 1,
-          category: 1,
-          playAttempts: 1,
-          referredBy: 1,
-          createdAt: 1,
-        },
-      },
-    )
-    .toArray();
-
-  const mask = (c: string) => {
-    if (c.includes("@")) {
-      const [a, b] = c.split("@");
-      return a.slice(0, 2) + "•••@" + b;
-    }
-    if (c.length > 4) return c.slice(0, 3) + "•••" + c.slice(-2);
-    return c;
-  };
-
+// Canonical Grand Score formula, shared by getGlobalLeaderboardFn (public,
+// masked contact, top 10) and getGrandPrizeCandidatesAdminFn (admin-only,
+// unmasked with userId, unlimited — used by the Grand Winners picker).
+export function computeScoredUsers(
+  users: Pick<
+    UserRecord,
+    "userId" | "name" | "contact" | "category" | "playAttempts" | "referredBy"
+  >[],
+) {
   // referCount is a manually incremented counter that can drift from the
   // ground truth (referredBy) if a request is interrupted mid-referral — see
   // withLiveReferCounts in userFns.ts. Always derive it live here instead.
@@ -920,8 +928,9 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
       );
 
       return {
+        userId: u.userId,
         name: u.name || "Player",
-        contact: mask(u.contact),
+        contact: u.contact,
         total: Math.round(finalScore),
         category: u.category,
         when: "All-time",
@@ -945,20 +954,97 @@ export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(
     return a._earliestPlayedAt.localeCompare(b._earliestPlayedAt);
   });
 
-  return scored
+  return scored.map(
+    ({
+      _activeDays: _,
+      _avgReflex: _r,
+      _avgMemory: _m,
+      _avgBalance: _b,
+      _referCount: _rc,
+      _earliestPlayedAt: _e,
+      ...entry
+    }) => entry,
+  );
+}
+
+const maskContactLeaderboard = (c: string) => {
+  if (c.includes("@")) {
+    const [a, b] = c.split("@");
+    return a.slice(0, 2) + "•••@" + b;
+  }
+  if (c.length > 4) return c.slice(0, 3) + "•••" + c.slice(-2);
+  return c;
+};
+
+export const getGlobalLeaderboardFn = createServerFn({ method: "GET" }).handler(async () => {
+  const db = await getDb();
+  // Projected: this computation only needs name/contact/scores/refer data — never email/address.
+  const users = await db
+    .collection<UserRecord>("users")
+    .find(
+      {},
+      {
+        projection: {
+          userId: 1,
+          name: 1,
+          contact: 1,
+          category: 1,
+          playAttempts: 1,
+          referredBy: 1,
+          createdAt: 1,
+        },
+      },
+    )
+    .toArray();
+
+  return computeScoredUsers(users)
     .slice(0, 10)
-    .map(
-      ({
-        _activeDays: _,
-        _avgReflex: _r,
-        _avgMemory: _m,
-        _avgBalance: _b,
-        _referCount: _rc,
-        _earliestPlayedAt: _e,
-        ...entry
-      }) => entry,
-    );
+    .map(({ userId: _userId, contact, ...entry }) => ({
+      ...entry,
+      contact: maskContactLeaderboard(contact),
+    }));
 });
+
+// ── Admin-only: full, unmasked, unlimited Grand Score ranking — feeds the
+// Grand Winners picker in admin.tsx, which needs every player's real userId
+// (not the masked contact the public leaderboard uses) to assign a podium slot. ──
+const grandPrizeCandidatesAuthSchema = z.object({ token: z.string() });
+
+export const getGrandPrizeCandidatesAdminFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => grandPrizeCandidatesAuthSchema.parse(data))
+  .handler(async ({ data }) => {
+    requireAdminToken(data.token);
+    const db = await getDb();
+    const users = await db
+      .collection<UserRecord>("users")
+      .find(
+        {},
+        {
+          projection: {
+            userId: 1,
+            name: 1,
+            contact: 1,
+            category: 1,
+            playAttempts: 1,
+            referredBy: 1,
+            avatarUrl: 1,
+            showAvatarOnLeaderboard: 1,
+            grandWinnerRank: 1,
+          },
+        },
+      )
+      .toArray();
+    const scored = computeScoredUsers(users);
+    const byUserId = new Map(users.map((u) => [u.userId, u]));
+    return scored.map((entry) => {
+      const full = byUserId.get(entry.userId);
+      return {
+        ...entry,
+        avatarUrl: full?.showAvatarOnLeaderboard ? full.avatarUrl : undefined,
+        grandWinnerRank: full?.grandWinnerRank ?? null,
+      };
+    });
+  });
 
 // Public: given a userId, return that user's global rank + score using the
 // identical canonical formula as getGlobalLeaderboardFn (kept duplicated on

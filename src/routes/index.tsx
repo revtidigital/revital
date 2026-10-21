@@ -50,6 +50,9 @@ function Landing() {
   const defaultAnnouncement = "🔥 Play now and become today's Revital Energy Challenge winner!";
   const [daily, setDaily] = useState<LeaderEntry[]>([]);
   const [global, setGlobal] = useState<LeaderEntry[]>([]);
+  const [grandWinners, setGrandWinners] = useState<
+    { userId: string; name: string; total: number; rank: 1 | 2 | 3; avatarUrl?: string }[]
+  >([]);
   const [announcements, setAnnouncements] = useState<string[]>([defaultAnnouncement]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showInstaBadge, setShowInstaBadge] = useState(true);
@@ -65,6 +68,7 @@ function Landing() {
 
     getDailyLeaderboard().then(setDaily);
     getGlobalLeaderboard().then(setGlobal);
+    import("@/server/userFns").then((mod) => mod.getGrandWinnersFn()).then(setGrandWinners);
     import("@/server/adminFns")
       .then((mod) => mod.getPlatformSettingsFn())
       .then((settings) => {
@@ -411,6 +415,85 @@ function Landing() {
               I'm Ready — Let's Go! →
             </Link>
           </motion.div>
+
+          {grandWinners.length >= 3 && (
+            <div className="relative mt-12 md:mt-16 w-full max-w-4xl mx-auto px-2 sm:px-4">
+              <div className="text-center mb-8 sm:mb-10">
+                <div className="inline-block px-4 sm:px-6 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-[#FDE68A] via-[#FBBF24] to-[#FDE68A] text-[#78350F] text-[10px] sm:text-xs uppercase tracking-[0.25em] font-black border border-[#F59E0B]/40 mb-3">
+                  THE TOP 3 CHAMPIONS
+                </div>
+                <div className="flex items-center justify-center gap-2 sm:gap-4">
+                  <svg viewBox="0 0 40 28" className="w-7 h-5 sm:w-10 sm:h-7 text-[#D97706] fill-current">
+                    <path d="M38 24 C28 20 14 14 4 4" stroke="#B45309" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                    <ellipse cx="6" cy="6" rx="4.5" ry="2.5" transform="rotate(-30 6 6)" />
+                    <ellipse cx="14" cy="11" rx="4.5" ry="2.5" transform="rotate(-20 14 11)" />
+                    <ellipse cx="23" cy="16" rx="4.5" ry="2.5" transform="rotate(-10 23 16)" />
+                    <ellipse cx="32" cy="21" rx="4.5" ry="2.5" transform="rotate(0 32 21)" />
+                  </svg>
+                  <span className="text-3xl sm:text-5xl filter drop-shadow-[0_4px_6px_rgba(217,119,6,0.35)] select-none">
+                    🏆
+                  </span>
+                  <h2 className="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-[#451A03] drop-shadow-sm">
+                    GRAND WINNERS
+                  </h2>
+                  <svg viewBox="0 0 40 28" className="w-7 h-5 sm:w-10 sm:h-7 text-[#D97706] fill-current scale-x-[-1]">
+                    <path d="M38 24 C28 20 14 14 4 4" stroke="#B45309" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                    <ellipse cx="6" cy="6" rx="4.5" ry="2.5" transform="rotate(-30 6 6)" />
+                    <ellipse cx="14" cy="11" rx="4.5" ry="2.5" transform="rotate(-20 14 11)" />
+                    <ellipse cx="23" cy="16" rx="4.5" ry="2.5" transform="rotate(-10 23 16)" />
+                    <ellipse cx="32" cy="21" rx="4.5" ry="2.5" transform="rotate(0 32 21)" />
+                  </svg>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3 sm:gap-5 items-end">
+                {[
+                  { entry: grandWinners.find((w) => w.rank === 2), rank: "2nd", medal: "🥈", size: "w-20 h-20 sm:w-28 sm:h-28", nameSize: "text-xs sm:text-base", border: "border-[#F59E0B]/70 shadow-[0_8px_20px_-6px_rgba(217,119,6,0.28)]", scale: "" },
+                  { entry: grandWinners.find((w) => w.rank === 1), rank: "1st", medal: "🥇", size: "w-24 h-24 sm:w-32 sm:h-32", nameSize: "text-sm sm:text-lg", border: "border-[#FEF08A] shadow-[0_0_0_4px_rgba(253,230,138,0.55),0_20px_45px_-8px_rgba(217,119,6,0.45)]", scale: "scale-[1.06] z-10" },
+                  { entry: grandWinners.find((w) => w.rank === 3), rank: "3rd", medal: "🥉", size: "w-20 h-20 sm:w-28 sm:h-28", nameSize: "text-xs sm:text-base", border: "border-[#F59E0B]/70 shadow-[0_8px_20px_-6px_rgba(217,119,6,0.28)]", scale: "" },
+                ].map(({ entry, rank, medal, size, nameSize, border, scale }) => (
+                  <div
+                    key={rank}
+                    className={`relative flex flex-col items-center rounded-2xl sm:rounded-3xl border-2 bg-gradient-to-b from-[#FCD34D] via-[#FBBF24] to-[#F59E0B] p-3 sm:p-4 text-center ${border} ${scale}`}
+                  >
+                    <span className="text-[10px] sm:text-xs font-black text-[#78350F]/80 tracking-widest uppercase mb-2 select-none">
+                      {medal} {rank}
+                    </span>
+                    <div
+                      className={`rounded-full overflow-hidden flex items-end justify-center bg-gradient-to-b from-[#FFFDF0] via-[#FDE68A] to-[#F59E0B] p-[3px] sm:p-1 mb-3 ${size}`}
+                      style={{ containerType: "inline-size" }}
+                    >
+                      <div
+                        className="relative w-full h-full rounded-full overflow-hidden flex items-end justify-center bg-gradient-energy"
+                        style={{ containerType: "inline-size" }}
+                      >
+                        {entry?.avatarUrl ? (
+                          <img
+                            src={entry.avatarUrl}
+                            alt={entry.name}
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span
+                            className="leading-none drop-shadow-sm origin-bottom scale-x-[1.35] scale-y-[1.25] select-none"
+                            style={{ fontSize: "clamp(2rem, 60cqw, 6rem)" }}
+                          >
+                            👤
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <p className={`font-black truncate w-full px-1 text-[#3E1B02] leading-tight ${nameSize}`}>
+                      {entry?.name}
+                    </p>
+                    <div className="mt-1.5 inline-flex items-center gap-1 bg-white/30 text-[#78350F] font-black text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 rounded-full border border-white/50">
+                      <span className="text-[#D97706]">★</span>
+                      <span>{entry?.total.toLocaleString()} pts</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <PlayerAvatarsCarousel />
 

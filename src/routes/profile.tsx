@@ -84,8 +84,6 @@ function Profile() {
   const [copiedUserId, setCopiedUserId] = useState(false);
   const [referrerName, setReferrerName] = useState("");
   const [referralCount, setReferralCount] = useState(0);
-  const [globalRank, setGlobalRank] = useState<number | null>(null);
-  const [globalScore, setGlobalScore] = useState<number | null>(null);
   const [nameFlagged, setNameFlagged] = useState(false);
   const [checkingName, setCheckingName] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -167,19 +165,6 @@ function Profile() {
       }
     };
     loadReferralData();
-
-    const loadGlobalRank = async () => {
-      try {
-        const { getUserRankFn } = await import("@/server/adminFns");
-        const result = await getUserRankFn({ data: { userId: u.userId } });
-        setGlobalRank(result.rank);
-        setGlobalScore(result.score);
-      } catch {
-        setGlobalRank(null);
-        setGlobalScore(null);
-      }
-    };
-    loadGlobalRank();
   }, [nav]);
 
   const safeUser = useMemo(() => {
@@ -217,7 +202,6 @@ function Profile() {
   const hasPlayedBefore = Boolean((safeUser.playAttempts?.length ?? 0) > 0 || hasCompletedRun);
   const finalPercentDisplay = hasPlayedBefore ? `${safeUser.total}` : "—";
   const tierDisplay = hasPlayedBefore ? safeUser.category : "Not started";
-  const eligibleDisplay = hasPlayedBefore ? "✓" : "Not yet";
   const currentScoreTier = hasPlayedBefore
     ? SCORE_TIERS.find((tier) => tier.label === safeUser.category)?.tier
     : null;
@@ -388,7 +372,7 @@ function Profile() {
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               {hasPlayedBefore
-                ? "Your score is saved. You're now in the prize draw."
+                ? "Your score is saved."
                 : "Play your first challenge to unlock your score band and start climbing the leaderboard."}
             </p>
 
@@ -403,18 +387,10 @@ function Profile() {
               </div>
             )}
 
-            <div className="mt-4 grid grid-cols-3 gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-3">
               <Stat label="Best Score" value={finalPercentDisplay} />
               <Stat label="Tier" value={tierDisplay} />
-              <Stat label="Eligible" value={eligibleDisplay} />
             </div>
-
-            {hasPlayedBefore && (
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <Stat label="Global Rank" value={globalRank !== null ? `#${globalRank}` : "—"} />
-                <Stat label="Grand Score" value={globalScore !== null ? `${globalScore}` : "—"} />
-              </div>
-            )}
 
             <div className="mt-4 bg-background/40 rounded-2xl p-4 text-left">
               <div className="flex items-center justify-between gap-3">
@@ -504,9 +480,6 @@ function Profile() {
             <div id="referral-url-section" className="mt-4 bg-background/40 rounded-2xl p-4 text-left scroll-mt-32 transition-all duration-700">
               <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
                 Your Referral URL
-              </p>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                For each referral you will get 100 points.
               </p>
               <div className="mt-2 flex flex-col sm:flex-row gap-2">
                 <input
@@ -647,9 +620,6 @@ function Profile() {
                 >
                   Optional
                 </span>
-                <span className="ml-auto text-[11px] text-muted-foreground hidden sm:inline">
-                  Let&apos;s connect on Instagram! 🤍
-                </span>
               </div>
               {/* @ input */}
               <div className="flex items-center rounded-xl border border-border/60 bg-background/60 px-3 py-2 focus-within:border-pink-300 transition-colors">
@@ -663,22 +633,7 @@ function Profile() {
                   className="flex-1 min-w-0 bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground/50"
                 />
               </div>
-              {/* Helper */}
-              <p className="text-[11px] text-muted-foreground">
-                ✦ Winners get featured on our Instagram — add your handle so we can tag you! 🏆
-              </p>
             </div>
-          </div>
-          <div>
-            <label className="text-xs uppercase tracking-wider text-muted-foreground">
-              Address (for prize delivery)
-            </label>
-            <textarea
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              rows={3}
-              className="mt-2 w-full bg-background/60 border border-border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-            />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <button

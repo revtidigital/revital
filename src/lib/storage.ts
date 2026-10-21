@@ -77,6 +77,7 @@ export interface UserRecord {
   lastIp?: string; // server-set IP address from the most recent save (never client-trusted)
   avatarUrl?: string; // optional profile picture, stored as a data URL
   showAvatarOnLeaderboard?: boolean; // winner-only opt-in: show avatarUrl instead of the default placeholder on the homepage carousel
+  grandWinnerRank?: 1 | 2 | 3 | null; // admin-assigned slot on the homepage "Grand Winners" podium (set from Grand Prize Leaderboard tab)
 }
 
 export interface UTMParams {

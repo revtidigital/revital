@@ -170,11 +170,6 @@ function Result() {
     trackEvent("share_clicked", { method: "generic" });
     generateAndShare(false);
   };
-  const shareInstagram = () => {
-    trackEvent("share_clicked", { method: "instagram" });
-    generateAndShare(true);
-  };
-
   useEffect(() => {
     if (!unlocked) return;
     if (scores.reflex === null || scores.memory === null || scores.balance === null) return;
@@ -312,26 +307,6 @@ function Result() {
             </div>
           )}
 
-          <p className="text-sm font-semibold text-garnet">
-            Follow us on Instagram for the winner updates
-          </p>
-          <div className="bg-gradient-card border border-accent/40 rounded-3xl p-5 text-left">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">📸</span>
-              <h3 className="font-black text-lg text-gradient-energy">Boost Your Chance to Win!</h3>
-            </div>
-            <p className="text-sm text-muted-foreground mt-2">
-              Share your score on Instagram and tag{" "}
-              <span className="text-garnet font-semibold">@revital.uae</span> in your story to
-              multiply your chances of winning the daily prize 🏆
-            </p>
-            <button
-              onClick={shareInstagram}
-              className="mt-4 w-full py-3 rounded-full bg-gradient-energy text-energy-foreground font-bold shadow-button glow-pulse hover:scale-[1.02] active:scale-[0.98] transition-transform"
-            >
-              Share on Instagram →
-            </button>
-          </div>
           <div className="flex gap-2">
             <button
               onClick={share}
