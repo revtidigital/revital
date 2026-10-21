@@ -56,7 +56,7 @@ export function PlayerAvatarsCarousel() {
     <div className="mt-14">
       <div className="text-center mb-6">
         <div className="inline-block px-4 py-1.5 rounded-full bg-[var(--marigold)] text-garnet text-xs uppercase tracking-[0.2em] font-black">
-          🔥 Players Climbing the Leaderboard
+          🔥 Players Climbed the Leaderboard
         </div>
       </div>
       <Carousel
